@@ -162,19 +162,19 @@
   --text-3xl: 22px;
   --text-4xl: 25px;
   --text-lead: clamp(15px, 1.4vw, 18px);
-  --display-1: clamp(54px, 7.3vw, 112px);
-  --display-2: clamp(42px, 6vw, 82px);
-  --display-3: clamp(32px, 4.3vw, 62px);
-  --display-4: clamp(28px, 3vw, 42px);
-  --display-5: clamp(25px, 2.5vw, 34px);
-  --display-6: clamp(23px, 2.4vw, 31px);
-  --display-mark: clamp(50px, 5vw, 74px);
-  --display-quote: clamp(16px, 1.5vw, 20px);
+  --display-1: clamp(52px, 6.1vw, 90px);
+  --display-2: clamp(40px, 4.9vw, 68px);
+  --display-3: clamp(30px, 3.6vw, 52px);
+  --display-4: clamp(26px, 2.6vw, 38px);
+  --display-5: clamp(23px, 2.2vw, 30px);
+  --display-6: clamp(22px, 2vw, 28px);
+  --display-mark: clamp(48px, 4.4vw, 64px);
+  --display-quote: clamp(16px, 1.4vw, 19px);
 }
 
 :lang(en) {
-  --display-1: clamp(44px, 5.6vw, 88px);
-  --display-2: clamp(40px, 5.2vw, 74px);
+  --display-1: clamp(40px, 4.8vw, 72px);
+  --display-2: clamp(36px, 4.3vw, 60px);
 }
 
 * {
@@ -254,11 +254,15 @@ input[type="range"] {
   color: #fff8f5;
 }
 
+/*
+ * Page gutters ramp with the viewport: ~14px each side on a phone, ~56px on a
+ * wide screen, where the measure also stops growing.
+ */
 .site-header,
 .site-footer,
 main {
   margin-inline: auto;
-  width: min(calc(100% - 48px), 1440px);
+  width: min(calc(100% - clamp(28px, 7.8vw, 112px)), 1320px);
 }
 
 .site-shell {
@@ -400,29 +404,21 @@ main {
 }
 
 .header-menu-mark span {
+  display: block;
   position: absolute;
 }
 
+/* The kana fills its em box; the Latin cap does not, so it is nudged to sit
+   on the same optical margin as the kana on the opposite corner. */
 .header-menu-mark span:first-child {
-  font-size: var(--text-lg);
-  inset: -2px auto auto -1px;
+  font-size: 15px;
+  inset: -1px auto auto -2px;
 }
 
 .header-menu-mark span:last-child {
-  font-size: var(--text-xs);
-  inset: auto -1px -1px auto;
-  opacity: 0.75;
-}
-
-.header-menu-mark::after {
-  background: currentColor;
-  content: "";
-  height: 1px;
-  inset: 50% auto auto 50%;
-  opacity: 0.3;
-  position: absolute;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  width: 15px;
+  font-size: 12px;
+  inset: auto 1px -3px auto;
+  opacity: 0.8;
 }
 
 .header-menu-icon {
@@ -670,8 +666,8 @@ main {
 .home-hero {
   align-items: center;
   display: grid;
-  gap: 0 clamp(48px, 8vw, 130px);
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.62fr);
+  gap: 0 clamp(40px, 5.4vw, 86px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
   min-height: min(780px, calc(100svh - 100px));
   padding: clamp(80px, 11vw, 150px) clamp(0px, 2vw, 30px) 100px;
   position: relative;
@@ -689,6 +685,7 @@ main {
   letter-spacing: -0.055em;
   line-height: 1.12;
   margin: 0;
+  word-break: auto-phrase;
 }
 
 :lang(en) .section-heading h2,
@@ -850,6 +847,8 @@ main {
   letter-spacing: -0.04em;
   line-height: 1.35;
   margin: 0;
+  /* Break Japanese headings at phrase boundaries where the browser can. */
+  word-break: auto-phrase;
 }
 
 .section-heading > p:not(.eyebrow),
@@ -1047,7 +1046,7 @@ main {
 }
 
 .page-shell-wide {
-  max-width: 1600px;
+  width: min(calc(100% - clamp(28px, 7.8vw, 112px)), 1520px);
 }
 
 .page-intro {
@@ -1880,12 +1879,6 @@ main {
 }
 
 @media (max-width: 760px) {
-  .site-header,
-  .site-footer,
-  main {
-    width: min(calc(100% - 28px), 1440px);
-  }
-
   .site-header {
     border-radius: 20px;
     min-height: 58px;
