@@ -3,9 +3,11 @@ import type { ReactNode } from "react";
 import { getDictionary, type Locale } from "../content";
 import { fontVariables } from "../lib/fonts";
 import { localePath, siteUrl } from "../lib/site";
+import { PageTransition } from "./page-transition";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { SiteMojikumi } from "./site-mojikumi";
+import { StructuredData } from "./structured-data";
 
 const themeScript = `
 try {
@@ -84,12 +86,13 @@ export function RootDocument({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <StructuredData locale={locale} />
       </head>
       <body>
         <div className="ambient-wash" aria-hidden="true" />
         <SiteMojikumi locale={locale}>
           <SiteHeader dictionary={dictionary} locale={locale} />
-          {children}
+          <PageTransition>{children}</PageTransition>
           <SiteFooter dictionary={dictionary} locale={locale} />
         </SiteMojikumi>
       </body>

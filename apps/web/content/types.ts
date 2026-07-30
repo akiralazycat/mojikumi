@@ -93,6 +93,17 @@ export type Dictionary = {
         description: string;
       }[];
     };
+    compare: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      sampleText: string;
+      beforeLabel: string;
+      beforeNote: string;
+      afterLabel: string;
+      afterNote: string;
+      link: string;
+    };
     closing: {
       eyebrow: string;
       title: string;
@@ -182,6 +193,7 @@ export type Dictionary = {
       label: string;
       title: string;
       body: string;
+      link: string;
     };
     metrics: {
       eyebrow: string;

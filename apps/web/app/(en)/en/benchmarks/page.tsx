@@ -6,5 +6,5 @@ import { buildMetadata } from "../../../../lib/site";
 export const metadata: Metadata = buildMetadata("en", "benchmarks");
 
 export default function Page() {
-  return <BenchmarksPage dictionary={getDictionary("en")} />;
+  return <BenchmarksPage dictionary={getDictionary("en")} locale="en" />;
 }

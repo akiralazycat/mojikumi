@@ -9,8 +9,10 @@ import {
   type KeyboardEvent
 } from "react";
 import { detectNativeSupport } from "@mojikumi/dom";
-import { Mojikumi, useMojikumi } from "@mojikumi/react";
+import { Mojikumi } from "@mojikumi/react";
 import type { Dictionary } from "../../content";
+import { CheckIcon, ChevronDownIcon } from "../icons";
+import { TextEditor } from "./text-editor";
 
 type PresetName = "web" | "book" | "editorial" | "minimal" | "native";
 type Precision = "auto" | "full";
@@ -120,7 +122,9 @@ function SelectControl<T extends string>({
         onKeyDown={handleKeyDown}
       >
         <span id={`${listId}-value`}>{selected.label}</span>
-        <span className="select-chevron" aria-hidden="true" />
+        <span className="select-chevron" aria-hidden="true">
+          <ChevronDownIcon size={16} />
+        </span>
       </button>
       {open ? (
         <div
@@ -143,7 +147,7 @@ function SelectControl<T extends string>({
             >
               <span>{option.label}</span>
               <span className="select-option-mark" aria-hidden="true">
-                {option.value === value ? "✓" : ""}
+                {option.value === value ? <CheckIcon size={14} /> : null}
               </span>
             </button>
           ))}
@@ -238,11 +242,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
   const [precision, setPrecision] = useState<Precision>("auto");
   const [debug, setDebug] = useState(false);
   const [support, setSupport] = useState<SupportState | null>(null);
-  const inputRef = useMojikumi<HTMLTextAreaElement>({
-    preset,
-    precision: "native",
-    observe: false
-  });
+  const editorLabelId = useId();
 
   const fontOptions: ControlOption<"serif" | "sans-serif">[] = [
     { value: "serif", label: controls.fontSerif },
@@ -280,10 +280,13 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
 
   const baseFont =
     font === "serif" ? "var(--font-display)" : "var(--font-ui)";
+  // YakuHanJP only carries punctuation, so the running text comes from whatever
+  // sits behind it. Noto Sans JP is the face the subset was cut from, which is
+  // also how YakuHanJP is normally deployed.
   const yakuhanFont =
     font === "serif"
       ? "YakuHanMP, var(--font-display)"
-      : "YakuHanJP, var(--font-ui)";
+      : "YakuHanJP, var(--font-yakuhan-sans)";
 
   const sampleStyle = {
     "--sample-width": `${width}em`,
@@ -332,15 +335,13 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
           </button>
         </div>
 
-        <label className="control-field control-field-text">
-          <span>{controls.text}</span>
-          <textarea
-            ref={inputRef}
-            rows={8}
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
-        </label>
+        <TextEditor
+          label={controls.text}
+          labelId={editorLabelId}
+          text={text}
+          preset={preset}
+          onChange={setText}
+        />
 
         <div className="control-grid">
           <SelectControl
@@ -392,7 +393,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             onChange={(event) => setDebug(event.target.checked)}
           />
           <span className="check-mark" aria-hidden="true">
-            <span />
+            <CheckIcon size={12} />
           </span>
           <span>{controls.debug}</span>
         </label>
@@ -425,10 +426,8 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
         <article className="sample-card sample-card-before">
           <header>
             <span className="sample-index">01</span>
-            <div>
-              <strong>{samples.before.title}</strong>
-              <small>{samples.before.note}</small>
-            </div>
+            <strong>{samples.before.title}</strong>
+            <small>{samples.before.note}</small>
           </header>
           <div className="sample-text" lang="ja" style={sampleStyle}>
             <Paragraphs text={text} />
@@ -438,10 +437,8 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
         <article className="sample-card sample-card-yakuhan">
           <header>
             <span className="sample-index">02</span>
-            <div>
-              <strong>{samples.yakuhan.title}</strong>
-              <small>{samples.yakuhan.note}</small>
-            </div>
+            <strong>{samples.yakuhan.title}</strong>
+            <small>{samples.yakuhan.note}</small>
           </header>
           <div className="sample-text" lang="ja" style={yakuhanStyle}>
             <Paragraphs text={text} />
@@ -451,10 +448,8 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
         <article className="sample-card">
           <header>
             <span className="sample-index">03</span>
-            <div>
-              <strong>{samples.native.title}</strong>
-              <small>{samples.native.note}</small>
-            </div>
+            <strong>{samples.native.title}</strong>
+            <small>{samples.native.note}</small>
           </header>
           <div
             className="sample-text mjk mjk-native"
@@ -468,16 +463,14 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
         <article className="sample-card sample-card-active">
           <header>
             <span className="sample-index">04</span>
-            <div>
-              <strong>{samples.mojikumi.title}</strong>
-              <small>
-                {usingFallback
-                  ? samples.mojikumi.noteFallback
-                  : preset === "native"
-                    ? samples.mojikumi.noteNativeOnly
-                    : samples.mojikumi.noteNative}
-              </small>
-            </div>
+            <strong>{samples.mojikumi.title}</strong>
+            <small>
+              {usingFallback
+                ? samples.mojikumi.noteFallback
+                : preset === "native"
+                  ? samples.mojikumi.noteNativeOnly
+                  : samples.mojikumi.noteNative}
+            </small>
           </header>
           <Mojikumi
             key={font}
