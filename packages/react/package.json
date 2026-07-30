@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React component and hook for Mojikumi",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,12 +11,15 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "sideEffects": false,
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/akiralazycat/mojikumi.git",
+    "url": "git+https://github.com/akiralazycat/mojikumi.git",
     "directory": "packages/react"
   },
   "homepage": "https://github.com/akiralazycat/mojikumi#readme",
@@ -25,7 +28,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@mojikumi/dom": "0.1.0"
+    "@mojikumi/dom": "0.1.1"
   },
   "peerDependencies": {
     "react": ">=18"
