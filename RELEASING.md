@@ -113,26 +113,67 @@ Trusted Publishingにはnpm CLI 11.5.1以上とNode.js 22.14以上が必要で�
 
 - [Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/)
 
-## 5. 次回リリースまでに整備する
+## 5. 変更を記録する
 
-1. Changesets等で複数パッケージのversionと内部依存を同期する
-2. Pull Requestごとに変更種別を記録する
-3. Release PRでCHANGELOGとversionを確定する
-4. GitHub Releaseまたは保護された手動workflowから公開する
-5. 公開後に`npm view <package> version`と新規プロジェクトへのinstallで検証する
+公開パッケージに影響するPull RequestではChangesetを追加します。
 
-現状の`release.yml`は、初回のTrusted Publisher接続を確認するための明示的な
-手動フローです。自動version更新を導入するまでは、バージョンを確認せずに実行しないで
-ください。
+```bash
+npm run changeset
+```
+
+変更対象、SemVerの更新種別、CHANGELOGへ載せる要約を入力します。Mojikumiの7つの
+公開パッケージはfixed groupとして設定されているため、同じバージョンで公開されます。
+Playgroundはprivate workspaceとしてリリース対象から除外されています。
+
+## 6. Release PRを作る
+
+未消費のChangesetがある状態で、リリース専用ブランチから次を実行します。
+
+```bash
+npm run version-packages
+npm install --package-lock-only
+npm run typecheck
+npm test
+npm run build
+npm run package:check
+```
+
+`version-packages`はChangesetを消費し、全パッケージのversion、内部依存、
+CHANGELOGを更新します。`package:check`は全7パッケージについて`npm pack
+--dry-run`を実行し、README、LICENSE、CHANGELOG、distの存在とテスト成果物の除外を
+確認します。
+
+結果をRelease PRとしてレビューし、versionとCHANGELOGが意図どおりであることを
+確認してからmainへマージします。
+
+## 7. Trusted Publishingで公開する
+
+Release PRのマージ後、GitHub Actionsから`Publish packages`を手動実行します。
+GitHubの`npm` EnvironmentにRequired reviewersが設定されている場合は、承認後に
+処理が始まります。
+
+workflowは型検査、テスト、ビルド、package dry-runを再実行してから
+`changeset publish`を呼び出します。npm上に存在しないversionだけをOIDCで公開し、
+生成されたGit tagをGitHubへpushします。`NPM_TOKEN`は使用しません。
+
+公開後は次を確認します。
+
+```bash
+npm view mojikumi version
+npm view @mojikumi/core version
+npm view @mojikumi/react version
+```
+
+すべて同じversionであることを確認します。レジストリの反映に数分かかる場合があるため、
+公開直後の404だけを理由に同じversionを再publishしないでください。
 
 ## 実装ロードマップ
 
-### 次のPR
+### 次の実装PR
 
 1. Chromium・Firefox・WebKitのPlaywright fixtureを追加
 2. コピー文字列、スクリーンリーダー向けDOM、CLSの受け入れテストを追加
-3. ChangesetsとRelease PRを導入
-4. パッケージごとのREADMEと最小利用例を追加
+3. パッケージごとのREADMEと最小利用例を追加
 
 ### v0.1公開前
 

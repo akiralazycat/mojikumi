@@ -2,15 +2,9 @@ name: Publish packages
 
 on:
   workflow_dispatch:
-    inputs:
-      publish_umbrella:
-        description: Publish the unscoped mojikumi package too
-        required: true
-        type: boolean
-        default: false
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -24,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -35,25 +31,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-
-      - name: Publish @mojikumi/core
-        run: npm publish --workspace @mojikumi/core
-
-      - name: Publish @mojikumi/css
-        run: npm publish --workspace @mojikumi/css
-
-      - name: Publish @mojikumi/presets
-        run: npm publish --workspace @mojikumi/presets
-
-      - name: Publish @mojikumi/dom
-        run: npm publish --workspace @mojikumi/dom
-
-      - name: Publish @mojikumi/react
-        run: npm publish --workspace @mojikumi/react
-
-      - name: Publish @mojikumi/rehype
-        run: npm publish --workspace @mojikumi/rehype
-
-      - name: Publish mojikumi
-        if: ${{ inputs.publish_umbrella }}
-        run: npm publish --workspace mojikumi
+      - run: npm run package:check
+      - run: npm run release
+      - run: git push --follow-tags

@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/css",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CSS-only Japanese typography presets",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,12 +13,17 @@
     "./mojikumi.css": "./dist/mojikumi.css"
   },
   "style": "./dist/mojikumi.css",
-  "files": ["dist"],
-  "sideEffects": ["*.css"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/akiralazycat/mojikumi.git",
+    "url": "git+https://github.com/akiralazycat/mojikumi.git",
     "directory": "packages/css"
   },
   "homepage": "https://github.com/akiralazycat/mojikumi#readme",

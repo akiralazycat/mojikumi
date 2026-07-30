@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mojikumi/css": "0.1.0",
-    "mojikumi": "0.1.0"
+    "@mojikumi/css": "0.1.1",
+    "mojikumi": "0.1.1"
   },
   "devDependencies": {
     "vite": "^7.0.6"
