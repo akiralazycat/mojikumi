@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Mojikumiの日本語字組みをBefore・標準CSS・フォールバックで比較するPlayground"
+      content="Mojikumiの日本語字組みを未調整・標準CSS・フォールバックで比較するPlayground"
     />
-    <title>Mojikumi Playground — Webの日本語を、もう少し端正に。</title>
+    <title>Mojikumi Playground — Webの日本語を端正にする</title>
   </head>
   <body>
     <main>
@@ -17,7 +17,7 @@
           <p class="eyebrow">Japanese typography compatibility layer</p>
           <h1>Mojikumi <span>Playground</span></h1>
           <p class="lede">
-            Webの日本語を、意味もコピー結果も変えずに、出版物に近い字組みへ。
+            Webの日本語を端正にする
           </p>
         </div>
         <a
@@ -45,8 +45,8 @@
             <label class="field">
               <span>プリセット</span>
               <select id="preset">
-                <option value="web">Web</option>
-                <option value="book" selected>Book</option>
+                <option value="web" selected>Web</option>
+                <option value="book">Book</option>
                 <option value="editorial">Editorial</option>
                 <option value="minimal">Minimal</option>
                 <option value="native">Native</option>
@@ -62,13 +62,21 @@
             </label>
 
             <label class="field">
+              <span>補完モード</span>
+              <select id="precision">
+                <option value="auto">Auto</option>
+                <option value="full">Fallback demo</option>
+              </select>
+            </label>
+
+            <label class="field">
               <span>文字サイズ <output id="size-output">18px</output></span>
               <input id="size" type="range" min="14" max="32" value="18" />
             </label>
 
             <label class="field">
-              <span>行幅 <output id="width-output">28em</output></span>
-              <input id="width" type="range" min="14" max="42" value="28" />
+              <span>行幅 <output id="width-output">24em</output></span>
+              <input id="width" type="range" min="14" max="42" value="24" />
             </label>
           </div>
 
@@ -79,10 +87,12 @@
         </aside>
 
         <section class="comparison" aria-live="polite">
+          <div id="compat-status" class="compat-status"></div>
+
           <article class="sample-card sample-card--before">
             <header>
               <span class="index">01</span>
-              <div><strong>Before</strong><small>ブラウザ既定</small></div>
+              <div><strong>Unadjusted</strong><small>比較用：約物調整なし</small></div>
             </header>
             <div id="before" class="sample"></div>
           </article>
@@ -90,7 +100,7 @@
           <article class="sample-card sample-card--native">
             <header>
               <span class="index">02</span>
-              <div><strong>Native CSS</strong><small>標準CSSのみ</small></div>
+              <div><strong>Native CSS</strong><small>現在のブラウザの標準実装</small></div>
             </header>
             <div id="native" class="sample mjk mjk-native" lang="ja"></div>
           </article>
@@ -98,7 +108,7 @@
           <article class="sample-card sample-card--active">
             <header>
               <span class="index">03</span>
-              <div><strong>Mojikumi</strong><small>標準CSS ＋ 必要な補完</small></div>
+              <div><strong>Mojikumi</strong><small id="enhanced-status">標準CSS ＋ 必要な補完</small></div>
             </header>
             <div id="enhanced" class="sample" lang="ja"></div>
           </article>
@@ -106,7 +116,7 @@
       </section>
 
       <footer>
-        <p>標準を置き換えず、標準へ橋をかける。</p>
+        <p>Webの日本語を端正にする</p>
         <span>JLREQ × CSS Text</span>
       </footer>
     </main>

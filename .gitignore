@@ -1,5 +1,7 @@
 node_modules/
 dist/
+out/
+.next/
 coverage/
 .DS_Store
 *.tsbuildinfo

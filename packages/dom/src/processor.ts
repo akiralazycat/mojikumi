@@ -29,9 +29,42 @@ function shouldFallback(
   return precision === "full" || (precision === "auto" && !supported);
 }
 
-function isExcluded(node: Text, options: ResolvedMojikumiOptions): boolean {
+export function requiresPunctuationFallback(
+  options: ResolvedMojikumiOptions,
+  support: NativeFeatureSupport
+): boolean {
+  if (options.precision === "native" || !options.preset.fallback) return false;
+  if (options.precision === "full") return true;
+
+  return Boolean(
+    (options.preset.punctuationClusters && !support.textSpacingTrim) ||
+      (options.preset.lineStartTrim && !support.textSpacingTrimStart) ||
+      (options.preset.lineEndTrim === "when-needed" &&
+        !support.textSpacingTrim) ||
+      (options.preset.lineEndTrim === true && !support.textSpacingTrimBoth)
+  );
+}
+
+export function requiresAutospaceFallback(
+  options: ResolvedMojikumiOptions,
+  support: NativeFeatureSupport
+): boolean {
+  return Boolean(
+    options.preset.autospace &&
+      options.preset.fallback &&
+      shouldFallback(options.precision, support.textAutospace)
+  );
+}
+
+function isExcluded(
+  node: Text,
+  root: Element,
+  options: ResolvedMojikumiOptions
+): boolean {
   const parent = node.parentElement;
   if (!parent || parent.closest(GENERATED_SELECTOR)) return true;
+  const mojikumiRoot = parent.closest(".mjk");
+  if (mojikumiRoot && mojikumiRoot !== root) return true;
   return options.exclude.some((selector) => parent.closest(selector));
 }
 
@@ -46,7 +79,7 @@ function collectTextNodes(
     {
       acceptNode(node) {
         const text = node as Text;
-        return text.data.trim() && !isExcluded(text, options)
+        return text.data.trim() && !isExcluded(text, root, options)
           ? (document.defaultView?.NodeFilter.FILTER_ACCEPT ?? 1)
           : (document.defaultView?.NodeFilter.FILTER_REJECT ?? 2);
       }
@@ -65,13 +98,9 @@ function decorationsFor(
 ): Map<number, TokenDecoration> {
   const clusterFallback =
     options.preset.punctuationClusters &&
-    shouldFallback(options.precision, support.textSpacingTrim);
-  const autospaceFallback =
-    options.preset.autospace &&
-    shouldFallback(options.precision, support.textAutospace);
-  const lineFallback =
-    options.precision === "full" ||
-    (options.precision === "auto" && !support.textSpacingTrim);
+    requiresPunctuationFallback(options, support);
+  const autospaceFallback = requiresAutospaceFallback(options, support);
+  const lineFallback = requiresPunctuationFallback(options, support);
 
   if (!clusterFallback && !autospaceFallback && !lineFallback) return new Map();
 
@@ -178,11 +207,18 @@ function transformTextNode(
 }
 
 export function restoreGeneratedMarkup(root: Element): void {
-  const generated = [...root.querySelectorAll<HTMLElement>(GENERATED_SELECTOR)];
+  const generated = [
+    ...root.querySelectorAll<HTMLElement>(GENERATED_SELECTOR)
+  ].filter((element) => element.closest(".mjk") === root);
   for (const element of generated.reverse()) {
     element.replaceWith(element.textContent ?? "");
   }
   root.normalize();
+}
+
+function rectAt(rects: DOMRectList, index: number): DOMRect | undefined {
+  if (typeof rects.item === "function") return rects.item(index) ?? undefined;
+  return rects[index] ?? undefined;
 }
 
 function getTextRect(
@@ -220,8 +256,8 @@ function getTextRect(
   if (typeof getClientRects !== "function") return undefined;
   const rects = getClientRects.call(range);
   return direction === "previous"
-    ? rects.item(rects.length - 1) ?? undefined
-    : rects.item(0) ?? undefined;
+    ? rectAt(rects, rects.length - 1)
+    : rectAt(rects, 0);
 }
 
 function hasPreviousTextInBlock(root: Element, token: Element): boolean {
@@ -246,23 +282,33 @@ export function measureLineContext(root: Element): void {
   const view = root.ownerDocument.defaultView;
   if (!view) return;
 
-  const candidates = root.querySelectorAll<HTMLElement>(
-    "[data-mjk-line-start-candidate],[data-mjk-line-end-candidate]"
-  );
+  const candidates = [
+    ...root.querySelectorAll<HTMLElement>(
+      "[data-mjk-line-start-candidate],[data-mjk-line-end-candidate]"
+    )
+  ].filter((token) => token.closest(".mjk") === root);
   for (const token of candidates) {
-    const rect = token.getClientRects().item(0);
+    token.classList.remove(
+      "mjk-line-start",
+      "mjk-wrapped-line-start",
+      "mjk-line-end"
+    );
+    delete token.dataset.mjkContext;
+
+    const rect = rectAt(token.getClientRects(), 0);
     if (!rect || (rect.width === 0 && rect.height === 0)) continue;
     const writingMode = view.getComputedStyle(token).writingMode;
 
     if (token.hasAttribute("data-mjk-line-start-candidate")) {
       const previous = getTextRect(root, token, "previous");
       const paragraphStart = !hasPreviousTextInBlock(root, token);
-      token.classList.toggle(
-        "mjk-wrapped-line-start",
-        !paragraphStart && Boolean(previous && !sameLine(rect, previous, writingMode))
-      );
+      const wrappedLineStart =
+        !paragraphStart &&
+        Boolean(previous && !sameLine(rect, previous, writingMode));
+      token.classList.toggle("mjk-line-start", paragraphStart || wrappedLineStart);
+      token.classList.toggle("mjk-wrapped-line-start", wrappedLineStart);
       if (paragraphStart) token.dataset.mjkContext = "paragraph-start";
-      else if (token.classList.contains("mjk-wrapped-line-start")) {
+      else if (wrappedLineStart) {
         token.dataset.mjkContext = "wrapped-line-start";
       }
     }

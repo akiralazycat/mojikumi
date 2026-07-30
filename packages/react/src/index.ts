@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createElement,
   forwardRef,
@@ -96,9 +98,7 @@ export const Mojikumi = forwardRef<HTMLElement, MojikumiProps>(
       },
       [forwardedRef, internalRef]
     );
-    const classes = ["mjk", `mjk-${preset}`, className]
-      .filter(Boolean)
-      .join(" ");
+    const classes = ["mjk", className].filter(Boolean).join(" ");
 
     return createElement(
       as,
@@ -107,6 +107,7 @@ export const Mojikumi = forwardRef<HTMLElement, MojikumiProps>(
         ref: setRef,
         lang,
         className: classes,
+        "data-mjk-preset": preset,
         ...(debug ? { "data-mjk-debug": "" } : {})
       },
       children

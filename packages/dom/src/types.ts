@@ -5,6 +5,8 @@ export type Precision = "native" | "auto" | "full";
 
 export interface NativeFeatureSupport {
   textSpacingTrim: boolean;
+  textSpacingTrimStart: boolean;
+  textSpacingTrimBoth: boolean;
   textAutospace: boolean;
   hangingPunctuation: boolean;
   autoPhrase: boolean;

@@ -2,6 +2,8 @@ import { resolveOptions } from "./options.js";
 import {
   measureLineContext,
   processElement,
+  requiresAutospaceFallback,
+  requiresPunctuationFallback,
   restoreGeneratedMarkup
 } from "./processor.js";
 import { detectNativeSupport } from "./support.js";
@@ -22,13 +24,9 @@ function applyRootAttributes(
   const originalDebug = root.getAttribute("data-mjk-debug");
 
   root.classList.add("mjk", `mjk-${options.presetName}`);
-  if (options.precision !== "native" && options.preset.fallback) {
-    root.classList.add("mjk-fallback");
-  }
   if (options.debug) root.setAttribute("data-mjk-debug", "");
   if (!root.closest("[lang]")) root.setAttribute("lang", "ja");
-  root.classList.toggle("mjk-tst-native", support.textSpacingTrim);
-  root.classList.toggle("mjk-autospace-native", support.textAutospace);
+  syncRootClasses(root, options, support);
 
   return () => {
     if (originalClass === null) root.removeAttribute("class");
@@ -40,6 +38,35 @@ function applyRootAttributes(
   };
 }
 
+function syncRootClasses(
+  root: Element,
+  options: ResolvedMojikumiOptions,
+  support: NativeFeatureSupport
+): void {
+  root.classList.toggle(
+    "mjk-fallback",
+    options.precision !== "native" && options.preset.fallback
+  );
+  root.classList.toggle(
+    "mjk-punctuation-fallback",
+    requiresPunctuationFallback(options, support)
+  );
+  root.classList.toggle(
+    "mjk-autospace-fallback",
+    requiresAutospaceFallback(options, support)
+  );
+  root.classList.toggle(
+    "mjk-force-fallback",
+    options.precision === "full" && options.preset.fallback
+  );
+  root.classList.toggle("mjk-tst-native", support.textSpacingTrim);
+  root.classList.toggle(
+    "mjk-tst-start-native",
+    support.textSpacingTrimStart
+  );
+  root.classList.toggle("mjk-autospace-native", support.textAutospace);
+}
+
 export function createMojikumi(options: MojikumiOptions = {}) {
   const resolved = resolveOptions(options);
 
@@ -47,7 +74,7 @@ export function createMojikumi(options: MojikumiOptions = {}) {
     mount(element: Element): MojikumiInstance {
       const document = element.ownerDocument;
       const view = document.defaultView;
-      const support = detectNativeSupport(view);
+      const support = detectNativeSupport(view, element);
       const restoreAttributes = applyRootAttributes(element, resolved, support);
       let destroyed = false;
       let frame = 0;
@@ -93,6 +120,7 @@ export function createMojikumi(options: MojikumiOptions = {}) {
         if (destroyed || !element.isConnected) return;
         mutationObserver?.disconnect();
         restoreGeneratedMarkup(element);
+        syncRootClasses(element, resolved, support);
         if (resolved.precision !== "native" && resolved.preset.fallback) {
           processElement(element, resolved, support);
         }
@@ -111,7 +139,11 @@ export function createMojikumi(options: MojikumiOptions = {}) {
       };
 
       refresh();
-      void document.fonts?.ready.then(scheduleRefresh);
+      void document.fonts?.ready.then(() => {
+        if (destroyed) return;
+        Object.assign(support, detectNativeSupport(view, element));
+        refresh();
+      });
 
       return {
         element,

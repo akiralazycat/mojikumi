@@ -204,6 +204,45 @@ output {
   min-width: 0;
 }
 
+.compat-status {
+  align-items: start;
+  background: #faf8f1;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(220px, 0.75fr) 1.25fr;
+  margin-bottom: 30px;
+  padding: 16px 18px;
+}
+
+.compat-status > div {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.compat-status strong {
+  font-size: 11px;
+}
+
+.compat-status p {
+  color: #5c6b67;
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.compat-status__dot {
+  background: #52716a;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  height: 7px;
+  width: 7px;
+}
+
+.compat-status__dot.is-fallback {
+  background: #d84b32;
+}
+
 .sample-card {
   border-top: 1px solid #9da7a3;
   display: grid;
@@ -262,6 +301,8 @@ output {
 
 .sample-card--before .sample {
   color: #68716e;
+  text-autospace: no-autospace;
+  text-spacing-trim: space-all;
 }
 
 footer {
@@ -315,7 +356,140 @@ footer p {
     grid-template-columns: 1fr;
   }
 
+  .compat-status {
+    grid-template-columns: 1fr;
+  }
+
   .sample-card header {
     align-items: baseline;
+  }
+}
+
+/* Standalone Vite surface follows the public site's Mojikumi palette. */
+:root {
+  color-scheme: light;
+  --vite-bg: #f5f0ea;
+  --vite-ink: #251c1d;
+  --vite-muted: #716466;
+  --vite-primary: #702735;
+  --vite-line: rgba(78, 44, 49, 0.14);
+  --vite-glass: rgba(255, 252, 248, 0.72);
+  --vite-field: rgba(255, 252, 248, 0.54);
+  color: var(--vite-ink);
+  background: var(--vite-bg);
+  font-family: "Zen Maru Gothic", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 55vw 50vh at -5% 5%, rgba(141, 31, 56, 0.16), transparent 68%),
+    radial-gradient(ellipse 45vw 55vh at 105% 30%, rgba(154, 116, 66, 0.12), transparent 70%),
+    var(--vite-bg);
+}
+
+.hero,
+footer,
+.sample-card {
+  border-color: var(--vite-line);
+}
+
+.hero__mark,
+.compat-status__dot.is-fallback {
+  background: var(--vite-primary);
+}
+
+.eyebrow,
+.sample-card--active .index,
+.sample-card--active header strong {
+  color: var(--vite-primary);
+}
+
+h1,
+.lede,
+.sample,
+footer p {
+  font-family: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
+}
+
+.lede,
+.sample-card header small,
+.sample-card--before .sample,
+footer {
+  color: var(--vite-muted);
+}
+
+.controls,
+.compat-status,
+.sample-card {
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  background: var(--vite-glass);
+  border: 1px solid var(--vite-line);
+  border-radius: 24px;
+  box-shadow:
+    0 18px 60px rgba(90, 43, 52, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.controls {
+  color: var(--vite-ink);
+}
+
+.controls__heading,
+.check {
+  border-color: var(--vite-line);
+}
+
+.controls__heading button,
+.field > span,
+.check,
+.compat-status p {
+  color: var(--vite-muted);
+}
+
+textarea,
+select {
+  background: var(--vite-field);
+  border-color: var(--vite-line);
+  border-radius: 13px;
+  color: var(--vite-ink);
+}
+
+.field input[type="range"],
+.check input {
+  accent-color: var(--vite-primary);
+}
+
+output {
+  color: var(--vite-ink);
+}
+
+.sample-card {
+  margin-bottom: 16px;
+  padding-inline: 22px;
+}
+
+.sample-card--active {
+  border-color: color-mix(in srgb, var(--vite-primary), transparent 65%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --vite-bg: #120d10;
+    --vite-ink: #f4ebe8;
+    --vite-muted: #b9a8a7;
+    --vite-primary: #bd897d;
+    --vite-line: rgba(242, 200, 207, 0.12);
+    --vite-glass: rgba(42, 26, 32, 0.68);
+    --vite-field: rgba(14, 9, 11, 0.42);
+  }
+
+  .controls,
+  .compat-status,
+  .sample-card {
+    box-shadow:
+      0 20px 70px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 }

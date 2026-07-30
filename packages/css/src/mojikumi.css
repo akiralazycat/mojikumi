@@ -10,22 +10,79 @@
     word-break: normal;
   }
 
-  :where(.mjk-heading, .mjk-editorial :is(h1, h2, h3, h4, h5, h6)) {
+  :where(
+    .mjk-web,
+    .mjk-book,
+    .mjk-editorial,
+    .mjk-native,
+    [data-mjk-preset="web"],
+    [data-mjk-preset="book"],
+    [data-mjk-preset="editorial"],
+    [data-mjk-preset="native"]
+  ) {
+    text-spacing-trim: trim-start;
+  }
+
+  @supports (text-spacing-trim: trim-both) {
+    :where(
+      .mjk-book,
+      .mjk-editorial,
+      .mjk-native,
+      [data-mjk-preset="book"],
+      [data-mjk-preset="editorial"],
+      [data-mjk-preset="native"]
+    ) {
+      text-spacing-trim: trim-both;
+    }
+  }
+
+  :where(
+    .mjk-editorial,
+    .mjk-minimal,
+    [data-mjk-preset="editorial"],
+    [data-mjk-preset="minimal"]
+  ) {
+    text-autospace: no-autospace;
+  }
+
+  /*
+   * When a preset needs a punctuation behavior the browser cannot provide,
+   * switch off native punctuation spacing as a unit. This prevents a partial
+   * native implementation and the DOM fallback from adjusting the same glyph.
+   */
+  :where(.mjk-punctuation-fallback) {
+    text-spacing-trim: space-all;
+  }
+
+  :where(.mjk-autospace-fallback) {
+    text-autospace: no-autospace;
+  }
+
+  /*
+   * `precision: "full"` is a diagnostic mode that deliberately runs every
+   * fallback. Disable the equivalent native features so spacing is not applied
+   * twice in browsers that already implement CSS Text Level 4.
+   */
+  :where(.mjk-force-fallback) {
+    text-spacing-trim: space-all;
+    text-autospace: no-autospace;
+  }
+
+  :where(
+    .mjk-heading,
+    .mjk-editorial :is(h1, h2, h3, h4, h5, h6),
+    [data-mjk-preset="editorial"] :is(h1, h2, h3, h4, h5, h6)
+  ) {
     word-break: auto-phrase;
     text-wrap: balance;
   }
 
-  :where(.mjk-book p) {
+  :where(.mjk-book p, [data-mjk-preset="book"] p) {
     text-indent: 1em;
   }
 
-  :where(.mjk-hanging, .mjk-book) {
+  :where(.mjk-hanging, .mjk-book, [data-mjk-preset="book"]) {
     hanging-punctuation: first allow-end;
-  }
-
-  :where(.mjk-native) {
-    text-spacing-trim: normal;
-    text-autospace: normal;
   }
 
   /*
@@ -43,7 +100,7 @@
     user-select: none;
   }
 
-  :where(.mjk-fallback .mjk-wrapped-line-start) {
+  :where(.mjk-fallback .mjk-line-start) {
     margin-inline-start: var(--mjk-punctuation-adjustment);
   }
 

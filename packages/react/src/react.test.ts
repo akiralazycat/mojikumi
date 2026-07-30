@@ -13,7 +13,8 @@ describe("Mojikumi React component", () => {
       )
     );
 
-    expect(html).toContain('<section id="article" lang="ja" class="mjk mjk-book">');
+    expect(html).toContain('class="mjk"');
+    expect(html).toContain('data-mjk-preset="book"');
     expect(html).toContain("『「引用」』");
     expect(html).not.toContain("data-mjk-generated");
   });
