@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Dictionary, Locale } from "../content";
 import { pageHref, repositoryUrl } from "../lib/site";
-import { LangToggle } from "./lang-toggle";
-import { ThemeToggle } from "./theme-toggle";
+import { HeaderMenu } from "./header-menu";
 
 export function SiteHeader({
   dictionary,
@@ -30,7 +29,7 @@ export function SiteHeader({
         <span>Mojikumi</span>
       </Link>
       <div className="header-actions">
-        <nav aria-label={dictionary.nav.label}>
+        <nav className="header-nav" aria-label={dictionary.nav.label}>
           {navigation.map((item) => (
             <Link key={item.href} href={item.href}>
               {item.label}
@@ -38,10 +37,7 @@ export function SiteHeader({
           ))}
           <a href={repositoryUrl}>{dictionary.nav.github}</a>
         </nav>
-        <div className="header-toggles">
-          <LangToggle dictionary={dictionary} locale={locale} />
-          <ThemeToggle dictionary={dictionary} />
-        </div>
+        <HeaderMenu dictionary={dictionary} locale={locale} />
       </div>
     </header>
   );

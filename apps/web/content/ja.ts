@@ -18,7 +18,10 @@ export const ja: Dictionary = {
     docs: "Docs",
     playground: "Playground",
     benchmarks: "Benchmarks",
-    github: "GitHub"
+    github: "GitHub",
+    menu: "メニュー",
+    close: "閉じる",
+    settings: "表示設定"
   },
   theme: {
     label: "カラーテーマ",

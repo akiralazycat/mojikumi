@@ -170,6 +170,22 @@ export function PackageBoxIcon(props: IconProps) {
   );
 }
 
+export function MenuIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={1.6} {...props}>
+      <path d="M4 7.5h16M4 12h16M4 16.5h16" />
+    </Svg>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={1.6} {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Svg>
+  );
+}
+
 export function ArrowRightIcon(props: IconProps) {
   return (
     <Svg strokeWidth={1.5} {...props}>

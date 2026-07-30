@@ -44,6 +44,9 @@ export type Dictionary = {
     playground: string;
     benchmarks: string;
     github: string;
+    menu: string;
+    close: string;
+    settings: string;
   };
   theme: {
     label: string;

@@ -18,7 +18,10 @@ export const en: Dictionary = {
     docs: "Docs",
     playground: "Playground",
     benchmarks: "Benchmarks",
-    github: "GitHub"
+    github: "GitHub",
+    menu: "Menu",
+    close: "Close",
+    settings: "Display settings"
   },
   theme: {
     label: "Color theme",
