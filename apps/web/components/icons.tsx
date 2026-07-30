@@ -5,6 +5,13 @@ type IconProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
+/*
+ * Two stroke weights, and only two. Icons built from several strokes keep the
+ * 1.4 default; icons made of one or two lines take `sparseStroke`, because a
+ * lone hairline reads lighter than a dense one at the same weight.
+ */
+const sparseStroke = 1.6;
+
 function Svg({ size = 24, children, ...props }: IconProps) {
   return (
     <svg
@@ -80,8 +87,8 @@ export function PrincipleGlyph({
 /** The brand bracket, used for the integrated package. */
 function BracketIcon(props: IconProps) {
   return (
-    <Svg {...props}>
-      <path d="M6 17V8.5A2.5 2.5 0 0 1 8.5 6H18" strokeWidth={1.7} />
+    <Svg strokeWidth={sparseStroke} {...props}>
+      <path d="M6 17V8.5A2.5 2.5 0 0 1 8.5 6H18" />
     </Svg>
   );
 }
@@ -152,7 +159,7 @@ export function PackageGlyph({
 
 export function BranchIcon(props: IconProps) {
   return (
-    <Svg strokeWidth={1.5} {...props}>
+    <Svg {...props}>
       <circle cx="7" cy="5.5" r="2.2" />
       <circle cx="7" cy="18.5" r="2.2" />
       <circle cx="17" cy="9.5" r="2.2" />
@@ -163,7 +170,7 @@ export function BranchIcon(props: IconProps) {
 
 export function PackageBoxIcon(props: IconProps) {
   return (
-    <Svg strokeWidth={1.5} {...props}>
+    <Svg {...props}>
       <path d="M12 3.4 20 7.6v8.8L12 20.6 4 16.4V7.6z" />
       <path d="M4 7.6l8 4.2 8-4.2M12 11.8v8.8" opacity="0.55" />
     </Svg>
@@ -172,7 +179,7 @@ export function PackageBoxIcon(props: IconProps) {
 
 export function MenuIcon(props: IconProps) {
   return (
-    <Svg strokeWidth={1.6} {...props}>
+    <Svg strokeWidth={sparseStroke} {...props}>
       <path d="M4 7.5h16M4 12h16M4 16.5h16" />
     </Svg>
   );
@@ -180,7 +187,7 @@ export function MenuIcon(props: IconProps) {
 
 export function CloseIcon(props: IconProps) {
   return (
-    <Svg strokeWidth={1.6} {...props}>
+    <Svg strokeWidth={sparseStroke} {...props}>
       <path d="M6 6l12 12M18 6L6 18" />
     </Svg>
   );
@@ -188,8 +195,24 @@ export function CloseIcon(props: IconProps) {
 
 export function ArrowRightIcon(props: IconProps) {
   return (
-    <Svg strokeWidth={1.5} {...props}>
+    <Svg strokeWidth={sparseStroke} {...props}>
       <path d="M4.5 12h15M14 6.5l5.5 5.5L14 17.5" />
+    </Svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={sparseStroke} {...props}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Svg>
+  );
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <Svg strokeWidth={sparseStroke} {...props}>
+      <path d="M6.5 9.75 12 15.25l5.5-5.5" />
     </Svg>
   );
 }

@@ -68,6 +68,10 @@
     var(--font-shippori-mincho), "Yu Mincho", "Hiragino Mincho ProN", serif;
   --font-ui:
     var(--font-zen-maru-gothic), "Hiragino Sans", "Yu Gothic", sans-serif;
+  /* The gothic YakuHanJP was cut from: used only by the Playground comparison,
+     so its punctuation sits on the text it was designed against. */
+  --font-yakuhan-sans:
+    var(--font-noto-sans-jp), "Hiragino Sans", "Yu Gothic", sans-serif;
   --font-code: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --radius-card: 28px;
   --radius-control: 15px;
@@ -255,6 +259,36 @@ input[type="range"] {
 }
 
 /*
+ * Running text is set justified, the way a book would be. Japanese fills a
+ * measure evenly because almost every character is the same width and a line
+ * may break between any two of them, so the last line is left ragged on its own
+ * and needs no text-align-last.
+ *
+ * Only prose is listed here. Code keeps its own alignment because a stretched
+ * line would move the indentation, and labels, headings and controls are short
+ * enough that justifying them only opens gaps.
+ *
+ * The four Playground cards share one rule on purpose: they are only
+ * comparable while every one of them is set the same way.
+ */
+.hero-copy,
+.section-heading > p:not(.eyebrow),
+.closing-panel > p:not(.eyebrow),
+.principle-grid p,
+.compare-card > p,
+.docs-content p,
+.docs-content li,
+.legal-content p,
+.legal-content li,
+.benchmark-status p,
+.method-note p,
+.benchmark-grid dd,
+.sample-text p,
+.comparison-credit {
+  text-align: justify;
+}
+
+/*
  * Page gutters ramp with the viewport: ~14px each side on a phone, ~56px on a
  * wide screen, where the measure also stops growing.
  */
@@ -268,6 +302,23 @@ main {
 .site-shell {
   min-height: 100vh;
   padding-top: 14px;
+}
+
+/*
+ * Replayed on every client-side navigation, since PageTransition remounts this
+ * element when the path changes. The keyframe sets a `from` state only, so the
+ * reduced-motion rule that cuts every duration lands the page on its resting
+ * state instead of leaving it faded out.
+ */
+.page-transition {
+  animation: page-in 260ms var(--ease-out) both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 .site-header {
@@ -365,8 +416,10 @@ main {
   transform-origin: left;
 }
 
+/* Anchor the panel to the header bar rather than to the trigger, so the gap
+   below the bar does not shrink by however much the trigger is inset. */
 .header-menu {
-  position: relative;
+  position: static;
 }
 
 .header-menu-trigger {
@@ -433,7 +486,7 @@ main {
   box-shadow: var(--surface-shadow);
   display: grid;
   gap: 16px;
-  inset: calc(100% + 10px) 0 auto auto;
+  inset: calc(100% + 12px) 0 auto auto;
   max-height: calc(100svh - 96px);
   overflow-y: auto;
   padding: 16px;
@@ -949,6 +1002,66 @@ main {
   margin: -6px 0 0;
 }
 
+.compare-pair {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 60px;
+}
+
+.compare-card {
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--surface-shadow-soft);
+  display: grid;
+  gap: 22px;
+  padding: 30px clamp(26px, 3vw, 40px) 34px;
+}
+
+.compare-card-after {
+  background: var(--glass-strong);
+  border-color: var(--line-strong);
+}
+
+.compare-card header {
+  display: grid;
+  gap: 7px;
+}
+
+.compare-card header strong {
+  font-size: var(--text-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.compare-card-after header strong {
+  color: var(--primary);
+}
+
+.compare-card header small {
+  color: var(--muted);
+  font-size: var(--text-2xs);
+  line-height: 1.75;
+}
+
+.compare-card > p {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 2;
+  margin: 0;
+}
+
+/* The reference side: standard properties off, runtime pass already blocked
+   by data-no-mojikumi. */
+.compare-card-before > p {
+  color: var(--muted);
+  text-autospace: no-autospace;
+  text-spacing-trim: space-all;
+}
+
 .section-split {
   display: grid;
   gap: clamp(50px, 9vw, 150px);
@@ -1296,21 +1409,31 @@ main {
   margin-bottom: 20px;
 }
 
-.control-field textarea {
+.control-editor {
   background: var(--field);
   border: 1px solid var(--glass-border);
   border-radius: 13px;
   color: var(--ink);
-  padding: 10px 12px;
-}
-
-.control-field textarea {
   font-family: var(--font-display);
   line-height: 1.8;
+  /* Roughly the eight rows the textarea used to show, but free to grow. */
+  min-height: 15em;
+  overflow-y: auto;
+  padding: 10px 12px;
   resize: vertical;
 }
 
-.control-field textarea:focus,
+/* The editor sets its own paragraphs, so the preset's block rules can reach
+   them. Only the gap between paragraphs is ours. */
+.control-editor > p {
+  margin: 0;
+}
+
+.control-editor > p + p {
+  margin-top: 0.9em;
+}
+
+.control-editor:focus-visible,
 .control-field input:focus-visible,
 .select-trigger:focus-visible,
 .select-option:focus-visible,
@@ -1350,18 +1473,15 @@ main {
 }
 
 .select-chevron {
-  border-bottom: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  height: 7px;
-  margin: 0 3px 4px 14px;
-  transform: rotate(45deg);
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  margin-left: 12px;
   transition: transform 160ms var(--ease);
-  width: 7px;
 }
 
 .select-trigger[aria-expanded="true"] .select-chevron {
-  margin-bottom: -3px;
-  transform: rotate(225deg);
+  transform: rotate(180deg);
 }
 
 .select-options {
@@ -1400,9 +1520,11 @@ main {
 }
 
 .select-option-mark {
+  align-items: center;
   color: var(--primary);
-  font-size: var(--text-2xs);
-  width: 1em;
+  display: inline-flex;
+  justify-content: flex-end;
+  width: 14px;
 }
 
 .segmented-field {
@@ -1559,13 +1681,9 @@ main {
   width: 19px;
 }
 
-.check-mark > span {
-  border-bottom: 1.5px solid #fff8f5;
-  border-right: 1.5px solid #fff8f5;
-  height: 8px;
+.check-mark > svg {
+  color: #fff8f5;
   opacity: 0;
-  transform: rotate(45deg) translate(-1px, -1px);
-  width: 4px;
 }
 
 .debug-control input:checked + .check-mark {
@@ -1573,7 +1691,7 @@ main {
   border-color: var(--primary-solid);
 }
 
-.debug-control input:checked + .check-mark > span {
+.debug-control input:checked + .check-mark > svg {
   opacity: 1;
 }
 
@@ -1647,9 +1765,20 @@ main {
   content: none;
 }
 
+/*
+ * The numeral sits in its own column so it can centre on the title alone. When
+ * the title and the note shared a wrapper, centring landed the numeral on the
+ * midpoint of the pair, which read as misaligned against the title beside it.
+ */
 .sample-card header {
-  display: flex;
-  gap: 11px;
+  /* The header is stretched to the card's height, so pack the rows at the top
+     instead of letting them spread across it. */
+  align-content: start;
+  align-items: center;
+  column-gap: 11px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: 5px;
 }
 
 .sample-index {
@@ -1657,15 +1786,13 @@ main {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-style: italic;
-}
-
-.sample-card header div {
-  display: grid;
-  gap: 5px;
+  grid-row: 1;
+  line-height: 1;
 }
 
 .sample-card header strong {
   font-size: var(--text-xs);
+  grid-column: 2;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -1673,6 +1800,7 @@ main {
 .sample-card header small {
   color: var(--muted);
   font-size: var(--text-2xs);
+  grid-column: 2;
   line-height: 1.6;
 }
 
@@ -1741,6 +1869,16 @@ main {
 .benchmark-status div {
   display: grid;
   gap: 9px;
+}
+
+/* The grid gap already separates the link from the paragraph above it. */
+.benchmark-status-body {
+  align-content: start;
+  justify-items: start;
+}
+
+.benchmark-status-body .text-link {
+  margin-top: 10px;
 }
 
 .benchmark-status span {
@@ -1879,6 +2017,7 @@ main {
   }
 
   .principle-grid,
+  .compare-pair,
   .benchmark-grid {
     grid-template-columns: 1fr;
   }
@@ -1924,11 +2063,6 @@ main {
     display: none;
   }
 
-  /* Anchor the panel to the header bar rather than to the trigger. */
-  .header-menu {
-    position: static;
-  }
-
   .header-menu-trigger {
     height: 38px;
     width: 38px;
@@ -1943,7 +2077,7 @@ main {
   }
 
   .header-panel {
-    inset: calc(100% + 8px) 0 auto;
+    inset: calc(100% + 10px) 0 auto;
     width: auto;
   }
 
@@ -1964,7 +2098,8 @@ main {
     --display-1: clamp(38px, 11vw, 62px);
   }
 
-  .principle-grid {
+  .principle-grid,
+  .compare-pair {
     margin-top: 42px;
   }
 
@@ -2002,10 +2137,6 @@ main {
   .sample-card {
     gap: 20px;
     grid-template-columns: 1fr;
-  }
-
-  .sample-card header {
-    align-items: baseline;
   }
 
   .benchmark-status {
@@ -2068,6 +2199,7 @@ main {
   .site-header,
   .hero-specimen,
   .principle-grid article,
+  .compare-card,
   .package-list,
   .docs-index,
   .next-step,

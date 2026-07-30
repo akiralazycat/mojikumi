@@ -72,6 +72,42 @@ export function HomePage({
         </div>
       </section>
 
+      {/*
+       * The "after" side is simply the page's own typesetting, since the whole
+       * site is already wrapped in Mojikumi. Only the "before" side has to opt
+       * out: data-no-mojikumi keeps the runtime pass off it, and the CSS resets
+       * the inherited standard properties.
+       */}
+      <section className="section-block home-compare">
+        <div className="section-heading">
+          <p className="eyebrow">{home.compare.eyebrow}</p>
+          <h2>{home.compare.title}</h2>
+          <p>{home.compare.body}</p>
+        </div>
+        <div className="compare-pair">
+          <article className="compare-card compare-card-before">
+            <header>
+              <strong>{home.compare.beforeLabel}</strong>
+              <small>{home.compare.beforeNote}</small>
+            </header>
+            <p lang="ja" data-no-mojikumi>
+              {home.compare.sampleText}
+            </p>
+          </article>
+          <article className="compare-card compare-card-after">
+            <header>
+              <strong>{home.compare.afterLabel}</strong>
+              <small>{home.compare.afterNote}</small>
+            </header>
+            <p lang="ja">{home.compare.sampleText}</p>
+          </article>
+        </div>
+        <Link className="text-link" href={pageHref(locale, "playground")}>
+          {home.compare.link}
+          <ArrowRightIcon size={16} />
+        </Link>
+      </section>
+
       <section className="section-block section-split">
         <div className="section-heading">
           <p className="eyebrow">{home.surfaces.eyebrow}</p>

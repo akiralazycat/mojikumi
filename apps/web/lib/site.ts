@@ -17,6 +17,26 @@ export const pagePaths = {
 
 export type PageKey = keyof typeof pagePaths;
 
+export const pageKeys = Object.keys(pagePaths) as PageKey[];
+
+/** Relative weight for the sitemap: what a first-time visitor should find. */
+const pagePriority: Record<PageKey, number> = {
+  home: 1,
+  docs: 0.9,
+  playground: 0.9,
+  benchmarks: 0.5,
+  privacy: 0.3,
+  terms: 0.3
+};
+
+export function absoluteUrl(locale: Locale, page: PageKey): string {
+  return new URL(localePath(locale, pagePaths[page]), siteUrl).href;
+}
+
+export function sitemapPriority(page: PageKey): number {
+  return pagePriority[page];
+}
+
 /** Japanese lives at the root; English is nested under /en/. */
 export function localePath(locale: Locale, path: string): string {
   if (locale === "ja") return path;

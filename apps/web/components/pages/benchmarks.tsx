@@ -1,6 +1,15 @@
-import type { Dictionary } from "../../content";
+import Link from "next/link";
+import type { Dictionary, Locale } from "../../content";
+import { pageHref } from "../../lib/site";
+import { ArrowRightIcon } from "../icons";
 
-export function BenchmarksPage({ dictionary }: { dictionary: Dictionary }) {
+export function BenchmarksPage({
+  dictionary,
+  locale
+}: {
+  dictionary: Dictionary;
+  locale: Locale;
+}) {
   const { benchmarks } = dictionary;
 
   return (
@@ -16,7 +25,13 @@ export function BenchmarksPage({ dictionary }: { dictionary: Dictionary }) {
           <span>{benchmarks.status.label}</span>
           <strong>{benchmarks.status.title}</strong>
         </div>
-        <p>{benchmarks.status.body}</p>
+        <div className="benchmark-status-body">
+          <p>{benchmarks.status.body}</p>
+          <Link className="text-link" href={pageHref(locale, "playground")}>
+            {benchmarks.status.link}
+            <ArrowRightIcon size={16} />
+          </Link>
+        </div>
       </section>
 
       <section className="benchmark-grid">

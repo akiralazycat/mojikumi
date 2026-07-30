@@ -9,7 +9,7 @@ export const en: Dictionary = {
     defaultTitle: "Mojikumi — Japanese typography, quietly set right",
     titleTemplate: "%s — Mojikumi",
     description:
-      "A compatibility layer for Japanese typography on the web: standard CSS first, a small fallback only where browsers fall short.",
+      "The space around brackets and punctuation, the gap where Japanese meets Latin text. Mojikumi settles what browsers cannot yet, on top of standard CSS.",
     ogAlt: "Mojikumi — Japanese typography, quietly set right"
   },
   nav: {
@@ -40,11 +40,11 @@ export const en: Dictionary = {
   home: {
     title: "Mojikumi — Japanese typography, quietly set right",
     description:
-      "A compatibility layer for Japanese typography on the web: standard CSS first, a small fallback only where browsers fall short.",
+      "The space around brackets and punctuation, the gap where Japanese meets Latin text. Mojikumi settles what browsers cannot yet, on top of standard CSS.",
     eyebrow: "Japanese typography compatibility layer",
     headlineLead: "Japanese type,",
     headlineAccent: "quietly set right",
-    lead: "Mojikumi is not another typesetting engine. It builds on web standards and fills in what is still missing — the space around punctuation, the breathing room between Japanese and Latin text.",
+    lead: "The gaping space around brackets and punctuation, the cramped join where Japanese meets Latin text. Mojikumi settles what browsers cannot yet, building on standard CSS. Your readers will never notice the work, only that the page sits right.",
     primaryAction: "Compare in the Playground",
     secondaryAction: "Read the docs",
     specimenLabel: "TYPE SAMPLE / 01",
@@ -58,26 +58,26 @@ export const en: Dictionary = {
           index: "01",
           icon: "standards",
           title: "CSS first",
-          body: "text-spacing-trim, text-autospace and the rest of the maturing platform always take precedence."
+          body: "Where a browser supports text-spacing-trim and text-autospace, that implementation is what runs. No extra script executes."
         },
         {
           index: "02",
           icon: "fallback",
           title: "Small fallback",
-          body: "Only the work a browser cannot do yet is added. Your text, what readers copy and what screen readers announce stay untouched."
+          body: "Only the work a browser cannot do yet gets added. The text itself is never touched, so what readers copy and what screen readers announce stay exactly as written."
         },
         {
           index: "03",
           icon: "layers",
           title: "Framework ready",
-          body: "Plain DOM, React, Markdown and MDX all follow the same typesetting policy."
+          body: "Plain HTML, React, Markdown. One typesetting policy carries across all of them unchanged."
         }
       ]
     },
     surfaces: {
       eyebrow: "One policy, several surfaces",
       title: "Adopt only the layers you need",
-      body: "From a CSS-only setup to the DOM fallback, React and MDX. Nothing about your project structure has to change to get started.",
+      body: "Start with a single CSS import, then add the DOM layer, React or MDX support as you need them. At no point does your project structure have to be rearranged.",
       packages: [
         { name: "mojikumi", icon: "mojikumi", description: "The all-in-one API for everyday use" },
         { name: "@mojikumi/css", icon: "css", description: "Presets built around standard CSS" },
@@ -86,10 +86,22 @@ export const en: Dictionary = {
         { name: "@mojikumi/rehype", icon: "rehype", description: "Markdown / MDX integration" }
       ]
     },
+    compare: {
+      eyebrow: "Before / After",
+      title: "Half a character wide, and the page reads differently",
+      body: "The same sentence, set once without punctuation adjustment and once with Mojikumi. Watch the space collapse around the brackets and after the punctuation, and the line endings fall into place.",
+      sampleText:
+        "『組版』は、文字と文字のあいだ（アキ）を整える仕事です。Webでも、JLREQが示す原則は変わりません。",
+      beforeLabel: "Unadjusted",
+      beforeNote: "Brackets and punctuation keep the full-width space built into the glyph.",
+      afterLabel: "Mojikumi",
+      afterNote: "That space is halved, while a little breathing room opens between Japanese and Latin.",
+      link: "Try more in the Playground"
+    },
     closing: {
       eyebrow: "See the difference",
       title: "The same passage, four ways",
-      body: "Put no adjustment, YakuhanJP, standard CSS and Mojikumi side by side, then change the measure and the typeface as you read.",
+      body: "Put no adjustment, YakuHanJP, standard CSS and Mojikumi side by side, then change the measure, the size and the typeface as you read. Paste in your own copy if you like.",
       link: "Open the Playground"
     }
   },
@@ -98,7 +110,7 @@ export const en: Dictionary = {
     description: "How to adopt Mojikumi, and how the packages fit together",
     eyebrow: "Documentation",
     heading: "Start small, add only what you need",
-    lead: "Apply the standard CSS first, then add the DOM fallback only in the environments that need it. React and MDX follow the same rule: the text itself is never rewritten.",
+    lead: "Apply the standard CSS first, then add the DOM fallback only where it is still needed. React and MDX follow the same steps, and the rule never changes: the text itself is left alone.",
     indexLabel: "On this page",
     sections: [
       {
@@ -106,7 +118,7 @@ export const en: Dictionary = {
         index: "01",
         title: "Use the CSS on its own",
         navLabel: "CSS",
-        body: "The CSS preset alone is a perfectly good starting point. Browsers that understand the standard properties simply use them.",
+        body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Four presets ship with it, book, web, editorial and minimal, differing in how tightly they set.",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -118,7 +130,7 @@ export const en: Dictionary = {
         index: "02",
         title: "Add the DOM fallback",
         navLabel: "DOM",
-        body: "Runs of punctuation, line starts and line ends — the places standard CSS cannot settle yet are handled at runtime.",
+        body: "When browsers without the standard properties should see the same page, add the DOM layer. Runs of punctuation, a bracket landing at the start or end of a line: the positions CSS cannot settle are measured and corrected at runtime. Leave precision on auto and nothing runs where support already exists.",
         code: `import "mojikumi/css";
 import { mojikumi } from "mojikumi";
 
@@ -132,7 +144,7 @@ const instance = mojikumi(".article", {
         index: "03",
         title: "Use it with React",
         navLabel: "React",
-        body: "Server rendering emits ordinary HTML; any DOM adjustment happens after mount.",
+        body: "The server emits ordinary HTML, and any adjustment happens once it reaches the browser. There is a component to wrap with and a hook to attach to an element you already render, so nothing about your layout has to move.",
         code: `import { Mojikumi } from "@mojikumi/react";
 
 export function Article({ children }) {
@@ -148,7 +160,7 @@ export function Article({ children }) {
         index: "04",
         title: "Use it with Markdown / MDX",
         navLabel: "Markdown / MDX",
-        body: "",
+        body: "Registered as a rehype plugin, the preset applies to the body of every article. The Markdown source stays as written, so authors never have to think about typesetting. Code blocks and math are left out, so runs of symbols are never disturbed.",
         code: `import rehypeMojikumi from "@mojikumi/rehype";
 
 export default {
@@ -164,10 +176,10 @@ export default {
       title: "Design policy",
       navLabel: "Design policy",
       items: [
-        "Standard CSS always comes first",
-        "Never change the text, what gets copied, or what is read aloud",
-        "Keep every fallback removable as native implementations catch up",
-        "Never over-tighten with an unverified font"
+        "Standard CSS runs first, and where a browser supports it that is the whole story",
+        "The text is never rewritten, so what gets copied and what is read aloud stay as written",
+        "As native support grows, the amount of code that loads shrinks on its own",
+        "Where a font carries no punctuation metrics, nothing is tightened by guesswork"
       ]
     },
     nextStep: {
@@ -179,10 +191,10 @@ export default {
   playground: {
     title: "Playground",
     description:
-      "Compare Japanese typesetting with no adjustment, YakuhanJP, standard CSS and Mojikumi",
+      "Compare Japanese typesetting with no adjustment, YakuHanJP, standard CSS and Mojikumi",
     eyebrow: "Interactive comparison",
     heading: "Compare the same passage",
-    lead: "No adjustment, YakuhanJP, standard CSS and Mojikumi, shown side by side. Switching between Auto and the fallback demo shows which part is the browser's work and which part is the compatibility layer's.",
+    lead: "No adjustment, YakuHanJP, standard CSS and Mojikumi, all set from the same text. Change the size, the measure and the typeface to see exactly what moves and where. Whatever you type stays inside your browser.",
     regionLabel: "Mojikumi comparison tool",
     controls: {
       heading: "Settings",
@@ -206,13 +218,13 @@ export default {
       nativeOnly: "Native preset: standard CSS only",
       supplementing: "Filling in what is missing: ",
       native: "This browser is using standard CSS",
-      note: "Auto prefers the standard CSS a browser already supports. The fallback demo forces the result an unsupported browser would get.",
+      note: "Auto prefers whatever standard CSS the browser you are using already supports. Switch to Fallback and it forces the result an unsupported browser would show you instead.",
       missingSeparator: ", ",
       missing: {
         punctuation: "punctuation pairs",
         lineStart: "line start",
         lineEnd: "line end",
-        autospace: "Japanese–Latin spacing"
+        autospace: "Japanese and Latin spacing"
       }
     },
     samples: {
@@ -221,7 +233,7 @@ export default {
         note: "Reference: no punctuation adjustment"
       },
       yakuhan: {
-        title: "YakuhanJP",
+        title: "YakuHanJP",
         note: "The long-standing approach: swap in half-width punctuation glyphs"
       },
       native: {
@@ -236,27 +248,40 @@ export default {
       }
     },
     credit:
-      "The YakuhanJP comparison uses the punctuation subset from Yaku Han JP v4.1.1 (© Qrac, OFL-1.1 AND MIT), served from this site."
+      "The YakuHanJP comparison uses the punctuation subset from Yaku Han JP v4.1.1 (© Qrac, OFL-1.1 AND MIT), served from this site. The running text behind it is Noto Sans JP, the face that subset was cut from."
   },
   benchmarks: {
     title: "Benchmarks",
     description: "How Mojikumi measures performance, and what will be published",
     eyebrow: "Performance & compatibility",
     heading: "Measuring speed and the size of the fallback",
-    lead: "Mojikumi is designed to do less work as browser support grows. Alongside processing time, the added DOM and the cost of re-evaluation are tracked continuously.",
+    lead: "Mojikumi is built to do less work as browser support grows. Alongside processing time, the number of elements the fallback adds and the cost of setting the text again are tracked continuously.",
     status: {
       label: "Current status",
-      title: "Measurement pipeline in preparation",
-      body: "The measurement conditions are still being fixed. Until comparable data is available, no estimates and no single-device results will be published."
+      title: "The measurement setup is being prepared",
+      body: "The work right now is pinning down conditions that produce the same numbers every run. Results move with the device and the browser version, so nothing is published until those conditions can be written down. In the meantime, the speed and the look of it can be checked directly in the Playground.",
+      link: "Check it in the Playground"
     },
     metrics: {
       eyebrow: "Metrics",
       title: "What gets measured",
       items: [
-        { term: "First pass", description: "Time to analyze and adjust a body of text for the first time" },
-        { term: "Re-evaluation", description: "Time to update after a resize or a font load" },
-        { term: "Added DOM", description: "Number of elements the fallback introduces" },
-        { term: "Memory", description: "Heap usage across long texts and multiple articles" }
+        {
+          term: "First pass",
+          description: "Time to analyze a body of text and finish placing the spacing"
+        },
+        {
+          term: "Re-evaluation",
+          description: "Time to set the text again after a resize or once a font loads"
+        },
+        {
+          term: "Added DOM",
+          description: "How many elements the fallback introduces. The fewer, the more standard CSS already covers"
+        },
+        {
+          term: "Memory",
+          description: "Heap usage across long texts and several articles open at once"
+        }
       ]
     },
     matrix: {
@@ -266,65 +291,71 @@ export default {
         { term: "Chromium", description: "Latest / macOS and Linux" },
         { term: "Firefox", description: "Latest / macOS and Linux" },
         { term: "WebKit", description: "Latest / macOS" },
-        { term: "Content", description: "1k characters, 10k characters, multiple paragraphs" }
+        { term: "Content", description: "Three shapes: 1k characters, 10k characters, many paragraphs" }
       ]
     },
     method: {
       label: "Method",
       title: "Only results you can reproduce",
-      body: "The measurement code, the input text, the browser versions and the font conditions all live in the repository, and this page reflects the JSON produced under fixed conditions in CI. Device-dependent live measurements are kept separate from published results."
+      body: "The measurement code, the input text, the browser versions and the font conditions all live in the repository. Follow the same steps and you should land close to the same numbers. This page carries only what CI produced under fixed conditions; live measurements taken on the spot depend on the state of the machine, so they are kept separate."
     }
   },
   privacy: {
     title: "Privacy",
     description: "What this site handles, and what it deliberately does not",
     eyebrow: "Privacy",
-    heading: "Collecting nothing, and showing the code for it",
-    lead: "This page states only what can be verified from the implementation of mojikumi.jp. Where this text and the code disagree, the code is authoritative.",
+    heading: "Nothing here is collected",
+    lead: "There is not a single mechanism on this site that follows you. No analytics, no advertising, no forms, no accounts, and nothing you type into the Playground goes anywhere. What follows is the detail behind that.",
     updated: "Last updated: 30 July 2026",
     sections: [
       {
         title: "How this site is built",
         body: [
-          "mojikumi.jp is a set of static files produced by Next.js static export (output: \"export\"). There are no accounts, no contact forms and no comment threads — nothing that receives information from a visitor."
+          "mojikumi.jp is a set of static files produced by Next.js static export (output: \"export\"). No server-side code runs when you open a page, and there is no endpoint that takes in what you do.",
+          "There are no accounts, no contact forms, no comment threads and no newsletter sign-ups. Nothing on the site is built to receive information from a visitor."
         ]
       },
       {
         title: "What is stored in your browser",
         body: [
-          "One localStorage entry, \"mojikumi.theme\", remembers the color theme you picked. Its value is either \"light\" or \"dark\", it is used for nothing else, and it is never transmitted. Clear it in your browser settings and the site follows your OS color scheme again.",
-          "No cookies are used."
+          "One localStorage entry, \"mojikumi.theme\", remembers the color theme you picked. Its value is either \"light\" or \"dark\", it decides nothing but the colors on your next visit, and it is never transmitted anywhere.",
+          "You can clear that entry from your browser settings at any time. Once it is gone, the site follows your operating system's color scheme again.",
+          "No cookies are used. With no login and no session to keep, there is nothing for one to do."
         ]
       },
       {
         title: "Analytics and advertising",
         body: [
-          "There are no analytics, advertising, A/B testing or session-recording tags of any kind. The only scripts that run on load are the one that restores your theme and Mojikumi's own typesetting code."
+          "There are no analytics, advertising, A/B testing, heatmap or session-recording tags of any kind. No count is kept of who visited which page.",
+          "The only scripts that run on load are the one that restores your chosen theme and Mojikumi's own typesetting code. Both finish inside your browser."
         ]
       },
       {
         title: "Outbound requests",
         body: [
-          "The body typefaces (Shippori Mincho and Zen Maru Gothic) are pulled in at build time by next/font and served from this site, so no request goes to a font provider while you read. The YakuHanJP and YakuHanMP subsets used in the Playground comparison are self-hosted the same way.",
-          "As a result, ordinary browsing sends nothing to a third-party domain. Links that take you elsewhere — GitHub, npm — are governed by those services' own policies."
+          "The body typefaces (Shippori Mincho and Zen Maru Gothic) are pulled in at build time by next/font and served from this site, so no request reaches a font provider while you read. The YakuHanJP, YakuHanMP and Noto Sans JP faces used in the Playground comparison are self-hosted the same way.",
+          "As a result, ordinary browsing sends nothing to a third-party domain. Links that take you elsewhere, such as GitHub and npm, are governed by those services' own policies."
         ]
       },
       {
         title: "Text you type into the Playground",
         body: [
-          "Anything you enter in the Playground is processed entirely inside your browser. It is never sent to a server, never stored and never logged, and it is gone when you leave the page."
+          "Anything you enter in the Playground is processed entirely inside your browser. It is never sent to a server, never stored and never logged, and nothing of it remains once you leave the page.",
+          "That said, the usual care applies on a shared machine or while screen sharing. Please do not paste confidential material into it."
         ]
       },
       {
         title: "Hosting provider logs",
         body: [
-          "The site is served from Vercel. The provider may retain the access logs a web server ordinarily records, such as IP addresses and user agents. Those logs are not available to us."
+          "The site is served from Vercel. The provider may retain the access logs a web server ordinarily records, such as IP addresses and user agents.",
+          "These are an unavoidable part of serving the site, and they are not something we can read or make use of."
         ]
       },
       {
-        title: "Changes",
+        title: "Changes, and how to check any of this",
         body: [
-          "Any change to this policy is reflected on this page and in the history of the public repository."
+          "Any change to this policy is recorded both on this page and in the history of the public repository.",
+          "Everything stated here can be checked against the site's source. If this text and the code ever disagree, treat the code as the truth, and please open an issue so the wording can be corrected."
         ]
       }
     ]
@@ -333,40 +364,41 @@ export default {
     title: "Terms",
     description: "License, disclaimer and third-party notices for Mojikumi",
     eyebrow: "Terms",
-    heading: "The MIT License, and the limits of what is verified",
-    lead: "The conditions that apply to the Mojikumi software and to this site.",
+    heading: "The license, and what to know before you use it",
+    lead: "The conditions that apply to the Mojikumi software and to this site. In short: use it freely, within the terms of the MIT License.",
     updated: "Last updated: 30 July 2026",
     sections: [
       {
         title: "License",
         body: [
-          "The Mojikumi packages and the source of this site are published under the MIT License (Copyright (c) 2026 akira). The full text is in the LICENSE file of the repository.",
+          "The Mojikumi packages and the source of this site are published under the MIT License (Copyright (c) 2026 akira). Commercial use, modification and redistribution are all permitted. The full text is in the LICENSE file of the repository.",
           "The prose and diagrams on this site may be quoted or reproduced as long as the source is credited."
         ]
       },
       {
         title: "No warranty",
         body: [
-          "As stated in the MIT License, the software is provided \"as is\", without warranty of any kind, including merchantability, fitness for a particular purpose and non-infringement. The author is not liable for any damages arising from its use."
+          "As stated in the MIT License, the software is provided \"as is\", without warranty of any kind, including merchantability, fitness for a particular purpose and non-infringement. The author is not liable for any damages arising from its use.",
+          "Before relying on it somewhere that matters, please confirm how it renders in the environment you actually ship to."
         ]
       },
       {
-        title: "Compatibility and measurements",
+        title: "What changes the result",
         body: [
-          "Typesetting results depend on what a browser implements and on the punctuation metrics a font carries, such as halt and chws. As COMPATIBILITY.md and FONT-MATRIX.md in the repository state, combinations that have not been verified are marked as unverified rather than asserted.",
-          "The Benchmarks page will only carry figures obtained under conditions that can be reproduced. Its contents may be updated without notice."
+          "With identical settings, the typesetting still shifts with what a browser implements and with the punctuation metrics a font carries, such as halt and chws. Mojikumi tightens only where the combination has been confirmed, and leaves fonts it cannot judge alone.",
+          "Which combinations count as confirmed is recorded in COMPATIBILITY.md and FONT-MATRIX.md in the repository. Figures on the Benchmarks page are limited to those whose procedure can be published. Both may be updated without notice."
         ]
       },
       {
         title: "About the Playground",
         body: [
-          "The Playground is a tool for inspecting typesetting differences. You are responsible for what you type into it, so please do not enter confidential material."
+          "The Playground is a tool for inspecting typesetting differences. What you type stays inside your browser, but you remain responsible for what you enter, so please do not use confidential material."
         ]
       },
       {
         title: "Third-party software and typefaces",
         list: [
-          "Shippori Mincho, Zen Maru Gothic — SIL Open Font License 1.1",
+          "Shippori Mincho, Zen Maru Gothic, Noto Sans JP — SIL Open Font License 1.1",
           "Yaku Han JP v4.1.1 (YakuHanJP / YakuHanMP) © Qrac — OFL-1.1 AND MIT",
           "Next.js, React — MIT License"
         ],
@@ -377,7 +409,7 @@ export default {
       {
         title: "Contact",
         body: [
-          "Please use the Issues page of the GitHub repository for bug reports and questions about these terms."
+          "Bug reports, questions about these terms and examples of typesetting that looks wrong are all welcome in the Issues page of the GitHub repository. A reproducible sentence and your browser details are a great help."
         ]
       }
     ]
