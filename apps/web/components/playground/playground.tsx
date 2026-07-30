@@ -10,6 +10,7 @@ import {
 } from "react";
 import { detectNativeSupport } from "@mojikumi/dom";
 import { Mojikumi, useMojikumi } from "@mojikumi/react";
+import type { Dictionary } from "../../content";
 
 type PresetName = "web" | "book" | "editorial" | "minimal" | "native";
 type Precision = "auto" | "full";
@@ -30,16 +31,6 @@ const presetOptions: ControlOption<PresetName>[] = [
   { value: "editorial", label: "Editorial" },
   { value: "minimal", label: "Minimal" },
   { value: "native", label: "Native" }
-];
-
-const fontOptions: ControlOption<"serif" | "sans-serif">[] = [
-  { value: "serif", label: "明朝" },
-  { value: "sans-serif", label: "ゴシック" }
-];
-
-const precisionOptions: ControlOption<Precision>[] = [
-  { value: "auto", label: "Auto" },
-  { value: "full", label: "Fallback" }
 ];
 
 const sample =
@@ -237,7 +228,8 @@ function RangeControl({
   );
 }
 
-export function Playground() {
+export function Playground({ dictionary }: { dictionary: Dictionary }) {
+  const { controls, status, samples } = dictionary.playground;
   const [text, setText] = useState(sample);
   const [preset, setPreset] = useState<PresetName>("web");
   const [font, setFont] = useState<"serif" | "sans-serif">("serif");
@@ -251,6 +243,16 @@ export function Playground() {
     precision: "native",
     observe: false
   });
+
+  const fontOptions: ControlOption<"serif" | "sans-serif">[] = [
+    { value: "serif", label: controls.fontSerif },
+    { value: "sans-serif", label: controls.fontSans }
+  ];
+
+  const precisionOptions: ControlOption<Precision>[] = [
+    { value: "auto", label: controls.precisionAuto },
+    { value: "full", label: controls.precisionFull }
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -276,22 +278,31 @@ export function Playground() {
     };
   }, [font]);
 
+  const baseFont =
+    font === "serif" ? "var(--font-display)" : "var(--font-ui)";
+  const yakuhanFont =
+    font === "serif"
+      ? "YakuHanMP, var(--font-display)"
+      : "YakuHanJP, var(--font-ui)";
+
   const sampleStyle = {
     "--sample-width": `${width}em`,
-    "--sample-font":
-      font === "serif"
-        ? "var(--font-display)"
-        : "var(--font-ui)",
+    "--sample-font": baseFont,
     fontSize: `${size}px`
+  } as CSSProperties;
+
+  const yakuhanStyle = {
+    ...sampleStyle,
+    "--sample-font": yakuhanFont
   } as CSSProperties;
 
   const requirements = presetRequirements[preset];
   const missing = support
     ? [
-        !support.trim && "約物間",
-        requirements.start && !support.trimStart && "行頭",
-        requirements.both && !support.trimBoth && "行末",
-        requirements.autospace && !support.autospace && "和欧文間"
+        !support.trim && status.missing.punctuation,
+        requirements.start && !support.trimStart && status.missing.lineStart,
+        requirements.both && !support.trimBoth && status.missing.lineEnd,
+        requirements.autospace && !support.autospace && status.missing.autospace
       ].filter(Boolean)
     : [];
   const allowsFallback = preset !== "native";
@@ -309,17 +320,20 @@ export function Playground() {
   }
 
   return (
-    <section className="playground-workspace" aria-label="Mojikumi比較ツール">
+    <section
+      className="playground-workspace"
+      aria-label={dictionary.playground.regionLabel}
+    >
       <aside className="playground-controls">
         <div className="controls-heading">
-          <strong>組版設定</strong>
+          <strong>{controls.heading}</strong>
           <button type="button" onClick={reset}>
-            初期値に戻す
+            {controls.reset}
           </button>
         </div>
 
         <label className="control-field control-field-text">
-          <span>テキスト</span>
+          <span>{controls.text}</span>
           <textarea
             ref={inputRef}
             rows={8}
@@ -330,14 +344,14 @@ export function Playground() {
 
         <div className="control-grid">
           <SelectControl
-            label="プリセット"
+            label={controls.preset}
             value={preset}
             options={presetOptions}
             onChange={setPreset}
           />
 
           <SegmentedControl
-            label="フォント"
+            label={controls.font}
             name="sample-font"
             value={font}
             options={fontOptions}
@@ -345,7 +359,7 @@ export function Playground() {
           />
 
           <SegmentedControl
-            label="補完モード"
+            label={controls.precision}
             name="sample-precision"
             value={precision}
             options={precisionOptions}
@@ -353,18 +367,18 @@ export function Playground() {
           />
 
           <RangeControl
-            label="文字サイズ"
+            label={controls.size}
             value={size}
-            unit="px"
+            unit={controls.sizeUnit}
             min={14}
             max={32}
             onChange={setSize}
           />
 
           <RangeControl
-            label="行幅"
+            label={controls.width}
             value={width}
-            unit="em"
+            unit={controls.widthUnit}
             min={14}
             max={42}
             onChange={setWidth}
@@ -380,7 +394,7 @@ export function Playground() {
           <span className="check-mark" aria-hidden="true">
             <span />
           </span>
-          <span>約物クラスと調整位置を表示</span>
+          <span>{controls.debug}</span>
         </label>
       </aside>
 
@@ -396,40 +410,50 @@ export function Playground() {
             <strong>
               {precision === "full"
                 ? allowsFallback
-                  ? "DOMフォールバックを再現中"
-                  : "Nativeプリセット：標準CSSのみ"
+                  ? status.fallbackDemo
+                  : status.nativeOnly
                 : missing.length > 0
                   ? allowsFallback
-                    ? `不足機能を補完中：${missing.join("・")}`
-                    : "Nativeプリセット：標準CSSのみ"
-                  : "このブラウザでは標準CSSを使用中"}
+                    ? `${status.supplementing}${missing.join(status.missingSeparator)}`
+                    : status.nativeOnly
+                  : status.native}
             </strong>
           </div>
-          <p>
-            Autoは対応済みの標準CSSを優先します。Fallback demoでは、
-            未対応ブラウザ向けの補完結果を強制表示します。
-          </p>
+          <p>{status.note}</p>
         </div>
 
         <article className="sample-card sample-card-before">
           <header>
             <span className="sample-index">01</span>
             <div>
-              <strong>Unadjusted</strong>
-              <small>比較用：約物調整なし</small>
+              <strong>{samples.before.title}</strong>
+              <small>{samples.before.note}</small>
             </div>
           </header>
-          <div className="sample-text" style={sampleStyle}>
+          <div className="sample-text" lang="ja" style={sampleStyle}>
+            <Paragraphs text={text} />
+          </div>
+        </article>
+
+        <article className="sample-card sample-card-yakuhan">
+          <header>
+            <span className="sample-index">02</span>
+            <div>
+              <strong>{samples.yakuhan.title}</strong>
+              <small>{samples.yakuhan.note}</small>
+            </div>
+          </header>
+          <div className="sample-text" lang="ja" style={yakuhanStyle}>
             <Paragraphs text={text} />
           </div>
         </article>
 
         <article className="sample-card">
           <header>
-            <span className="sample-index">02</span>
+            <span className="sample-index">03</span>
             <div>
-              <strong>Native CSS</strong>
-              <small>現在のブラウザの標準実装</small>
+              <strong>{samples.native.title}</strong>
+              <small>{samples.native.note}</small>
             </div>
           </header>
           <div
@@ -443,15 +467,15 @@ export function Playground() {
 
         <article className="sample-card sample-card-active">
           <header>
-            <span className="sample-index">03</span>
+            <span className="sample-index">04</span>
             <div>
-              <strong>Mojikumi</strong>
+              <strong>{samples.mojikumi.title}</strong>
               <small>
                 {usingFallback
-                  ? "標準CSS ＋ DOM補完"
+                  ? samples.mojikumi.noteFallback
                   : preset === "native"
-                    ? "標準CSSのみ"
-                    : "標準CSSをそのまま使用"}
+                    ? samples.mojikumi.noteNativeOnly
+                    : samples.mojikumi.noteNative}
               </small>
             </div>
           </header>
@@ -459,6 +483,7 @@ export function Playground() {
             key={font}
             as="div"
             className="sample-text"
+            lang="ja"
             preset={preset}
             precision={precision}
             observe={false}
@@ -468,6 +493,8 @@ export function Playground() {
             <Paragraphs text={text} />
           </Mojikumi>
         </article>
+
+        <p className="comparison-credit">{dictionary.playground.credit}</p>
       </section>
     </section>
   );
