@@ -665,6 +665,7 @@ main {
 
 .home-hero {
   align-items: center;
+  container-type: inline-size;
   display: grid;
   gap: 0 clamp(40px, 5.4vw, 86px);
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
@@ -686,6 +687,19 @@ main {
   line-height: 1.12;
   margin: 0;
   word-break: auto-phrase;
+}
+
+/*
+ * The hero headline is set as two deliberate lines. Cap its size against the
+ * container so neither line can spill onto a row of its own on a narrow
+ * screen — at 375px the first line had about 1.5% to spare once the
+ * Japanese/Latin space is inserted — and forbid a break inside a phrase.
+ * Latin headlines are longer and wrap between words, so the cap only ever
+ * binds on the Japanese one.
+ */
+.home-hero h1 {
+  font-size: min(var(--display-1), 13.2cqw);
+  word-break: keep-all;
 }
 
 :lang(en) .section-heading h2,
