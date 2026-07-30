@@ -22,7 +22,7 @@ v0.1の土台として次を実装しています。
 - `refresh()` / `destroy()`を備えた冪等な公開API
 - SSR時に本文を変更しないReactコンポーネントとHook
 - `lang`とプリセットクラスを付与するrehypeプラグイン
-- Before / Native CSS / Mojikumiを比較できるPlayground
+- Before / YakuhanJP / Native CSS / Mojikumiを比較できるPlayground
 
 フォントプロファイルと縦書きの精密対応は次のフェーズです。
 

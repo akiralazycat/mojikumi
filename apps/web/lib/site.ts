@@ -1,0 +1,74 @@
+import type { Metadata } from "next";
+import { getDictionary, type Locale } from "../content";
+
+export const siteUrl = "https://mojikumi.jp";
+export const repositoryUrl = "https://github.com/akiralazycat/mojikumi";
+export const releasesUrl = `${repositoryUrl}/releases`;
+export const npmUrl = "https://www.npmjs.com/package/mojikumi";
+
+export const pagePaths = {
+  home: "/",
+  docs: "/docs/",
+  playground: "/playground/",
+  benchmarks: "/benchmarks/",
+  privacy: "/privacy/",
+  terms: "/terms/"
+} as const;
+
+export type PageKey = keyof typeof pagePaths;
+
+/** Japanese lives at the root; English is nested under /en/. */
+export function localePath(locale: Locale, path: string): string {
+  if (locale === "ja") return path;
+  return path === "/" ? "/en/" : `/en${path}`;
+}
+
+export function pageHref(locale: Locale, page: PageKey): string {
+  return localePath(locale, pagePaths[page]);
+}
+
+/** Maps a pathname back to the equivalent page in the other locale. */
+export function switchLocalePath(locale: Locale, pathname: string): string {
+  const withoutPrefix = pathname.startsWith("/en/")
+    ? pathname.slice(3)
+    : pathname === "/en"
+      ? "/"
+      : pathname;
+  return localePath(locale, withoutPrefix);
+}
+
+export function buildMetadata(locale: Locale, page: PageKey): Metadata {
+  const dictionary = getDictionary(locale);
+  const path = pagePaths[page];
+  const content =
+    page === "home"
+      ? dictionary.home
+      : page === "docs"
+        ? dictionary.docs
+        : page === "playground"
+          ? dictionary.playground
+          : page === "benchmarks"
+            ? dictionary.benchmarks
+            : page === "privacy"
+              ? dictionary.privacy
+              : dictionary.terms;
+
+  return {
+    title: page === "home" ? dictionary.meta.defaultTitle : content.title,
+    description: content.description,
+    alternates: {
+      canonical: localePath(locale, path),
+      languages: {
+        ja: localePath("ja", path),
+        en: localePath("en", path),
+        "x-default": localePath("ja", path)
+      }
+    },
+    openGraph: {
+      locale: dictionary.ogLocale,
+      url: localePath(locale, path),
+      title: page === "home" ? dictionary.meta.defaultTitle : content.title,
+      description: content.description
+    }
+  };
+}
