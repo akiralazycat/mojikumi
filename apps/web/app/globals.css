@@ -286,7 +286,7 @@ main {
 }
 
 .header-actions {
-  gap: 12px;
+  gap: clamp(18px, 2.4vw, 32px);
 }
 
 .header-nav {
@@ -1841,10 +1841,12 @@ main {
   }
 
   .header-panel-nav {
-    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ink), transparent 96%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
     display: grid;
     gap: 2px;
-    padding-bottom: 14px;
+    padding: 6px;
   }
 
   .home-hero {
