@@ -1,0 +1,30 @@
+{
+  "name": "@mojikumi/rehype",
+  "version": "0.1.0",
+  "description": "Rehype plugin for Mojikumi-ready Japanese HTML",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akiralazycat/mojikumi.git",
+    "directory": "packages/rehype"
+  },
+  "homepage": "https://github.com/akiralazycat/mojikumi#readme",
+  "bugs": "https://github.com/akiralazycat/mojikumi/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@mojikumi/presets": "0.1.0"
+  }
+}

@@ -1,0 +1,79 @@
+@layer mojikumi {
+  :where(.mjk) {
+    --mjk-autospace: 0.125em;
+    --mjk-punctuation-adjustment: -0.5em;
+    font-kerning: normal;
+    line-break: strict;
+    overflow-wrap: break-word;
+    text-spacing-trim: normal;
+    text-autospace: normal;
+    word-break: normal;
+  }
+
+  :where(.mjk-heading, .mjk-editorial :is(h1, h2, h3, h4, h5, h6)) {
+    word-break: auto-phrase;
+    text-wrap: balance;
+  }
+
+  :where(.mjk-book p) {
+    text-indent: 1em;
+  }
+
+  :where(.mjk-hanging, .mjk-book) {
+    hanging-punctuation: first allow-end;
+  }
+
+  :where(.mjk-native) {
+    text-spacing-trim: normal;
+    text-autospace: normal;
+  }
+
+  /*
+   * JavaScript fallback hooks. Empty pseudo-elements preserve copied text and
+   * screen-reader output while providing an inline spacing adjustment.
+   */
+  :where(.mjk-fallback .mjk-pair-after) {
+    margin-inline-end: var(--mjk-punctuation-adjustment);
+  }
+
+  :where(.mjk-fallback .mjk-autospace-before)::before {
+    content: "";
+    display: inline-block;
+    inline-size: var(--mjk-autospace);
+    user-select: none;
+  }
+
+  :where(.mjk-fallback .mjk-wrapped-line-start) {
+    margin-inline-start: var(--mjk-punctuation-adjustment);
+  }
+
+  :where(.mjk-fallback .mjk-line-end) {
+    margin-inline-end: var(--mjk-punctuation-adjustment);
+  }
+
+  :where([data-mjk-debug] .mjk-token) {
+    background: color-mix(in srgb, #00a7a0 12%, transparent);
+    outline: 1px solid color-mix(in srgb, #00a7a0 42%, transparent);
+  }
+
+  :where([data-mjk-debug] .mjk-token)::after {
+    color: #006a66;
+    content: attr(data-mjk-class);
+    font: 9px/1 ui-monospace, monospace;
+    inset-block-start: -1.1em;
+    inset-inline-start: 0;
+    position: absolute;
+    text-indent: 0;
+    white-space: nowrap;
+  }
+
+  :where([data-mjk-debug] .mjk-token) {
+    position: relative;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(.mjk) {
+      scroll-behavior: auto;
+    }
+  }
+}
