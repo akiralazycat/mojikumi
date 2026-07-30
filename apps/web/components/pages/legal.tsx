@@ -17,9 +17,6 @@ export function LegalPageView({ page }: { page: LegalPage }) {
               {String(index + 1).padStart(2, "0")}
             </p>
             <h2>{section.title}</h2>
-            {section.body?.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
             {section.list ? (
               <ul>
                 {section.list.map((item) => (
@@ -27,6 +24,9 @@ export function LegalPageView({ page }: { page: LegalPage }) {
                 ))}
               </ul>
             ) : null}
+            {section.body?.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </section>
         ))}
       </article>
