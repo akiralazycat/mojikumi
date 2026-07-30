@@ -1,0 +1,59 @@
+name: Publish packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_umbrella:
+        description: Publish the unscoped mojikumi package too
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Publish @mojikumi/core
+        run: npm publish --workspace @mojikumi/core
+
+      - name: Publish @mojikumi/css
+        run: npm publish --workspace @mojikumi/css
+
+      - name: Publish @mojikumi/presets
+        run: npm publish --workspace @mojikumi/presets
+
+      - name: Publish @mojikumi/dom
+        run: npm publish --workspace @mojikumi/dom
+
+      - name: Publish @mojikumi/react
+        run: npm publish --workspace @mojikumi/react
+
+      - name: Publish @mojikumi/rehype
+        run: npm publish --workspace @mojikumi/rehype
+
+      - name: Publish mojikumi
+        if: ${{ inputs.publish_umbrella }}
+        run: npm publish --workspace mojikumi

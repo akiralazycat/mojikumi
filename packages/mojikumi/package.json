@@ -1,0 +1,34 @@
+{
+  "name": "mojikumi",
+  "version": "0.1.0",
+  "description": "Japanese typography compatibility layer for the Web",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": "./dist/mojikumi.css"
+  },
+  "files": ["dist"],
+  "sideEffects": ["*.css"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akiralazycat/mojikumi.git",
+    "directory": "packages/mojikumi"
+  },
+  "homepage": "https://github.com/akiralazycat/mojikumi#readme",
+  "bugs": "https://github.com/akiralazycat/mojikumi/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@mojikumi/core": "0.1.0",
+    "@mojikumi/css": "0.1.0",
+    "@mojikumi/dom": "0.1.0",
+    "@mojikumi/presets": "0.1.0"
+  }
+}

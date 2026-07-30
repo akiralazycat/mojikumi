@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mojikumiの日本語字組みをBefore・標準CSS・フォールバックで比較するPlayground"
+    />
+    <title>Mojikumi Playground — Webの日本語を、もう少し端正に。</title>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="hero__mark" aria-hidden="true">「</div>
+        <div>
+          <p class="eyebrow">Japanese typography compatibility layer</p>
+          <h1>Mojikumi <span>Playground</span></h1>
+          <p class="lede">
+            Webの日本語を、意味もコピー結果も変えずに、出版物に近い字組みへ。
+          </p>
+        </div>
+        <a
+          class="repo-link"
+          href="https://github.com/akiralazycat/mojikumi"
+          aria-label="GitHubでMojikumiを見る"
+        >
+          v0.1 preview
+        </a>
+      </header>
+
+      <section class="workspace" aria-label="Mojikumi比較ツール">
+        <aside class="controls">
+          <div class="controls__heading">
+            <span>組版設定</span>
+            <button id="reset" type="button">初期値に戻す</button>
+          </div>
+
+          <label class="field field--text">
+            <span>テキスト</span>
+            <textarea id="input" rows="9"></textarea>
+          </label>
+
+          <div class="control-grid">
+            <label class="field">
+              <span>プリセット</span>
+              <select id="preset">
+                <option value="web">Web</option>
+                <option value="book" selected>Book</option>
+                <option value="editorial">Editorial</option>
+                <option value="minimal">Minimal</option>
+                <option value="native">Native</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>フォント</span>
+              <select id="font">
+                <option value="serif">明朝</option>
+                <option value="sans-serif">ゴシック</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>文字サイズ <output id="size-output">18px</output></span>
+              <input id="size" type="range" min="14" max="32" value="18" />
+            </label>
+
+            <label class="field">
+              <span>行幅 <output id="width-output">28em</output></span>
+              <input id="width" type="range" min="14" max="42" value="28" />
+            </label>
+          </div>
+
+          <label class="check">
+            <input id="debug" type="checkbox" />
+            <span>約物クラスと調整位置を表示</span>
+          </label>
+        </aside>
+
+        <section class="comparison" aria-live="polite">
+          <article class="sample-card sample-card--before">
+            <header>
+              <span class="index">01</span>
+              <div><strong>Before</strong><small>ブラウザ既定</small></div>
+            </header>
+            <div id="before" class="sample"></div>
+          </article>
+
+          <article class="sample-card sample-card--native">
+            <header>
+              <span class="index">02</span>
+              <div><strong>Native CSS</strong><small>標準CSSのみ</small></div>
+            </header>
+            <div id="native" class="sample mjk mjk-native" lang="ja"></div>
+          </article>
+
+          <article class="sample-card sample-card--active">
+            <header>
+              <span class="index">03</span>
+              <div><strong>Mojikumi</strong><small>標準CSS ＋ 必要な補完</small></div>
+            </header>
+            <div id="enhanced" class="sample" lang="ja"></div>
+          </article>
+        </section>
+      </section>
+
+      <footer>
+        <p>標準を置き換えず、標準へ橋をかける。</p>
+        <span>JLREQ × CSS Text</span>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

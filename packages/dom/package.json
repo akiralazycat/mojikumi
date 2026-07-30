@@ -1,0 +1,31 @@
+{
+  "name": "@mojikumi/dom",
+  "version": "0.1.0",
+  "description": "Progressive DOM fallback for Japanese web typography",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akiralazycat/mojikumi.git",
+    "directory": "packages/dom"
+  },
+  "homepage": "https://github.com/akiralazycat/mojikumi#readme",
+  "bugs": "https://github.com/akiralazycat/mojikumi/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@mojikumi/core": "0.1.0",
+    "@mojikumi/presets": "0.1.0"
+  }
+}
