@@ -64,7 +64,8 @@ export function HeaderMenu({
         onClick={() => setOpen((current) => !current)}
       >
         <span className="header-menu-mark" aria-hidden="true">
-          あA
+          <span>あ</span>
+          <span>A</span>
         </span>
         <span className="header-menu-icon" aria-hidden="true">
           {open ? <CloseIcon size={18} /> : <MenuIcon size={18} />}

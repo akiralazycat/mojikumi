@@ -1,7 +1,28 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import type { Dictionary, Locale } from "../../content";
+import { tokenize } from "../../lib/highlight";
 import { pageHref } from "../../lib/site";
 import { ArrowRightIcon } from "../icons";
+
+/* Highlighting happens here, while the page is prerendered. */
+function Code({ source }: { source: string }) {
+  return (
+    <pre>
+      <code>
+        {tokenize(source).map((token, index) =>
+          token.type === "plain" ? (
+            <Fragment key={index}>{token.value}</Fragment>
+          ) : (
+            <span key={index} className={`tok-${token.type}`}>
+              {token.value}
+            </span>
+          )
+        )}
+      </code>
+    </pre>
+  );
+}
 
 export function DocsPage({
   dictionary,
@@ -37,9 +58,7 @@ export function DocsPage({
               <p className="section-number">{section.index}</p>
               <h2>{section.title}</h2>
               {section.body ? <p>{section.body}</p> : null}
-              <pre>
-                <code>{section.code}</code>
-              </pre>
+              <Code source={section.code} />
             </section>
           ))}
 

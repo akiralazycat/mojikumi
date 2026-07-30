@@ -50,6 +50,13 @@
   --field: rgba(255, 252, 248, 0.54);
   --code-bg: #24191c;
   --code-ink: #f4e9e6;
+  --code-keyword: #e6a2ad;
+  --code-string: #d7b183;
+  --code-tag: #f0cdb8;
+  --code-attr: #bda9a8;
+  --code-number: #dcae9a;
+  --code-punct: #93807f;
+  --code-comment: #7a6668;
   --surface-shadow:
     0 20px 70px rgba(90, 43, 52, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.76);
@@ -66,12 +73,6 @@
   --radius-control: 15px;
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --text-3xs: 10px;
-  --text-2xs: 11px;
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-md: 14px;
-  --text-lg: 15px;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-ui);
@@ -141,6 +142,39 @@
       0 14px 44px rgba(0, 0, 0, 0.25),
       inset 0 1px 0 rgba(255, 255, 255, 0.045);
   }
+}
+
+/*
+ * Type scale.
+ * --text-*    UI steps (Zen Maru Gothic): labels, body copy, controls.
+ * --display-* headline steps (Shippori Mincho); they scale with the viewport
+ *             and are re-declared per breakpoint and per :lang below.
+ */
+:root {
+  --text-3xs: 10px;
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 15px;
+  --text-xl: 17px;
+  --text-2xl: 18px;
+  --text-3xl: 22px;
+  --text-4xl: 25px;
+  --text-lead: clamp(15px, 1.4vw, 18px);
+  --display-1: clamp(54px, 7.3vw, 112px);
+  --display-2: clamp(42px, 6vw, 82px);
+  --display-3: clamp(32px, 4.3vw, 62px);
+  --display-4: clamp(28px, 3vw, 42px);
+  --display-5: clamp(25px, 2.5vw, 34px);
+  --display-6: clamp(23px, 2.4vw, 31px);
+  --display-mark: clamp(50px, 5vw, 74px);
+  --display-quote: clamp(16px, 1.5vw, 20px);
+}
+
+:lang(en) {
+  --display-1: clamp(44px, 5.6vw, 88px);
+  --display-2: clamp(40px, 5.2vw, 74px);
 }
 
 * {
@@ -254,7 +288,7 @@ main {
   align-items: center;
   display: flex;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   gap: 11px;
   letter-spacing: 0.01em;
@@ -271,7 +305,7 @@ main {
   color: #fff8f5;
   display: inline-flex;
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: var(--text-4xl);
   height: 42px;
   justify-content: center;
   line-height: 1;
@@ -356,11 +390,39 @@ main {
 }
 
 .header-menu-mark {
+  display: block;
   font-family: var(--font-display);
-  font-size: 15px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  height: 22px;
   line-height: 1;
+  position: relative;
+  width: 22px;
+}
+
+.header-menu-mark span {
+  position: absolute;
+}
+
+.header-menu-mark span:first-child {
+  font-size: var(--text-lg);
+  inset: -2px auto auto -1px;
+}
+
+.header-menu-mark span:last-child {
+  font-size: var(--text-xs);
+  inset: auto -1px -1px auto;
+  opacity: 0.75;
+}
+
+.header-menu-mark::after {
+  background: currentColor;
+  content: "";
+  height: 1px;
+  inset: 50% auto auto 50%;
+  opacity: 0.3;
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  width: 15px;
 }
 
 .header-menu-icon {
@@ -397,19 +459,25 @@ main {
 
 .header-panel-nav a {
   align-items: center;
-  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink), transparent 97%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-control);
   color: var(--ink);
   display: flex;
   font-size: var(--text-md);
-  min-height: 42px;
-  padding: 0 10px;
+  min-height: 46px;
+  padding: 0 14px;
   text-decoration: none;
-  transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+  transition:
+    background 220ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    color 220ms var(--ease-out);
 }
 
 .header-panel-nav a:hover,
 .header-panel-nav a:focus-visible {
   background: var(--primary-soft);
+  border-color: color-mix(in srgb, var(--primary), transparent 76%);
   color: var(--primary);
 }
 
@@ -492,12 +560,12 @@ main {
 }
 
 .footer-brand .brand {
-  font-size: 17px;
+  font-size: var(--text-xl);
 }
 
 .footer-brand .brand-mark {
   border-radius: 13px;
-  font-size: 22px;
+  font-size: var(--text-3xl);
   height: 36px;
   width: 36px;
 }
@@ -616,17 +684,11 @@ main {
 .home-hero h1,
 .page-intro h1 {
   font-family: var(--font-display);
-  font-size: clamp(54px, 7.3vw, 112px);
+  font-size: var(--display-1);
   font-weight: 500;
   letter-spacing: -0.055em;
   line-height: 1.12;
   margin: 0;
-}
-
-:lang(en) .home-hero h1,
-:lang(en) .page-intro h1 {
-  font-size: clamp(44px, 5.6vw, 88px);
-  letter-spacing: -0.03em;
 }
 
 :lang(en) .section-heading h2,
@@ -645,7 +707,7 @@ main {
 .hero-copy {
   color: var(--muted);
   font-family: var(--font-ui);
-  font-size: clamp(15px, 1.4vw, 18px);
+  font-size: var(--text-lead);
   line-height: 2.05;
   margin: 34px 0 0;
   max-width: 640px;
@@ -750,7 +812,7 @@ main {
 .hero-specimen-mark {
   color: var(--primary);
   font-family: var(--font-display);
-  font-size: clamp(50px, 5vw, 74px);
+  font-size: var(--display-mark);
   line-height: 0.9;
 }
 
@@ -763,7 +825,7 @@ main {
 
 .hero-specimen p {
   font-family: var(--font-display);
-  font-size: clamp(16px, 1.5vw, 20px);
+  font-size: var(--display-quote);
   line-height: 2.05;
   margin: 22px 0 0;
   text-indent: 0;
@@ -783,7 +845,7 @@ main {
 .next-step h2,
 .method-note h2 {
   font-family: var(--font-display);
-  font-size: clamp(32px, 4.3vw, 62px);
+  font-size: var(--display-3);
   font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1.35;
@@ -862,7 +924,7 @@ main {
 
 .principle-grid h3 {
   font-family: var(--font-display);
-  font-size: clamp(25px, 2.5vw, 34px);
+  font-size: var(--display-5);
   font-weight: 500;
   margin: 0;
 }
@@ -1005,7 +1067,7 @@ main {
 }
 
 .page-intro h1 {
-  font-size: clamp(42px, 6vw, 82px);
+  font-size: var(--display-2);
   max-width: 1080px;
 }
 
@@ -1073,7 +1135,7 @@ main {
 .docs-content h2,
 .benchmark-grid h2 {
   font-family: var(--font-display);
-  font-size: clamp(28px, 3vw, 42px);
+  font-size: var(--display-4);
   font-weight: 500;
   letter-spacing: -0.025em;
   margin: 12px 0 22px;
@@ -1099,6 +1161,36 @@ main {
   margin: 28px 0 0;
   overflow-x: auto;
   padding: 25px;
+  tab-size: 2;
+}
+
+.docs-content pre .tok-keyword {
+  color: var(--code-keyword);
+}
+
+.docs-content pre .tok-string {
+  color: var(--code-string);
+}
+
+.docs-content pre .tok-tag {
+  color: var(--code-tag);
+}
+
+.docs-content pre .tok-attr {
+  color: var(--code-attr);
+}
+
+.docs-content pre .tok-number {
+  color: var(--code-number);
+}
+
+.docs-content pre .tok-punctuation {
+  color: var(--code-punct);
+}
+
+.docs-content pre .tok-comment {
+  color: var(--code-comment);
+  font-style: italic;
 }
 
 .next-step {
@@ -1153,7 +1245,7 @@ main {
 
 .controls-heading strong {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--text-lg);
   font-weight: 500;
 }
 
@@ -1288,7 +1380,7 @@ main {
 
 .select-option-mark {
   color: var(--primary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   width: 1em;
 }
 
@@ -1542,7 +1634,7 @@ main {
 .sample-index {
   color: var(--muted-soft);
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--text-lg);
   font-style: italic;
 }
 
@@ -1640,7 +1732,7 @@ main {
 
 .benchmark-status strong {
   font-family: var(--font-display);
-  font-size: 23px;
+  font-size: var(--text-3xl);
   font-weight: 500;
   line-height: 1.4;
 }
@@ -1728,7 +1820,7 @@ main {
 
 .legal-content h2 {
   font-family: var(--font-display);
-  font-size: clamp(23px, 2.4vw, 31px);
+  font-size: var(--display-6);
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 10px 0 18px;
@@ -1802,13 +1894,13 @@ main {
   }
 
   .brand {
-    font-size: 17px;
+    font-size: var(--text-xl);
     gap: 10px;
   }
 
   .brand-mark {
     border-radius: 14px;
-    font-size: 23px;
+    font-size: var(--text-3xl);
     height: 38px;
     width: 38px;
   }
@@ -1841,24 +1933,20 @@ main {
   }
 
   .header-panel-nav {
-    background: color-mix(in srgb, var(--ink), transparent 96%);
-    border: 1px solid var(--line);
-    border-radius: 16px;
     display: grid;
-    gap: 2px;
-    padding: 6px;
+    gap: 8px;
   }
 
   .home-hero {
     padding-block: 70px 84px;
   }
 
-  .home-hero h1 {
-    font-size: clamp(40px, 12.4vw, 68px);
+  :root {
+    --display-1: clamp(40px, 12.4vw, 68px);
   }
 
-  :lang(en) .home-hero h1 {
-    font-size: clamp(38px, 11vw, 62px);
+  :lang(en) {
+    --display-1: clamp(38px, 11vw, 62px);
   }
 
   .principle-grid {
@@ -1941,12 +2029,9 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .hero-specimen-mark {
-    font-size: 54px;
-  }
-
-  .page-intro h1 {
-    font-size: clamp(38px, 12vw, 54px);
+  :root {
+    --display-2: clamp(38px, 12vw, 54px);
+    --display-mark: 54px;
   }
 
   .benchmark-grid dl div {
