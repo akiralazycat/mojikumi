@@ -1,26 +1,35 @@
 import { Fragment } from "react";
 import Link from "next/link";
-import type { Dictionary, Locale } from "../../content";
+import type { Dictionary, DocsSection, Locale } from "../../content";
 import { tokenize } from "../../lib/highlight";
 import { pageHref } from "../../lib/site";
+import { CodeBlock } from "../code-block";
 import { ArrowRightIcon } from "../icons";
 
 /* Highlighting happens here, while the page is prerendered. */
-function Code({ source }: { source: string }) {
+function Code({
+  section,
+  labels
+}: {
+  section: DocsSection;
+  labels: Dictionary["docs"]["codeCopy"];
+}) {
   return (
-    <pre>
-      <code>
-        {tokenize(source).map((token, index) =>
-          token.type === "plain" ? (
-            <Fragment key={index}>{token.value}</Fragment>
-          ) : (
-            <span key={index} className={`tok-${token.type}`}>
-              {token.value}
-            </span>
-          )
-        )}
-      </code>
-    </pre>
+    <CodeBlock
+      language={section.language}
+      source={section.code}
+      labels={{ ...labels, action: labels.action.replace("{title}", section.title) }}
+    >
+      {tokenize(section.code).map((token, index) =>
+        token.type === "plain" ? (
+          <Fragment key={index}>{token.value}</Fragment>
+        ) : (
+          <span key={index} className={`tok-${token.type}`}>
+            {token.value}
+          </span>
+        )
+      )}
+    </CodeBlock>
   );
 }
 
@@ -58,7 +67,7 @@ export function DocsPage({
               <p className="section-number">{section.index}</p>
               <h2>{section.title}</h2>
               {section.body ? <p>{section.body}</p> : null}
-              <Code source={section.code} />
+              <Code section={section} labels={docs.codeCopy} />
             </section>
           ))}
 

@@ -240,6 +240,16 @@ a {
   color: inherit;
 }
 
+/* Read out, never drawn: used for status messages that have a visual form. */
+.visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 button,
 select,
 textarea,
@@ -305,19 +315,51 @@ main {
 }
 
 /*
- * Replayed on every client-side navigation, since PageTransition remounts this
- * element when the path changes. The keyframe sets a `from` state only, so the
- * reduced-motion rule that cuts every duration lands the page on its resting
- * state instead of leaving it faded out.
+ * Driven by PageTransition, which holds the incoming page at the `enter` state
+ * until the navigation work has drained. The resting state carries the
+ * transition, so the reduced-motion rule that cuts every duration lands the
+ * page on it at once rather than leaving it faded out.
  */
 .page-transition {
-  animation: page-in 260ms var(--ease-out) both;
+  transition:
+    opacity 460ms var(--ease-out),
+    transform 620ms var(--ease);
 }
 
-@keyframes page-in {
+.page-transition[data-page-state="enter"] {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: none;
+}
+
+/*
+ * Sections settle in as they come up the viewport, on a scroll timeline rather
+ * than a clock: an element that is already on screen when the page loads sits
+ * past the end of its range and so is simply at rest, which is what keeps the
+ * first paint of a server-rendered page complete and readable. Browsers
+ * without scroll-driven animations get the resting state and nothing else.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-block,
+    .closing-panel,
+    .docs-content section,
+    .next-step,
+    .benchmark-status,
+    .benchmark-grid article,
+    .method-note,
+    .legal-content section + section {
+      animation: settle-in linear both;
+      animation-range: entry 0% entry 22%;
+      animation-timeline: view();
+    }
+  }
+}
+
+@keyframes settle-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translate3d(0, 22px, 0);
   }
 }
 
@@ -666,15 +708,8 @@ main {
   width: fit-content;
 }
 
-.footer-links a svg {
-  color: var(--muted-soft);
-  flex: none;
-  transition: color 220ms var(--ease-out);
-}
-
 .footer-links a:hover,
-.footer-links a:focus-visible,
-.footer-links a:hover svg {
+.footer-links a:focus-visible {
   color: var(--primary);
 }
 
@@ -957,35 +992,19 @@ main {
   }
 }
 
-.principle-head {
-  align-items: center;
-  display: flex;
-  gap: 13px;
-}
-
-.principle-icon {
-  align-items: center;
-  background: var(--primary-soft);
-  border: 1px solid color-mix(in srgb, var(--primary), transparent 82%);
-  border-radius: 14px;
-  color: var(--primary);
-  display: inline-flex;
-  flex: none;
-  height: 44px;
-  justify-content: center;
-  width: 44px;
-}
-
-.principle-index,
-.section-number {
-  color: var(--primary);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-
-.principle-index {
+/*
+ * One index mark for the whole site: the Principles cards, the Docs sections
+ * and the Playground's four samples all count in the same italic mincho
+ * numerals, always zero-padded.
+ */
+.index-mark,
+.section-number,
+.sample-index {
   color: var(--muted-soft);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  line-height: 1;
 }
 
 .principle-grid h3 {
@@ -1079,23 +1098,12 @@ main {
 }
 
 .package-list > div {
-  align-items: center;
+  align-items: baseline;
   border-bottom: 1px solid var(--line);
   display: grid;
   gap: 18px;
-  grid-template-columns: auto minmax(150px, 0.72fr) 1fr;
-  padding: 19px 24px;
-}
-
-.package-icon {
-  align-items: center;
-  border: 1px solid var(--glass-border);
-  border-radius: 11px;
-  color: var(--primary);
-  display: inline-flex;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
+  grid-template-columns: minmax(150px, 0.62fr) 1fr;
+  padding: 19px 26px;
 }
 
 .package-list > div:last-child {
@@ -1282,19 +1290,107 @@ main {
   line-height: 2;
 }
 
-.docs-content pre {
+/*
+ * The card is the wrapper, not the `pre`: the bar above the snippet has to sit
+ * inside the same rounded, clipped box, and the `pre` itself has to keep its
+ * own horizontal scroll for long lines.
+ */
+.code-block {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--code-bg), #fff 3%), var(--code-bg));
   border: 1px solid color-mix(in srgb, var(--primary), transparent 72%);
   border-radius: 22px;
   box-shadow: 0 18px 52px rgba(20, 9, 13, 0.2);
   color: var(--code-ink);
+  margin: 28px 0 0;
+  overflow: hidden;
+}
+
+.code-block-bar {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.028);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 9px 11px 9px 22px;
+}
+
+.code-language {
+  color: var(--code-attr);
+  font-family: var(--font-code);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.code-copy {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 10px;
+  color: color-mix(in srgb, var(--code-ink), transparent 28%);
+  display: inline-flex;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  gap: 6px;
+  letter-spacing: 0.06em;
+  padding: 6px 11px;
+  transition:
+    background 240ms var(--ease-out),
+    border-color 240ms var(--ease-out),
+    color 240ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .code-copy:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--code-ink);
+  }
+}
+
+.code-copy[data-copied] {
+  border-color: color-mix(in srgb, var(--code-string), transparent 60%);
+  color: var(--code-string);
+}
+
+.code-copy svg {
+  flex: none;
+}
+
+/*
+ * "コピー" and "コピーしました" are nowhere near the same width, so both labels
+ * occupy one grid cell: the button is sized by the longer of the two and the
+ * confirmation crossfades in place instead of shoving the button wider.
+ */
+.code-copy-label {
+  display: grid;
+  place-items: center start;
+}
+
+.code-copy-label > span {
+  grid-area: 1 / 1;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.code-copy-label > span:last-child,
+.code-copy[data-copied] .code-copy-label > span:first-child {
+  opacity: 0;
+}
+
+.code-copy[data-copied] .code-copy-label > span:last-child {
+  opacity: 1;
+}
+
+.docs-content pre {
   font-family: var(--font-code);
   font-size: var(--text-sm);
   line-height: 1.9;
-  margin: 28px 0 0;
+  margin: 0;
   overflow-x: auto;
-  padding: 25px;
+  padding: 24px 22px;
   tab-size: 2;
 }
 
@@ -1782,12 +1878,7 @@ main {
 }
 
 .sample-index {
-  color: var(--muted-soft);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-style: italic;
   grid-row: 1;
-  line-height: 1;
 }
 
 .sample-card header strong {
@@ -1896,8 +1987,13 @@ main {
   line-height: 1.4;
 }
 
+/*
+ * Excluding the eyebrow matters: it is a `p` too, and a blanket `margin: 0`
+ * here used to cancel the 16px it sets for itself, closing the gap under
+ * "Method" that every other section on the site keeps.
+ */
 .benchmark-status p,
-.method-note p {
+.method-note p:not(.eyebrow) {
   color: var(--muted);
   line-height: 1.95;
   margin: 0;
@@ -2103,18 +2199,9 @@ main {
     margin-top: 42px;
   }
 
-  .principle-grid h3 {
-    margin-top: 36px;
-  }
-
   .package-list > div {
-    column-gap: 14px;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     row-gap: 6px;
-  }
-
-  .package-icon {
-    grid-row: span 2;
   }
 
   .closing-panel {

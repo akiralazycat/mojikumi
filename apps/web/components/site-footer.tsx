@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Dictionary, Locale } from "../content";
 import { npmUrl, pageHref, releasesUrl, repositoryUrl } from "../lib/site";
-import { BranchIcon, PackageBoxIcon } from "./icons";
 
 export function SiteFooter({
   dictionary,
@@ -36,14 +35,8 @@ export function SiteFooter({
 
           <nav aria-label={footer.project}>
             <p className="footer-heading">{footer.project}</p>
-            <a href={repositoryUrl}>
-              <BranchIcon size={14} />
-              {nav.github}
-            </a>
-            <a href={npmUrl}>
-              <PackageBoxIcon size={14} />
-              {footer.npm}
-            </a>
+            <a href={repositoryUrl}>{nav.github}</a>
+            <a href={npmUrl}>{footer.npm}</a>
             <a href={releasesUrl}>{footer.releases}</a>
           </nav>
 

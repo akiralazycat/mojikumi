@@ -15,7 +15,5 @@ export type {
   LegalPage,
   LegalSection,
   Locale,
-  PackageIcon,
-  PrincipleIcon,
   TermDefinition
 } from "./types";
