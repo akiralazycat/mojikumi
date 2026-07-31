@@ -118,9 +118,9 @@ export const ja: Dictionary = {
     choose: {
       eyebrow: "Choose",
       title: "コードはどこに貼れますか",
-      body: "貼り付け先によって、開く画面と確認の仕方が変わります。近いほうを選んでください。読み込むコードはどちらも同じです。",
+      body: "貼り付け先によって、開く画面と確認の仕方が変わります。使っているサービスを選んでください。一覧になければ、いちばん近いものを選べば同じことができます。",
       pending:
-        "WordPressやShopifyなど、サービスごとの手順は実機で確認できた順に増やします。それまでも、下のどちらかの方法で同じことができます。"
+        "各サービスの手順は、標準的なテーマの構成をもとに書いています。テーマを変更している場合は、本文を囲むクラス名が異なることがあります。「範囲を変える」の手順で自分のサイトの名前を確かめてください。WixやSTUDIOのように、カスタムコードから本文へ届くかどうかを確認できていないサービスは、まだ載せていません。"
     },
     steps: {
       requirements: "必要なもの",
@@ -163,12 +163,157 @@ export const ja: Dictionary = {
         ]
       },
       {
-        id: "custom-code",
+        id: "wordpress",
         index: "02",
-        navLabel: "カスタムコード欄がある",
-        title: "管理画面にカスタムコード欄があるサービス",
+        navLabel: "WordPress",
+        title: "WordPress",
         summary:
-          "HTMLのファイルは触れないが、管理画面からコードを差し込める場合です。Webflow、Shopify、Ghost、Squarespaceなどが当てはまります。",
+          "テーマのファイルを編集せず、ヘッダーへコードを追加する方法です。テーマを更新しても設定が残ります。",
+        time: "5分",
+        access: "プラグインを追加できる管理者権限",
+        open: "スニペット系のプラグイン（WPCodeやCode Snippetsなど）を追加し、ヘッダーへ出力するコードとして登録します。子テーマを使っているなら、header.phpのwp_headの直前へ直接書いても同じです。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".entry-content, .wp-block-post-content"
+  data-style="article"
+></script>`,
+        verify: "投稿ページを開いて確認します。管理バーが出ていても構いません。管理バーとブロックエディターの中では動かないようにしてあります。",
+        scope: "本文を囲むクラス名はテーマによって違います。上のコードは、従来のテーマとブロックテーマでよく使われる2つを指定しています。変化がない場合は、投稿ページで本文を検証し、実際のクラス名に置き換えてください。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-content"
+  data-style="book"
+></script>`,
+        revert: "登録したスニペットを無効化するか削除すれば元に戻ります。投稿の内容は書き換えていないため、記事のデータには何も残りません。",
+        trouble: [
+          "ブロックエディターの編集画面には適用されません。仕上がりは公開後のページで確認してください。",
+          "キャッシュ系のプラグインを使っている場合、貼った直後は反映されないことがあります。キャッシュを削除してから見てください。"
+        ]
+      },
+      {
+        id: "shopify",
+        index: "03",
+        navLabel: "Shopify",
+        title: "Shopify",
+        summary:
+          "テーマのコードを編集し、全ページ共通のヘッダーへ追加します。ブログ記事にも商品説明にも効きます。",
+        time: "5分",
+        access: "テーマを編集できる管理者権限",
+        open: "管理画面のオンラインストアからテーマを開き、「コードを編集」を選びます。layoutフォルダーのtheme.liquidを開き、headタグの終わりの直前へ貼り付けて保存します。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-template__content, .rte"
+  data-style="article"
+></script>`,
+        verify: "公開中のブログ記事を開いて確認します。テーマのプレビューでも確認できます。",
+        scope: "上のコードはDawnなど標準的なテーマのクラス名です。記事だけに絞りたい場合や、逆に商品説明にも広げたい場合は、対象のページで本文を検証してクラス名を確かめてください。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-template__content"
+  data-style="article"
+></script>`,
+        revert: "theme.liquidから該当の行を削除して保存します。編集の前にテーマを複製しておくと、いつでも戻せます。",
+        trouble: [
+          "テーマを更新すると編集内容が失われることがあります。更新後に同じ手順をやり直してください。",
+          "チェックアウト画面には適用されません。Shopifyがそこではテーマのコードを読み込まないためです。"
+        ]
+      },
+      {
+        id: "webflow",
+        index: "04",
+        navLabel: "Webflow",
+        title: "Webflow",
+        summary:
+          "プロジェクト設定のカスタムコードへ追加します。リッチテキスト要素の中の日本語に効きます。",
+        time: "5分",
+        access: "プロジェクトを公開できる権限（有料のSite planが必要）",
+        open: "Project settingsのCustom codeを開き、Head codeの欄へ貼り付けて保存します。反映にはサイトの再公開が必要です。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".w-richtext"
+  data-style="article"
+></script>`,
+        verify: "公開したサイトで確認します。エディター内のプレビューではカスタムコードが実行されません。",
+        scope: "リッチテキスト要素にはw-richtextというクラスが付きます。自分で付けたクラスに絞りたい場合は、そのクラス名を指定してください。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-body"
+  data-style="article"
+></script>`,
+        revert: "Head codeから該当の行を削除し、もう一度公開します。",
+        trouble: [
+          "Site planに加入していないプロジェクトでは、カスタムコードが公開サイトへ出力されません。",
+          "保存しただけでは反映されません。公開を実行してください。"
+        ]
+      },
+      {
+        id: "squarespace",
+        index: "05",
+        navLabel: "Squarespace",
+        title: "Squarespace",
+        summary:
+          "サイト全体のCode Injectionへ追加します。コードを差し込める欄は上位プランの機能です。",
+        time: "5分",
+        access: "サイト設定を変更できる権限（Business以上のプラン）",
+        open: "設定のCode Injectionを開き、Headerの欄へ貼り付けて保存します。ページ単位のCode Injectionではなく、サイト全体の設定を使います。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".sqs-html-content"
+  data-style="article"
+></script>`,
+        verify: "公開されているページで確認します。編集モードでは編集用の要素が重なるため、通常の表示で見てください。",
+        scope: "テキストブロックの中身はsqs-html-contentというクラスに入ります。ブログ記事だけに絞りたい場合は、記事ページで本文を検証してクラス名を確かめてください。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".blog-item-content"
+  data-style="article"
+></script>`,
+        revert: "Code Injectionの欄から削除して保存すれば元に戻ります。",
+        trouble: [
+          "下位のプランではコードを差し込む欄が使えません。",
+          "編集モードのプレビューには適用されないことがあります。"
+        ]
+      },
+      {
+        id: "ghost",
+        index: "06",
+        navLabel: "Ghost",
+        title: "Ghost",
+        summary:
+          "サイト全体のCode injectionへ追加します。テーマを編集する必要はありません。",
+        time: "5分",
+        access: "サイト設定を変更できる管理者権限",
+        open: "管理画面のSettingsからCode injectionを開き、Site headerの欄へ貼り付けて保存します。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".gh-content, .post-content"
+  data-style="article"
+></script>`,
+        verify: "公開されている記事を開いて確認します。エディターの中には適用されません。",
+        scope: "多くのテーマはgh-contentというクラスで本文を囲みます。独自のテーマを使っている場合は、記事ページで本文を検証してクラス名を確かめてください。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-content"
+  data-style="book"
+></script>`,
+        revert: "Code injectionの欄から削除して保存します。",
+        trouble: [
+          "テーマによって本文のクラス名が異なります。変化がない場合はdata-targetを確かめてください。",
+          "メールで配信される記事には適用されません。ブラウザで表示されるページだけが対象です。"
+        ]
+      },
+      {
+        id: "custom-code",
+        index: "07",
+        navLabel: "一覧にないサービス",
+        title: "一覧にないサービス",
+        summary:
+          "上に挙げていないサービスでも、管理画面からコードを差し込めるなら同じ方法が使えます。",
         time: "5分",
         access: "サイト全体の設定を変更できる管理者権限",
         open: "管理画面で、コードを差し込む欄を探します。「カスタムコード」「Code Injection」「ヘッダーに追加するコード」などの名前で、サイト全体の設定にあります。ページ単位の設定ではなく、全ページ共通の欄を選びます。",
@@ -193,7 +338,7 @@ export const ja: Dictionary = {
     ],
     trouble: {
       id: "trouble",
-      index: "03",
+      index: "08",
       title: "うまくいかないとき",
       navLabel: "うまくいかないとき",
       body: "どの環境でも起きる症状です。原因の詳しい説明はDocsにあります。",

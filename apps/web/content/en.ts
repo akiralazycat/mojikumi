@@ -118,9 +118,9 @@ export const en: Dictionary = {
     choose: {
       eyebrow: "Choose",
       title: "Where can you paste code?",
-      body: "Where the code goes changes which screen you open and how you check the result. Pick whichever is closer to your setup. The code itself is the same either way.",
+      body: "Where the code goes changes which screen you open and how you check the result. Pick the service you use. If it is not here, the closest one will get you there.",
       pending:
-        "Instructions for WordPress, Shopify and the rest are added as each one is checked on a real site. Until then, either route below does the same job."
+        "Each set of instructions is written against the standard theme for that service. On a theme you have changed, the class around your body text may differ; the step on changing scope shows how to find the name your own site uses. Services where we cannot yet confirm that injected code reaches the body text, such as Wix and STUDIO, are not listed."
     },
     steps: {
       requirements: "What you need",
@@ -163,12 +163,157 @@ export const en: Dictionary = {
         ]
       },
       {
-        id: "custom-code",
+        id: "wordpress",
         index: "02",
-        navLabel: "You have a code field",
-        title: "Services with a custom code field",
+        navLabel: "WordPress",
+        title: "WordPress",
         summary:
-          "For anywhere you cannot open the HTML but can paste code in the settings: Webflow, Shopify, Ghost, Squarespace and others.",
+          "Adds the tag to your header without editing theme files, so it survives a theme update.",
+        time: "5 minutes",
+        access: "Admin rights to install a plugin",
+        open: "Install a snippet plugin such as WPCode or Code Snippets and register the tag as header output. If you run a child theme, writing it into header.php just before wp_head does the same thing.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".entry-content, .wp-block-post-content"
+  data-style="article"
+></script>`,
+        verify: "Open a post to check. The admin bar can stay where it is: neither it nor the block editor is ever touched.",
+        scope: "Which class wraps your body text depends on the theme. The code above names the two you meet most often, one from classic themes and one from block themes. If nothing changes, inspect a post and use the class you actually find.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-content"
+  data-style="book"
+></script>`,
+        revert: "Disable or delete the snippet. Your posts were never rewritten, so nothing is left in the stored content.",
+        trouble: [
+          "The block editor does not show the result. Check a published post instead.",
+          "With a caching plugin, the change may not appear straight away. Clear the cache and look again."
+        ]
+      },
+      {
+        id: "shopify",
+        index: "03",
+        navLabel: "Shopify",
+        title: "Shopify",
+        summary:
+          "Edits the theme so the tag loads on every page. It applies to blog posts and product descriptions alike.",
+        time: "5 minutes",
+        access: "Admin rights to edit the theme",
+        open: "From Online Store, open your theme and choose Edit code. Open theme.liquid in the layout folder, paste the tag just before the closing head tag, and save.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-template__content, .rte"
+  data-style="article"
+></script>`,
+        verify: "Open a published blog post. The theme preview works for this too.",
+        scope: "The code above uses the class names from standard themes such as Dawn. To narrow it to articles, or widen it to product descriptions, inspect the page you care about and use the class you find.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-template__content"
+  data-style="article"
+></script>`,
+        revert: "Delete the line from theme.liquid and save. Duplicating the theme before you edit gives you a way back at any point.",
+        trouble: [
+          "A theme update can drop your edit. Repeat the steps afterwards.",
+          "Checkout is not affected, because Shopify does not load theme code there."
+        ]
+      },
+      {
+        id: "webflow",
+        index: "04",
+        navLabel: "Webflow",
+        title: "Webflow",
+        summary:
+          "Goes in the project's custom code, and applies to the Japanese inside rich text elements.",
+        time: "5 minutes",
+        access: "Rights to publish the project, on a paid site plan",
+        open: "Open Custom code in Project settings, paste the tag into Head code, and save. It only reaches the site once you publish again.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".w-richtext"
+  data-style="article"
+></script>`,
+        verify: "Check on the published site. Custom code does not run inside the editor's preview.",
+        scope: "Rich text elements carry the w-richtext class. To limit it to a class of your own, name that one instead.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-body"
+  data-style="article"
+></script>`,
+        revert: "Remove the line from Head code and publish again.",
+        trouble: [
+          "Projects without a paid site plan never emit custom code to the published site.",
+          "Saving is not enough on its own. Publish for the change to appear."
+        ]
+      },
+      {
+        id: "squarespace",
+        index: "05",
+        navLabel: "Squarespace",
+        title: "Squarespace",
+        summary:
+          "Goes in the site-wide code injection, which is a feature of the higher plans.",
+        time: "5 minutes",
+        access: "Rights to change site settings, on a Business plan or above",
+        open: "Open Code Injection in the settings and paste the tag into the Header field. Use the site-wide setting rather than the per-page one.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".sqs-html-content"
+  data-style="article"
+></script>`,
+        verify: "Check on a published page. In edit mode the editing chrome sits over the text, so look at the ordinary view.",
+        scope: "Text blocks put their content inside the sqs-html-content class. To limit it to blog posts, inspect a post and use the class you find there.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".blog-item-content"
+  data-style="article"
+></script>`,
+        revert: "Clear the field and save.",
+        trouble: [
+          "The lower plans have no field for injected code.",
+          "The preview in edit mode may not show the result."
+        ]
+      },
+      {
+        id: "ghost",
+        index: "06",
+        navLabel: "Ghost",
+        title: "Ghost",
+        summary:
+          "Goes in the site-wide code injection. There is no need to touch the theme.",
+        time: "5 minutes",
+        access: "Admin rights to change site settings",
+        open: "Open Code injection from Settings and paste the tag into Site header, then save.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".gh-content, .post-content"
+  data-style="article"
+></script>`,
+        verify: "Open a published post to check. The editor itself is never affected.",
+        scope: "Most themes wrap the body in gh-content. On a theme of your own, inspect a post and use the class you find there.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-content"
+  data-style="book"
+></script>`,
+        revert: "Clear the field and save.",
+        trouble: [
+          "Themes differ in what they call the body element. If nothing changes, check data-target.",
+          "Posts delivered by email are not affected; this is only for pages shown in a browser."
+        ]
+      },
+      {
+        id: "custom-code",
+        index: "07",
+        navLabel: "Anything else",
+        title: "Services not listed here",
+        summary:
+          "Any other service works the same way, as long as its settings let you paste code.",
         time: "5 minutes",
         access: "Admin rights over the site settings",
         open: "Find the field your service uses for injected code. It is usually called custom code, code injection, or something about the header, and it lives in the settings for the whole site. Choose the site-wide field rather than a per-page one.",
@@ -193,7 +338,7 @@ export const en: Dictionary = {
     ],
     trouble: {
       id: "trouble",
-      index: "03",
+      index: "08",
       title: "When it does not work",
       navLabel: "When it does not work",
       body: "Symptoms that come up whatever you are running. The explanations behind them are in the docs.",

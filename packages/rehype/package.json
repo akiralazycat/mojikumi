@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/rehype",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Rehype plugin for Mojikumi-ready Japanese HTML",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,6 +28,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@mojikumi/presets": "0.1.1"
+    "@mojikumi/presets": "0.2.0"
   }
 }

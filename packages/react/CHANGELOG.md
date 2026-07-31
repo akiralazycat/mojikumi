@@ -1,5 +1,12 @@
 # @mojikumi/react
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [9f8920b]
+  - @mojikumi/dom@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes

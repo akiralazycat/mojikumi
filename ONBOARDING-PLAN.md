@@ -267,20 +267,27 @@ Phase 2では`/docs/`の拡充、`/start/`の環境選択、HTMLサイト向け�
 WordPressを含め、すべて同じブラウザバンドルを使います。差分は「どこへ貼るか」と
 「本文セレクターは何か」だけです。
 
-| 環境 | 貼り付け場所 | 想定セレクター |
-| --- | --- | --- |
-| WordPress | スニペット系プラグイン、またはテーマのヘッダー | `.entry-content`、`.wp-block-post-content` |
-| Shopify | `theme.liquid` | `.rte`、`.article__content` |
-| Ghost | Code Injection（Site Header） | `.gh-content` |
-| Webflow | Project Settings → Custom Code | `.w-richtext` |
-| Squarespace | Code Injection | `.sqs-block-content` |
-| Wix | カスタムコード | 要検証 |
-| STUDIO | カスタムコード | 要検証 |
+| 環境 | 貼り付け場所 | 公開しているセレクター | 実機確認 |
+| --- | --- | --- | --- |
+| WordPress | スニペット系プラグイン、または子テーマのヘッダー | `.entry-content`、`.wp-block-post-content` | 未 |
+| Shopify | `theme.liquid` | `.article-template__content`、`.rte` | 未 |
+| Webflow | Project Settings → Custom Code | `.w-richtext` | 未 |
+| Squarespace | Code Injection（Header） | `.sqs-html-content` | 未 |
+| Ghost | Code Injection（Site Header） | `.gh-content`、`.post-content` | 未 |
+| Wix | カスタムコード | 未掲載 | — |
+| STUDIO | カスタムコード | 未掲載 | — |
 
-セレクターはいずれも**実機で確定**します。上表は調査の出発点で、確認前に
-ドキュメントへは載せません。WixとSTUDIOは、そもそもカスタムコードで本文DOMへ
-到達できるか自体を先に確認します。到達できない場合は、`/start/`の環境選択の下に
-「現時点で対応できない環境」として理由付きで挙げます。探して見つからないより、
+当初は実機確認を終えるまで公開しない方針でしたが、先に出す判断へ変更しました。
+セレクターは各サービスの標準テーマを前提にした値で、テーマを変えていれば異なり
+ます。そのため`/start/`では次の2つを明示しています。
+
+1. 手順は標準的なテーマを前提に書いていること
+2. 自分のサイトのクラス名を確かめる方法（「範囲を変える」の節）
+
+実機確認が済んだ環境から、この表の「実機確認」を埋めていきます。確認の結果
+セレクターが違っていた場合は、`/start/`のコードを直します。WixとSTUDIOは、
+カスタムコードから本文DOMへ到達できるかが未確認のため、引き続き掲載しません。
+到達できないと分かった場合は、その旨を理由付きで書きます。探して見つからないより、
 書いてある方が早く諦められます。
 
 ### WordPressの扱い
