@@ -179,16 +179,17 @@ export const en: Dictionary = {
   data-style="article"
 ></script>`,
         verify: "Open a post to check. The admin bar can stay where it is: neither it nor the block editor is ever touched.",
-        scope: "Which class wraps your body text depends on the theme. The code above names the two you meet most often, one from classic themes and one from block themes. If nothing changes, inspect a post and use the class you actually find.",
+        scope: "Which class wraps your body text depends on the theme. The code above names the two you meet most often, one from classic themes and one from block themes. If nothing changes, inspect a post and use the class you actually find. Selectors are comma separated, so you can name as many as you need. To reach the excerpts on a post list or an archive as well, add the class they use. The third one below is Cocoon's excerpt class, and differs from theme to theme too. On a page where none of the ones you named is found, Mojikumi does nothing.",
         scopeCode: `<script
   src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
-  data-target=".post-content"
-  data-style="book"
+  data-target=".entry-content, .wp-block-post-content, .entry-card-snippet"
+  data-style="article"
 ></script>`,
         revert: "Disable or delete the snippet. Your posts were never rewritten, so nothing is left in the stored content.",
         trouble: [
           "The block editor does not show the result. Check a published post instead.",
-          "With a caching plugin, the change may not appear straight away. Clear the cache and look again."
+          "With a caching plugin, the change may not appear straight away. Clear the cache and look again.",
+          "If posts change but post lists and archives do not, data-target is not reaching anything on those pages. Add the class the excerpts use."
         ]
       },
       {

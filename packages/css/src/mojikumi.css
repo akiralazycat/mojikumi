@@ -92,29 +92,6 @@
     hanging-punctuation: first allow-end;
   }
 
-  /*
-   * JavaScript fallback hooks. Empty pseudo-elements preserve copied text and
-   * screen-reader output while providing an inline spacing adjustment.
-   */
-  :where(.mjk-fallback .mjk-pair-after) {
-    margin-inline-end: var(--mjk-punctuation-adjustment);
-  }
-
-  :where(.mjk-fallback .mjk-autospace-before)::before {
-    content: "";
-    display: inline-block;
-    inline-size: var(--mjk-autospace);
-    user-select: none;
-  }
-
-  :where(.mjk-fallback .mjk-line-start) {
-    margin-inline-start: var(--mjk-punctuation-adjustment);
-  }
-
-  :where(.mjk-fallback .mjk-line-end) {
-    margin-inline-end: var(--mjk-punctuation-adjustment);
-  }
-
   :where([data-mjk-debug] .mjk-token) {
     background: color-mix(in srgb, #00a7a0 12%, transparent);
     outline: 1px solid color-mix(in srgb, #00a7a0 42%, transparent);
@@ -140,4 +117,35 @@
       scroll-behavior: auto;
     }
   }
+}
+
+/*
+ * JavaScript fallback hooks. Empty pseudo-elements preserve copied text and
+ * screen-reader output while providing an inline spacing adjustment.
+ *
+ * Outside the layer, and deliberately so. Everything above styles the page's
+ * own elements, where losing to the page is the point; these four only ever
+ * reach spans Mojikumi generated a moment ago, which no author has written a
+ * rule for. Inside the layer they lose to the unlayered `* { margin: 0 }` that
+ * resets and CMS themes almost all ship — an unlayered declaration beats a
+ * layered one whatever its specificity — and the fallback then wraps every
+ * token, measures every line, and moves nothing.
+ */
+.mjk-fallback .mjk-pair-after {
+  margin-inline-end: var(--mjk-punctuation-adjustment);
+}
+
+.mjk-fallback .mjk-autospace-before::before {
+  content: "";
+  display: inline-block;
+  inline-size: var(--mjk-autospace);
+  user-select: none;
+}
+
+.mjk-fallback .mjk-line-start {
+  margin-inline-start: var(--mjk-punctuation-adjustment);
+}
+
+.mjk-fallback .mjk-line-end {
+  margin-inline-end: var(--mjk-punctuation-adjustment);
 }

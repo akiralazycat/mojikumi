@@ -269,7 +269,7 @@ WordPressを含め、すべて同じブラウザバンドルを使います。�
 
 | 環境 | 貼り付け場所 | 公開しているセレクター | 実機確認 |
 | --- | --- | --- | --- |
-| WordPress | スニペット系プラグイン、または子テーマのヘッダー | `.entry-content`、`.wp-block-post-content` | 未 |
+| WordPress | スニペット系プラグイン、または子テーマのヘッダー | `.entry-content`、`.wp-block-post-content`、`.entry-card-snippet` | 済（Cocoon） |
 | Shopify | `theme.liquid` | `.article-template__content`、`.rte` | 未 |
 | Webflow | Project Settings → Custom Code | `.w-richtext` | 未 |
 | Squarespace | Code Injection（Header） | `.sqs-html-content` | 未 |
@@ -292,6 +292,11 @@ WordPressを含め、すべて同じブラウザバンドルを使います。�
 
 ### WordPressの扱い
 
+- 実機確認：Cocoon（子テーマ）で確認しました。投稿の本文は`.entry-content`で
+  当たりますが、投稿一覧とアーカイブの抜粋は`.entry-card-snippet`で、
+  `data-target`を明示している以上そこへは届きません。掲載しているセレクターに
+  抜粋を足し、届かなかったときの症状を`/start/`のトラブル欄に書きました。
+  同じ確認でCSSのカスケードレイヤーの不具合も見つかり、別途修正しています。
 - 主経路：ヘッダーへスクリプトを1行。
 - 副経路：カスタマイズの「追加CSS」しか触れない利用者向けに、CSSだけの版を用意
   します。ただし現在のCSSは`.mjk`クラスを前提としており、追加CSS欄からはクラスを
