@@ -301,15 +301,15 @@ export default {
     }
   },
   privacy: {
-    title: "Privacy",
-    description: "What this site handles, and what it deliberately does not",
+    title: "Privacy Policy",
+    description: "How mojikumi.jp handles information",
     eyebrow: "Privacy",
-    heading: "Nothing here is collected",
-    lead: "There is not a single mechanism on this site that follows you. No analytics, no advertising, no forms, no accounts, and nothing you type into the Playground goes anywhere. What follows is the detail behind that.",
+    heading: "Privacy Policy",
+    lead: "mojikumi.jp has no mechanism for identifying visitors or tracking what they do. There is no analytics, no advertising, no contact form and no account system, and nothing entered into the Playground is sent to a server. This policy sets out in detail what the site handles and what it does not.",
     updated: "Last updated: 30 July 2026",
     sections: [
       {
-        title: "How this site is built",
+        title: "How the site is built",
         body: [
           "mojikumi.jp is a set of static files produced by Next.js static export (output: \"export\"). No server-side code runs when you open a page, and there is no endpoint that takes in what you do.",
           "There are no accounts, no contact forms, no comment threads and no newsletter sign-ups. Nothing on the site is built to receive information from a visitor."
@@ -338,7 +338,7 @@ export default {
         ]
       },
       {
-        title: "Text you type into the Playground",
+        title: "Text entered in the Playground",
         body: [
           "Anything you enter in the Playground is processed entirely inside your browser. It is never sent to a server, never stored and never logged, and nothing of it remains once you leave the page.",
           "That said, the usual care applies on a shared machine or while screen sharing. Please do not paste confidential material into it."
@@ -352,7 +352,7 @@ export default {
         ]
       },
       {
-        title: "Changes, and how to check any of this",
+        title: "Changes to this policy, and how to verify it",
         body: [
           "Any change to this policy is recorded both on this page and in the history of the public repository.",
           "Everything stated here can be checked against the site's source. If this text and the code ever disagree, treat the code as the truth, and please open an issue so the wording can be corrected."
@@ -364,8 +364,8 @@ export default {
     title: "Terms",
     description: "License, disclaimer and third-party notices for Mojikumi",
     eyebrow: "Terms",
-    heading: "The license, and what to know before you use it",
-    lead: "The conditions that apply to the Mojikumi software and to this site. In short: use it freely, within the terms of the MIT License.",
+    heading: "Terms of Use",
+    lead: "These terms set out the conditions that apply to the Mojikumi packages and to this site. The software is published under the MIT License, and within its terms you are free to use it for any purpose, commercial or otherwise.",
     updated: "Last updated: 30 July 2026",
     sections: [
       {
@@ -376,14 +376,14 @@ export default {
         ]
       },
       {
-        title: "No warranty",
+        title: "Disclaimer",
         body: [
           "As stated in the MIT License, the software is provided \"as is\", without warranty of any kind, including merchantability, fitness for a particular purpose and non-infringement. The author is not liable for any damages arising from its use.",
           "Before relying on it somewhere that matters, please confirm how it renders in the environment you actually ship to."
         ]
       },
       {
-        title: "What changes the result",
+        title: "Conditions that affect the result",
         body: [
           "With identical settings, the typesetting still shifts with what a browser implements and with the punctuation metrics a font carries, such as halt and chws. Mojikumi tightens only where the combination has been confirmed, and leaves fonts it cannot judge alone.",
           "Which combinations count as confirmed is recorded in COMPATIBILITY.md and FONT-MATRIX.md in the repository. Figures on the Benchmarks page are limited to those whose procedure can be published. Both may be updated without notice."
