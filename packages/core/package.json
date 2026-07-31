@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DOM-independent Japanese typography rules for Mojikumi",
   "type": "module",
   "main": "./dist/index.js",

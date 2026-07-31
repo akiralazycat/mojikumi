@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/presets",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Opinionated Japanese typography presets for Mojikumi",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,6 +28,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@mojikumi/core": "0.2.0"
+    "@mojikumi/core": "0.2.1"
   }
 }
