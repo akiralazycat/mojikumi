@@ -72,14 +72,14 @@ describe("script tag options", () => {
       style: "book",
       css: "false"
     });
-    expect(readScriptOptions(null)).toEqual({
-      target: undefined,
-      style: undefined,
-      precision: undefined,
-      exclude: undefined,
-      css: undefined,
-      auto: undefined
-    });
+  });
+
+  /*
+   * An import from a bundler has no tag behind it, and starting anyway would
+   * apply Mojikumi to a page whose author only asked for the module.
+   */
+  it("has nothing to obey when no script tag loaded it", () => {
+    expect(readScriptOptions(null)).toBeNull();
   });
 });
 

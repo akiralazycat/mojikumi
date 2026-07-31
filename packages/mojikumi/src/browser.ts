@@ -300,17 +300,24 @@ export function stop(): void {
   Reflect.deleteProperty(view, REGISTRY_KEY);
 }
 
+/*
+ * Null when no script tag loaded this module, which is how an import from a
+ * bundler arrives. Configuration comes from the tag, so without one there is
+ * nothing to obey and nothing to start on the reader's behalf.
+ */
 export function readScriptOptions(
   script: HTMLOrSVGScriptElement | null
-): StartOptions {
-  const data = script?.dataset ?? {};
+): StartOptions | null {
+  if (!script) return null;
+  const { dataset } = script;
+
   return {
-    target: data.target,
-    style: data.style,
-    precision: data.precision,
-    exclude: data.exclude,
-    css: data.css,
-    auto: data.auto
+    target: dataset.target,
+    style: dataset.style,
+    precision: dataset.precision,
+    exclude: dataset.exclude,
+    css: dataset.css,
+    auto: dataset.auto
   };
 }
 
@@ -334,7 +341,7 @@ function autoStart(): void {
 
   try {
     const options = readScriptOptions(currentScript);
-    if (!parseBoolean(options.auto)) return;
+    if (!options || !parseBoolean(options.auto)) return;
 
     /*
      * The stylesheet goes in during evaluation rather than on ready: in the

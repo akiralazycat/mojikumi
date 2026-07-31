@@ -77,6 +77,17 @@ Mojikumi.stop();
 CDNを使わない場合は、`node_modules/mojikumi/dist/mojikumi.browser.js`を自分の
 サーバーへ置いても同じように動作します。
 
+ビルド環境がある場合は、同じAPIをモジュールとして読み込めます。スクリプトタグ
+経由ではないため自動では開始せず、`start()`を呼んだ時点から適用されます。CSSは
+別途読み込んでください。
+
+```ts
+import "mojikumi/css";
+import { start } from "mojikumi/browser";
+
+start({ target: ".article", style: "article" });
+```
+
 ## CSSだけで使う
 
 ```ts

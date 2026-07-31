@@ -10,8 +10,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./browser": "./dist/mojikumi.browser.js",
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
     "./css": "./dist/mojikumi.css",
+    "./mojikumi.browser.js": "./dist/mojikumi.browser.js",
     "./mojikumi.min.css": "./dist/mojikumi.min.css"
   },
   "files": [
