@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { brotliCompressSync } from "node:zlib";
 import { build, transform } from "esbuild";
@@ -20,6 +20,8 @@ const { version } = packageJson;
 const source = await readFile(resolve("packages/css/src/mojikumi.css"), "utf8");
 const { code: css } = await transform(source, { loader: "css", minify: true });
 
+/* Runs on its own as well as after the package build, so do not assume dist. */
+await mkdir(resolve("packages/mojikumi/dist"), { recursive: true });
 await writeFile(resolve("packages/mojikumi/dist/mojikumi.min.css"), css);
 
 const result = await build({

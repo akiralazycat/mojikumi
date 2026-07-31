@@ -52,3 +52,8 @@ npm run build:cdn
 Root Directory設定の「Include source files outside of the Root Directory in
 the Build Step」を有効にします。ビルドコマンドとキャッシュヘッダーは
 `vercel.json`に設定済みです。
+
+ビルドコマンドの先頭で`npm ci`を実行しています。Vercelの依存インストールは
+Root Directory側で完結し、リポジトリルートのdevDependenciesが揃うとは限らないため
+です。バンドルの生成にはesbuildが必要なので、ここで確実に入れています。`apps/web`
+はバンドルを使わないため、こうした追加のインストールを行いません。
