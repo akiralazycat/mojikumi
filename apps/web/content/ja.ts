@@ -109,7 +109,7 @@ export const ja: Dictionary = {
     title: "Docs",
     description: "Mojikumiの導入手順とパッケージ構成",
     eyebrow: "Documentation",
-    heading: "最小構成から導入する",
+    heading: "段階的に導入する",
     lead: "導入は、CSSプリセットを読み込むところから始まります。標準CSSだけでは揃わない環境には、DOMフォールバックを追加してください。ReactでもMarkdown / MDXでも手順は変わらず、本文の文字列に手を加えないという方針も共通です。",
     indexLabel: "このページ",
     sections: [
