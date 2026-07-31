@@ -1123,6 +1123,14 @@ main {
   box-shadow: 0 30px 90px rgba(73, 15, 29, 0.3);
   color: #fff8f5;
   margin-bottom: 76px;
+  /*
+   * Every other section inherits this inset from its own horizontal padding
+   * (.home-hero, .section-block, .page-shell all pad by the same amount),
+   * which is what lines up .principle-grid, .package-list and .hero-specimen
+   * with each other. This section has no such wrapper, so match it here —
+   * otherwise the panel silently stretches out to the header/footer band.
+   */
+  margin-inline: clamp(0px, 2vw, 30px);
   overflow: hidden;
   padding: clamp(50px, 8vw, 108px);
   position: relative;
