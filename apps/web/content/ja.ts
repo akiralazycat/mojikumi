@@ -717,15 +717,72 @@ Mojikumi.stop();`,
   },
   benchmarks: {
     title: "Benchmarks",
-    description: "Mojikumiの性能計測の方針と、公開予定の指標",
+    description: "Mojikumiの処理コストとレイアウトシフトの計測結果",
     eyebrow: "Performance & compatibility",
     heading: "処理速度と補完量を測る",
     lead: "Mojikumiは、ブラウザの標準実装が広がるほど処理量が減る設計です。そのため計測では、処理にかかる時間に加えて、補完のために追加されるDOMの量と、組み直しに要するコストも記録します。",
     status: {
       label: "Current status",
-      title: "計測環境を準備しています",
-      body: "現在は、再現性のある計測条件を確定させる作業を進めています。端末やブラウザのバージョンが変われば結果も変動するため、条件を明記できない段階で数値を公開することはしません。それまでのあいだ、実際の処理速度と表示はPlaygroundで直接ご確認いただけます。",
+      title: "Chromiumで計測しました",
+      body: "ブラウザが標準実装を持っている場合、10,000字の記事に対してMojikumiが追加する要素は1つだけです。その1つは注入するstyle要素で、本文には何も足していません。字組みのすべてを標準CSSが引き受けたという意味で、これが設計の前提でした。実装を持たないブラウザではフォールバックが動き、処理時間は6倍から9倍になります。FirefoxとWebKitはまだ揃えていないため、下の表のfullはその代役です。",
       link: "Playgroundで確かめる"
+    },
+    results: {
+      eyebrow: "Results",
+      title: "計測結果",
+      tables: [
+        {
+          caption: "処理コスト",
+          note: "Chromium 148.0.7778.96、幅1280px、書体はシステム標準のserif。7回実行した中央値です。autoはこのブラウザの読者が実際に受け取る経路、fullはネイティブ実装を使わずフォールバックを強制した経路で、CSS Text Level 4のプロパティを持たないブラウザの代役として測っています。",
+          table: {
+            head: [
+              "本文",
+              "経路",
+              "初期処理",
+              "再評価",
+              "DOM増加",
+              "生成要素",
+              "ヒープ"
+            ],
+            rows: [
+              ["1,000字", "auto", "2.6ms", "0.2ms", "1", "0", "74KB"],
+              ["1,000字", "full", "15.2ms", "5.0ms", "136", "135", "197KB"],
+              ["10,000字", "auto", "5.5ms", "0.2ms", "1", "0", "88KB"],
+              [
+                "10,000字",
+                "full",
+                "45.6ms",
+                "140.5ms",
+                "1,243",
+                "1,242",
+                "250KB"
+              ],
+              ["記事10本", "auto", "7.4ms", "0.3ms", "1", "0", "120KB"],
+              [
+                "記事10本",
+                "full",
+                "48.9ms",
+                "148.5ms",
+                "1,351",
+                "1,350",
+                "288KB"
+              ]
+            ]
+          }
+        },
+        {
+          caption: "レイアウトシフト",
+          note: "同じブラウザで、40msの遅延を付けて配信したバンドルを対象に、layout-shiftエントリーの合計を測っています。段落数（8 / 40）で結果は変わりませんでした。以前Chromium 141で測ったときは、bodyの終わりに置いた場合だけモバイルで0.033が出ていました。148では貼らない場合の行送りが最初からMojikumiと同じで、差そのものが消えています。",
+          table: {
+            head: ["貼る場所", "デスクトップ1280px", "モバイル390px"],
+            rows: [
+              ["貼らない", "0", "0"],
+              ["headの中", "0", "0"],
+              ["bodyの終わり", "0", "0"]
+            ]
+          }
+        }
+      ]
     },
     metrics: {
       eyebrow: "Metrics",
@@ -753,16 +810,23 @@ Mojikumi.stop();`,
       eyebrow: "Matrix",
       title: "揃える環境",
       items: [
-        { term: "Chromium", description: "最新版 / macOS・Linux" },
-        { term: "Firefox", description: "最新版 / macOS・Linux" },
-        { term: "WebKit", description: "最新版 / macOS" },
-        { term: "Content", description: "1,000字・10,000字・複数段落の3種類" }
+        { term: "Chromium", description: "148.0.7778.96 / macOS。計測済み" },
+        {
+          term: "Firefox",
+          description: "未計測。フォールバックが実際に動く環境のひとつ"
+        },
+        {
+          term: "WebKit",
+          description:
+            "未計測。text-spacing-trimを持たないため、表のfullが実測に置き換わります"
+        },
+        { term: "Content", description: "1,000字・10,000字・記事10本の3種類" }
       ]
     },
     method: {
       label: "Method",
       title: "再現できる結果だけを公開する",
-      body: "計測に使用したコード、入力した文章、ブラウザのバージョン、書体の条件は、すべてリポジトリに記録しています。同じ手順をたどれば、お手元でも近い数値が得られるはずです。このページに掲載するのは、CIの固定条件で得られた結果に限ります。その場で実行するライブ計測は端末の状態に左右されるため、別の扱いとします。"
+      body: "計測コードはリポジトリのscripts/measure-cost.mjsとscripts/measure-shift.mjsで、条件と読み方はBENCHMARKS.mdに書いています。npm run measure:costとnpm run measure:shiftで、お手元でも同じ手順を踏めます。数値は機械に依存するため、絶対値より、条件を変えたときの差のほうを見てください。どちらの計測も、設計上の前提が崩れたときに失敗します。標準実装のあるブラウザでフォールバックの要素が出た場合と、headに置いたタグがシフトを起こした場合です。"
     }
   },
   privacy: {

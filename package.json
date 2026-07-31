@@ -29,7 +29,8 @@
     "version-packages": "changeset version",
     "package:check": "node scripts/check-packages.mjs",
     "release": "changeset publish",
-    "measure:shift": "node scripts/measure-shift.mjs"
+    "measure:shift": "node scripts/measure-shift.mjs",
+    "measure:cost": "node scripts/measure-cost.mjs"
   },
   "engines": {
     "node": ">=20"

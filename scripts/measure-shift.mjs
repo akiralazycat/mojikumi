@@ -107,7 +107,12 @@ async function measure(viewport, placement, paragraphs) {
     height: Math.round(
       document.querySelector(".entry-content")?.getBoundingClientRect().height ?? 0
     ),
-    generated: document.querySelectorAll("[data-mjk-generated]").length
+    generated: document.querySelectorAll("[data-mjk-generated]").length,
+    /*
+     * A tag that never ran also reports no shift. Without this the healthy
+     * result and the broken one are the same number.
+     */
+    mounted: document.querySelectorAll(".mjk").length
   }));
 
   await page.close();
@@ -126,7 +131,8 @@ for (const viewport of VIEWPORTS) {
         cls: Number(result.cls.toFixed(4)),
         shifts: result.shifts,
         articleHeight: result.height,
-        generated: result.generated
+        generated: result.generated,
+        mounted: result.mounted
       });
     }
   }
@@ -135,12 +141,24 @@ for (const viewport of VIEWPORTS) {
 console.log(`chromium ${browser.version()}`);
 console.table(rows);
 
+const tagged = rows.filter((row) => row.placement !== "none");
 const worstInHead = Math.max(
   ...rows.filter((row) => row.placement === "head").map((row) => row.cls)
 );
+const unmounted = tagged.filter((row) => row.mounted === 0);
 
 await browser.close();
 server.close();
+
+/*
+ * Checked before the shift, because a page where nothing mounted passes the
+ * shift check for the wrong reason and would read as good news.
+ */
+if (unmounted.length) {
+  throw new Error(
+    `The tag mounted nothing in ${unmounted.length} of ${tagged.length} runs`
+  );
+}
 
 /* The guides tell people to paste into the head. That has to stay free. */
 if (worstInHead > 0) {
