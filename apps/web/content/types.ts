@@ -2,10 +2,6 @@ export const locales = ["ja", "en"] as const;
 
 export type Locale = (typeof locales)[number];
 
-export type PrincipleIcon = "standards" | "fallback" | "layers";
-
-export type PackageIcon = "mojikumi" | "css" | "dom" | "react" | "rehype";
-
 export type TermDefinition = {
   term: string;
   description: string;
@@ -23,6 +19,7 @@ export type DocsSection = {
   title: string;
   navLabel: string;
   body: string;
+  language: string;
   code: string;
 };
 
@@ -78,7 +75,6 @@ export type Dictionary = {
       title: string;
       items: {
         index: string;
-        icon: PrincipleIcon;
         title: string;
         body: string;
       }[];
@@ -89,7 +85,6 @@ export type Dictionary = {
       body: string;
       packages: {
         name: string;
-        icon: PackageIcon;
         description: string;
       }[];
     };
@@ -118,6 +113,12 @@ export type Dictionary = {
     heading: string;
     lead: string;
     indexLabel: string;
+    codeCopy: {
+      label: string;
+      copied: string;
+      /** Names the button for assistive technology; `{title}` takes the section. */
+      action: string;
+    };
     sections: DocsSection[];
     policy: {
       id: string;

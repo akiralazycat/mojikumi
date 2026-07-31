@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Dictionary, Locale } from "../../content";
 import { pageHref } from "../../lib/site";
-import { ArrowRightIcon, PackageGlyph, PrincipleGlyph } from "../icons";
+import { ArrowRightIcon } from "../icons";
 
 export function HomePage({
   dictionary,
@@ -59,12 +59,7 @@ export function HomePage({
         <div className="principle-grid">
           {home.principles.items.map((item) => (
             <article key={item.index}>
-              <div className="principle-head">
-                <span className="principle-icon">
-                  <PrincipleGlyph name={item.icon} size={22} />
-                </span>
-                <span className="principle-index">{item.index}</span>
-              </div>
+              <span className="index-mark">{item.index}</span>
               <h3>{item.title}</h3>
               <p>{item.body}</p>
             </article>
@@ -117,9 +112,6 @@ export function HomePage({
         <div className="package-list">
           {home.surfaces.packages.map((item) => (
             <div key={item.name}>
-              <span className="package-icon">
-                <PackageGlyph name={item.icon} size={17} />
-              </span>
               <code>{item.name}</code>
               <span className="package-description">{item.description}</span>
             </div>

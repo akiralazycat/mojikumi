@@ -56,19 +56,16 @@ export const en: Dictionary = {
       items: [
         {
           index: "01",
-          icon: "standards",
           title: "CSS first",
           body: "Where a browser supports text-spacing-trim and text-autospace, that implementation is what runs. No extra script executes."
         },
         {
           index: "02",
-          icon: "fallback",
           title: "Small fallback",
           body: "Only the work a browser cannot do yet gets added. The text itself is never touched, so what readers copy and what screen readers announce stay exactly as written."
         },
         {
           index: "03",
-          icon: "layers",
           title: "Framework ready",
           body: "Plain HTML, React, Markdown. One typesetting policy carries across all of them unchanged."
         }
@@ -79,11 +76,11 @@ export const en: Dictionary = {
       title: "Adopt only the layers you need",
       body: "Start with a single CSS import, then add the DOM layer, React or MDX support as you need them. At no point does your project structure have to be rearranged.",
       packages: [
-        { name: "mojikumi", icon: "mojikumi", description: "The all-in-one API for everyday use" },
-        { name: "@mojikumi/css", icon: "css", description: "Presets built around standard CSS" },
-        { name: "@mojikumi/dom", icon: "dom", description: "The DOM layer that covers browser gaps" },
-        { name: "@mojikumi/react", icon: "react", description: "Component and hook" },
-        { name: "@mojikumi/rehype", icon: "rehype", description: "Markdown / MDX integration" }
+        { name: "mojikumi", description: "The all-in-one API for everyday use" },
+        { name: "@mojikumi/css", description: "Presets built around standard CSS" },
+        { name: "@mojikumi/dom", description: "The DOM layer that covers browser gaps" },
+        { name: "@mojikumi/react", description: "Component and hook" },
+        { name: "@mojikumi/rehype", description: "Markdown / MDX integration" }
       ]
     },
     compare: {
@@ -112,12 +109,18 @@ export const en: Dictionary = {
     heading: "Start small, add only what you need",
     lead: "Apply the standard CSS first, then add the DOM fallback only where it is still needed. React and MDX follow the same steps, and the rule never changes: the text itself is left alone.",
     indexLabel: "On this page",
+    codeCopy: {
+      label: "Copy",
+      copied: "Copied",
+      action: "Copy the code for {title}"
+    },
     sections: [
       {
         id: "css",
         index: "01",
         title: "Use the CSS on its own",
         navLabel: "CSS",
+        language: "TSX",
         body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Four presets ship with it, book, web, editorial and minimal, differing in how tightly they set.",
         code: `import "mojikumi/css";
 
@@ -130,6 +133,7 @@ export const en: Dictionary = {
         index: "02",
         title: "Add the DOM fallback",
         navLabel: "DOM",
+        language: "TypeScript",
         body: "When browsers without the standard properties should see the same page, add the DOM layer. Runs of punctuation, a bracket landing at the start or end of a line: the positions CSS cannot settle are measured and corrected at runtime. Leave precision on auto and nothing runs where support already exists.",
         code: `import "mojikumi/css";
 import { mojikumi } from "mojikumi";
@@ -144,6 +148,7 @@ const instance = mojikumi(".article", {
         index: "03",
         title: "Use it with React",
         navLabel: "React",
+        language: "TSX",
         body: "The server emits ordinary HTML, and any adjustment happens once it reaches the browser. There is a component to wrap with and a hook to attach to an element you already render, so nothing about your layout has to move.",
         code: `import { Mojikumi } from "@mojikumi/react";
 
@@ -160,6 +165,7 @@ export function Article({ children }) {
         index: "04",
         title: "Use it with Markdown / MDX",
         navLabel: "Markdown / MDX",
+        language: "TypeScript",
         body: "Registered as a rehype plugin, the preset applies to the body of every article. The Markdown source stays as written, so authors never have to think about typesetting. Code blocks and math are left out, so runs of symbols are never disturbed.",
         code: `import rehypeMojikumi from "@mojikumi/rehype";
 

@@ -56,19 +56,16 @@ export const ja: Dictionary = {
       items: [
         {
           index: "01",
-          icon: "standards",
           title: "CSS first",
           body: "text-spacing-trimとtext-autospaceに対応したブラウザでは、その実装をそのまま使います。追加のスクリプトは読み込まれず、実行もされません。"
         },
         {
           index: "02",
-          icon: "fallback",
           title: "Small fallback",
           body: "標準実装で届かない処理だけを、あとから補います。本文の文字列そのものには手を加えないため、読者がコピーした文章も、スクリーンリーダーが読み上げる内容も元のまま保たれます。"
         },
         {
           index: "03",
-          icon: "layers",
           title: "Framework ready",
           body: "素のHTML、React、Markdownのいずれでも、同じ字組み方針をそのまま持ち込めます。環境ごとに設定を書き分ける必要はありません。"
         }
@@ -79,11 +76,11 @@ export const ja: Dictionary = {
       title: "使う場所に合わせて、必要な層だけを選ぶ",
       body: "導入はCSSを一行読み込むところから始められます。DOM層やReact、Markdown / MDXとの連携は、必要になった時点で追加すれば十分です。どの段階に進んでも、プロジェクトの構成を組み替える必要はありません。",
       packages: [
-        { name: "mojikumi", icon: "mojikumi", description: "既定の構成をまとめた統合API" },
-        { name: "@mojikumi/css", icon: "css", description: "標準CSS中心のプリセット" },
-        { name: "@mojikumi/dom", icon: "dom", description: "ブラウザ差を補うDOM層" },
-        { name: "@mojikumi/react", icon: "react", description: "ComponentとHook" },
-        { name: "@mojikumi/rehype", icon: "rehype", description: "Markdown / MDX連携" }
+        { name: "mojikumi", description: "既定の構成をまとめた統合API" },
+        { name: "@mojikumi/css", description: "標準CSS中心のプリセット" },
+        { name: "@mojikumi/dom", description: "ブラウザ差を補うDOM層" },
+        { name: "@mojikumi/react", description: "ComponentとHook" },
+        { name: "@mojikumi/rehype", description: "Markdown / MDX連携" }
       ]
     },
     compare: {
@@ -112,12 +109,18 @@ export const ja: Dictionary = {
     heading: "段階的に導入する",
     lead: "導入は、CSSプリセットを読み込むところから始まります。標準CSSだけでは揃わない環境には、DOMフォールバックを追加してください。ReactでもMarkdown / MDXでも手順は変わらず、本文の文字列に手を加えないという方針も共通です。",
     indexLabel: "このページ",
+    codeCopy: {
+      label: "コピー",
+      copied: "コピー済み",
+      action: "{title}のコードをコピー"
+    },
     sections: [
       {
         id: "css",
         index: "01",
         title: "CSSだけで使う",
         navLabel: "CSS",
+        language: "TSX",
         body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
         code: `import "mojikumi/css";
 
@@ -130,6 +133,7 @@ export const ja: Dictionary = {
         index: "02",
         title: "DOMフォールバックを追加する",
         navLabel: "DOM",
+        language: "TypeScript",
         body: "標準CSSが未実装のブラウザでも同じ表示を得たい場合は、DOM層を追加します。約物が連続する箇所や、行頭・行末に置かれた括弧など、CSSだけでは揃わない位置を実行時に計測して補正する層です。precisionをautoに設定しておけば、対応済みのブラウザでは処理そのものが実行されません。",
         code: `import "mojikumi/css";
 import { mojikumi } from "mojikumi";
@@ -144,6 +148,7 @@ const instance = mojikumi(".article", {
         index: "03",
         title: "Reactで使う",
         navLabel: "React",
+        language: "TSX",
         body: "サーバーでは通常のHTMLを出力し、ブラウザに届いた時点で不足分だけを補います。要素を囲むComponentと、既存の要素に適用するHookのどちらでも利用できるため、現在のレイアウトを組み替える必要はありません。",
         code: `import { Mojikumi } from "@mojikumi/react";
 
@@ -160,6 +165,7 @@ export function Article({ children }) {
         index: "04",
         title: "Markdown / MDXで使う",
         navLabel: "Markdown / MDX",
+        language: "TypeScript",
         body: "rehypeプラグインとして組み込むと、記事本文にプリセットが適用されます。原稿のMarkdownは変更する必要がなく、書き手が字組みを意識することもありません。コードブロックと数式は処理の対象から除外されるため、記号の並びが崩れることはありません。",
         code: `import rehypeMojikumi from "@mojikumi/rehype";
 
