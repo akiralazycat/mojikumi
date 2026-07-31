@@ -221,6 +221,16 @@ function rectAt(rects: DOMRectList, index: number): DOMRect | undefined {
   return rects[index] ?? undefined;
 }
 
+/**
+ * Line context is a question about one block. A neighbouring paragraph always
+ * sits on another line, so letting the search escape the block would report
+ * every block-final closing bracket as a line end wherever it happened to fall.
+ */
+function blockOf(root: Element, token: Element): Element {
+  const block = token.closest(BLOCK_SELECTOR);
+  return block && root.contains(block) ? block : root;
+}
+
 function getTextRect(
   root: Element,
   token: Element,
@@ -228,7 +238,7 @@ function getTextRect(
 ): DOMRect | undefined {
   const document = root.ownerDocument;
   const walker = document.createTreeWalker(
-    root,
+    blockOf(root, token),
     document.defaultView?.NodeFilter.SHOW_TEXT ?? 4
   );
   const nodes: Text[] = [];
@@ -261,9 +271,8 @@ function getTextRect(
 }
 
 function hasPreviousTextInBlock(root: Element, token: Element): boolean {
-  const block = token.closest(BLOCK_SELECTOR) ?? root;
   const range = root.ownerDocument.createRange();
-  range.selectNodeContents(block);
+  range.selectNodeContents(blockOf(root, token));
   range.setEndBefore(token);
   return Boolean(range.toString().trim());
 }

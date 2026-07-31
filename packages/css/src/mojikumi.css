@@ -23,11 +23,18 @@
     text-spacing-trim: trim-start;
   }
 
+  /*
+   * `web` is in here too. Its line-end trimming is conditional, meaning it is
+   * not worth starting the JS fallback for on its own, but where the browser
+   * can close up a line-final closing bracket for free it should.
+   */
   @supports (text-spacing-trim: trim-both) {
     :where(
+      .mjk-web,
       .mjk-book,
       .mjk-editorial,
       .mjk-native,
+      [data-mjk-preset="web"],
       [data-mjk-preset="book"],
       [data-mjk-preset="editorial"],
       [data-mjk-preset="native"]
