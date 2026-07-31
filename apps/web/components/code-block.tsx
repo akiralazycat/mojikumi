@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from "react";
 import { CheckIcon, CopyIcon } from "./icons";
 
 /*
@@ -44,8 +52,48 @@ export function CodeBlock({
 }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | undefined>(undefined);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [width, setWidth] = useState<[number, number] | null>(null);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  /*
+   * The two labels are stacked in one cell so the confirmation crossfades in
+   * place, which otherwise sizes the button to the longer of them and leaves
+   * the shorter one sitting against a gap. Measuring both lets the button be
+   * exactly as wide as the label it is showing, and lets the change between
+   * them ease rather than jump. Until the measurement lands the cell falls back
+   * to `auto`, so a button that never reaches this code is merely wide, not
+   * clipped. Mincho and the UI face both load late, so measure again once the
+   * fonts are in.
+   */
+  useLayoutEffect(() => {
+    const node = labelRef.current;
+    if (!node) return;
+    let cancelled = false;
+
+    const measure = () => {
+      const [idle, done] = node.children;
+      if (cancelled || !idle || !done) return;
+      setWidth([
+        idle.getBoundingClientRect().width,
+        done.getBoundingClientRect().width
+      ]);
+    };
+
+    measure();
+    void document.fonts?.ready.then(measure);
+    return () => {
+      cancelled = true;
+    };
+  }, [labels.label, labels.copied]);
+
+  const labelStyle = width
+    ? ({
+        "--copy-label-width": `${width[0]}px`,
+        "--copy-label-width-done": `${width[1]}px`
+      } as CSSProperties)
+    : undefined;
 
   const copy = useCallback(async () => {
     if (!(await writeToClipboard(source))) return;
@@ -66,7 +114,12 @@ export function CodeBlock({
           aria-label={labels.action}
         >
           {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
-          <span className="code-copy-label" aria-hidden="true">
+          <span
+            className="code-copy-label"
+            aria-hidden="true"
+            ref={labelRef}
+            style={labelStyle}
+          >
             <span>{labels.label}</span>
             <span>{labels.copied}</span>
           </span>

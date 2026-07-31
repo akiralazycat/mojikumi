@@ -75,6 +75,9 @@
   --font-code: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --radius-card: 28px;
   --radius-control: 15px;
+  /* The air an article leaves around itself, and the footer's own run-up. */
+  --article-band: 72px;
+  --footer-gap: 40px;
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   background: var(--bg);
@@ -646,7 +649,7 @@ main {
 .site-footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
-  margin-top: 40px;
+  margin-top: var(--footer-gap);
   padding-block: 54px 40px;
 }
 
@@ -1240,7 +1243,7 @@ main {
   display: grid;
   gap: clamp(54px, 9vw, 140px);
   grid-template-columns: 190px minmax(0, 800px);
-  padding: 72px 0;
+  padding: var(--article-band) 0;
 }
 
 .docs-index {
@@ -1302,13 +1305,35 @@ main {
   line-height: 2;
 }
 
-/* The step headings inside a guide: smaller than a section, still mincho. */
+/*
+ * The step headings inside a guide, and the symptoms in the troubleshooting
+ * list, which sit at the same level. At display-5 they landed within a few
+ * points of the display-4 section title above them and the two read as one
+ * level, so they change voice instead of shrinking: the gothic face at body
+ * scale, under a short accent rule. That rule is also where the accent belongs
+ * — as a marker, rather than as the colour of a whole line of text.
+ */
+.docs-content h3,
+.trouble-list dt {
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.docs-content h3::before,
+.trouble-list dt::before {
+  background: var(--primary);
+  content: "";
+  display: block;
+  height: 2px;
+  margin-bottom: 14px;
+  width: 20px;
+}
+
 .docs-content h3 {
-  font-family: var(--font-display);
-  font-size: var(--display-5);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  margin: 44px 0 14px;
+  margin: 48px 0 14px;
 }
 
 .docs-content h3 + p {
@@ -1392,11 +1417,7 @@ main {
 }
 
 .trouble-list dt {
-  color: var(--primary);
-  font-family: var(--font-display);
-  font-size: var(--display-5);
-  font-weight: 500;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 }
 
 .trouble-list dd {
@@ -1538,18 +1559,30 @@ main {
 }
 
 /*
- * "コピー" and "コピーしました" are nowhere near the same width, so both labels
- * occupy one grid cell: the button is sized by the longer of the two and the
- * confirmation crossfades in place instead of shoving the button wider.
+ * "コピー" and "コピー済み" are nowhere near the same width, so both labels
+ * occupy one grid cell and the confirmation crossfades in place. The cell is
+ * then sized to whichever label is showing — CodeBlock measures both and hands
+ * the widths over — so the resting button hugs "コピー" instead of holding open
+ * the space the longer word will need. The button is the last thing in the bar,
+ * so the extra width opens out to the left as the confirmation arrives.
  */
 .code-copy-label {
   display: grid;
+  /* Clip sideways only: `hidden` would also trim the descenders. */
+  overflow-x: clip;
   place-items: center start;
+  transition: width 380ms var(--ease);
+  width: var(--copy-label-width, auto);
+}
+
+.code-copy[data-copied] .code-copy-label {
+  width: var(--copy-label-width-done, auto);
 }
 
 .code-copy-label > span {
   grid-area: 1 / 1;
   transition: opacity 200ms var(--ease-out);
+  white-space: nowrap;
 }
 
 .code-copy-label > span:last-child,
@@ -1598,6 +1631,18 @@ main {
 .docs-content pre .tok-comment {
   color: var(--code-comment);
   font-style: italic;
+}
+
+/*
+ * The card closes the page between two rules: the one under the last section
+ * and the one the footer opens with. The space above it is the article's own
+ * bottom padding; the space below it is the shell's, plus the margin the footer
+ * already holds off by, so the shell only owes the remainder. Left alone those
+ * came out 72 above and 140 below, which on a phone is most of a screen of
+ * drift.
+ */
+.page-shell:has(> .next-step) {
+  padding-bottom: calc(var(--article-band) - var(--footer-gap));
 }
 
 .next-step {
