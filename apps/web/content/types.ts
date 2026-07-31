@@ -274,6 +274,16 @@ export type Dictionary = {
       body: string;
       link: string;
     };
+    /* Every published table carries the conditions it was measured under. */
+    results: {
+      eyebrow: string;
+      title: string;
+      tables: {
+        caption: string;
+        note: string;
+        table: DocsTable;
+      }[];
+    };
     metrics: {
       eyebrow: string;
       title: string;
