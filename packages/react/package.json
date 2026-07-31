@@ -1,6 +1,6 @@
 {
   "name": "@mojikumi/react",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React component and hook for Mojikumi",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,7 +28,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@mojikumi/dom": "0.2.0"
+    "@mojikumi/dom": "0.2.1"
   },
   "peerDependencies": {
     "react": ">=18"

@@ -1,6 +1,6 @@
 {
   "name": "mojikumi",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Japanese typography compatibility layer for the Web",
   "type": "module",
   "main": "./dist/index.js",
@@ -37,9 +37,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@mojikumi/core": "0.2.0",
-    "@mojikumi/css": "0.2.0",
-    "@mojikumi/dom": "0.2.0",
-    "@mojikumi/presets": "0.2.0"
+    "@mojikumi/core": "0.2.1",
+    "@mojikumi/css": "0.2.1",
+    "@mojikumi/dom": "0.2.1",
+    "@mojikumi/presets": "0.2.1"
   }
 }
