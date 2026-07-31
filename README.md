@@ -41,6 +41,42 @@ npm run typecheck
 npm run build
 ```
 
+## スクリプトタグで使う
+
+ビルド設定を持たないサイトでは、`<script>`を1つ置くだけで使えます。CSSはバンドル
+に含まれているため、読み込むファイルは1つです。
+
+```html
+<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>
+```
+
+| 属性 | 既定値 | 内容 |
+| --- | --- | --- |
+| `data-target` | `auto` | 本文のセレクター。`auto`は既知の本文要素を順に探す |
+| `data-style` | `article` | `article`（記事向け）、`book`（書籍風）、`headline`（見出し重視） |
+| `data-precision` | `auto` | `native` / `auto` / `full` |
+| `data-exclude` | なし | 追加で除外するセレクター。カンマ区切り |
+| `data-css` | `true` | 同梱CSSを読み込むか |
+| `data-auto` | `true` | `false`にすると`Mojikumi.start()`を呼ぶまで何もしない |
+
+`data-style`にはプリセット名（`web`、`book`、`editorial`、`minimal`、`native`）も
+そのまま書けます。読み込み後に追加された記事も自動で対象になります。
+
+```js
+Mojikumi.start({ target: ".article", style: "book" });
+Mojikumi.refresh();
+Mojikumi.stop();
+```
+
+`stop()`は生成した要素とクラス、読み込んだCSSをすべて取り除きます。
+
+CDNを使わない場合は、`node_modules/mojikumi/dist/mojikumi.browser.js`を自分の
+サーバーへ置いても同じように動作します。
+
 ## CSSだけで使う
 
 ```ts
