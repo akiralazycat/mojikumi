@@ -13,14 +13,52 @@ export type LegalSection = {
   list?: string[];
 };
 
+export type DocsTable = {
+  head: string[];
+  rows: string[][];
+};
+
+/* A reference section shows a snippet, a table, or a list — not all three. */
 export type DocsSection = {
   id: string;
   index: string;
   title: string;
   navLabel: string;
   body: string;
+  language?: string;
+  code?: string;
+  table?: DocsTable;
+  list?: string[];
+};
+
+export type CodeCopyLabels = {
+  label: string;
+  copied: string;
+  /** Names the button for assistive technology; `{title}` takes the section. */
+  action: string;
+};
+
+/*
+ * Every field is required so that a guide cannot ship half-written. Someone
+ * who pastes code into their site is owed the way back out of it, and "how to
+ * undo this" is the field an author in a hurry would leave for later.
+ */
+export type Guide = {
+  id: string;
+  index: string;
+  navLabel: string;
+  title: string;
+  summary: string;
+  time: string;
+  access: string;
+  open: string;
   language: string;
   code: string;
+  verify: string;
+  scope: string;
+  scopeCode: string;
+  revert: string;
+  trouble: string[];
 };
 
 export type Dictionary = {
@@ -37,6 +75,7 @@ export type Dictionary = {
   nav: {
     label: string;
     home: string;
+    start: string;
     docs: string;
     playground: string;
     benchmarks: string;
@@ -45,6 +84,8 @@ export type Dictionary = {
     close: string;
     settings: string;
   };
+  /* Shared: the same button sits above every snippet on the site. */
+  codeCopy: CodeCopyLabels;
   theme: {
     label: string;
     light: string;
@@ -106,6 +147,47 @@ export type Dictionary = {
       link: string;
     };
   };
+  start: {
+    title: string;
+    description: string;
+    eyebrow: string;
+    heading: string;
+    lead: string;
+    indexLabel: string;
+    choose: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      /** What is not on the list yet, and why it is not. */
+      pending: string;
+    };
+    /* The seven headings every guide answers, written once. */
+    steps: {
+      requirements: string;
+      time: string;
+      access: string;
+      open: string;
+      paste: string;
+      verify: string;
+      scope: string;
+      revert: string;
+      trouble: string;
+    };
+    guides: Guide[];
+    trouble: {
+      id: string;
+      index: string;
+      title: string;
+      navLabel: string;
+      body: string;
+      items: TermDefinition[];
+    };
+    nextStep: {
+      label: string;
+      title: string;
+      link: string;
+    };
+  };
   docs: {
     title: string;
     description: string;
@@ -113,12 +195,6 @@ export type Dictionary = {
     heading: string;
     lead: string;
     indexLabel: string;
-    codeCopy: {
-      label: string;
-      copied: string;
-      /** Names the button for assistive technology; `{title}` takes the section. */
-      action: string;
-    };
     sections: DocsSection[];
     policy: {
       id: string;

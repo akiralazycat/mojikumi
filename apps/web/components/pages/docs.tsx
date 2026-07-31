@@ -1,35 +1,43 @@
-import { Fragment } from "react";
 import Link from "next/link";
-import type { Dictionary, DocsSection, Locale } from "../../content";
-import { tokenize } from "../../lib/highlight";
+import type { Dictionary, DocsTable, Locale } from "../../content";
 import { pageHref } from "../../lib/site";
-import { CodeBlock } from "../code-block";
 import { ArrowRightIcon } from "../icons";
+import { Snippet } from "../snippet";
 
-/* Highlighting happens here, while the page is prerendered. */
-function Code({
-  section,
-  labels
-}: {
-  section: DocsSection;
-  labels: Dictionary["docs"]["codeCopy"];
-}) {
+/*
+ * Wide reference tables scroll on their own rather than pushing the page
+ * sideways, and the first cell of each row is a heading for that row.
+ */
+function Table({ table }: { table: DocsTable }) {
   return (
-    <CodeBlock
-      language={section.language}
-      source={section.code}
-      labels={{ ...labels, action: labels.action.replace("{title}", section.title) }}
-    >
-      {tokenize(section.code).map((token, index) =>
-        token.type === "plain" ? (
-          <Fragment key={index}>{token.value}</Fragment>
-        ) : (
-          <span key={index} className={`tok-${token.type}`}>
-            {token.value}
-          </span>
-        )
-      )}
-    </CodeBlock>
+    <div className="docs-table">
+      <table>
+        <thead>
+          <tr>
+            {table.head.map((cell) => (
+              <th key={cell} scope="col">
+                {cell}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row) => (
+            <tr key={row[0]}>
+              {row.map((cell, index) =>
+                index === 0 ? (
+                  <th key={index} scope="row">
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={index}>{cell}</td>
+                )
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -67,7 +75,22 @@ export function DocsPage({
               <p className="section-number">{section.index}</p>
               <h2>{section.title}</h2>
               {section.body ? <p>{section.body}</p> : null}
-              <Code section={section} labels={docs.codeCopy} />
+              {section.code && section.language ? (
+                <Snippet
+                  language={section.language}
+                  source={section.code}
+                  title={section.title}
+                  labels={dictionary.codeCopy}
+                />
+              ) : null}
+              {section.table ? <Table table={section.table} /> : null}
+              {section.list ? (
+                <ul>
+                  {section.list.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : null}
             </section>
           ))}
 

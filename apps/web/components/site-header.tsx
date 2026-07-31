@@ -11,6 +11,7 @@ export function SiteHeader({
   locale: Locale;
 }) {
   const navigation = [
+    { href: pageHref(locale, "start"), label: dictionary.nav.start },
     { href: pageHref(locale, "docs"), label: dictionary.nav.docs },
     { href: pageHref(locale, "playground"), label: dictionary.nav.playground },
     { href: pageHref(locale, "benchmarks"), label: dictionary.nav.benchmarks }

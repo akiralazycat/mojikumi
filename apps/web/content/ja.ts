@@ -15,6 +15,7 @@ export const ja: Dictionary = {
   nav: {
     label: "メインナビゲーション",
     home: "Mojikumi ホーム",
+    start: "はじめる",
     docs: "Docs",
     playground: "Playground",
     benchmarks: "Benchmarks",
@@ -22,6 +23,11 @@ export const ja: Dictionary = {
     menu: "メニュー",
     close: "閉じる",
     settings: "表示設定"
+  },
+  codeCopy: {
+    label: "コピー",
+    copied: "コピー済み",
+    action: "{title}のコードをコピー"
   },
   theme: {
     label: "カラーテーマ",
@@ -45,8 +51,8 @@ export const ja: Dictionary = {
     headlineLead: "Webの日本語を",
     headlineAccent: "端正にする",
     lead: "日本語の本文をWebに載せると、括弧の前後が間延びし、和文と欧文の境目が窮屈になります。Mojikumiは、ブラウザの実装だけでは揃いきらないこの差を標準CSSの上で補い、本文の字面を整えます。文字列そのものは書き換えないため、コピーした文章も読み上げの内容も元のままです。",
-    primaryAction: "Playgroundで比較する",
-    secondaryAction: "導入方法を見る",
+    primaryAction: "自分のサイトへ入れる",
+    secondaryAction: "Playgroundで試す",
     specimenLabel: "TYPE SAMPLE / 01",
     specimenText:
       "『美しい本文』は、文字そのものだけでなく、文字と文字のあいだに宿ります。",
@@ -102,22 +108,159 @@ export const ja: Dictionary = {
       link: "Playgroundを開く"
     }
   },
+  start: {
+    title: "はじめる",
+    description: "Mojikumiを自分のサイトへ入れる手順",
+    eyebrow: "Getting started",
+    heading: "コードを1つ貼れば始められる",
+    lead: "ビルド設定は要りません。管理画面からコードを貼れるサイトなら、5分ほどで本文の字組みが変わります。合わなければ、貼ったコードを消すだけで元どおりです。",
+    indexLabel: "このページ",
+    choose: {
+      eyebrow: "Choose",
+      title: "コードはどこに貼れますか",
+      body: "貼り付け先によって、開く画面と確認の仕方が変わります。近いほうを選んでください。読み込むコードはどちらも同じです。",
+      pending:
+        "WordPressやShopifyなど、サービスごとの手順は実機で確認できた順に増やします。それまでも、下のどちらかの方法で同じことができます。"
+    },
+    steps: {
+      requirements: "必要なもの",
+      time: "所要時間",
+      access: "必要な権限",
+      open: "開く場所",
+      paste: "貼り付けるコード",
+      verify: "効いているか確かめる",
+      scope: "範囲を変える",
+      revert: "元に戻す",
+      trouble: "この環境でよくある問題"
+    },
+    guides: [
+      {
+        id: "html",
+        index: "01",
+        navLabel: "HTMLを編集できる",
+        title: "HTMLを直接編集できるサイト",
+        summary:
+          "テンプレートのファイルを触れる場合です。自作のサイト、静的サイトジェネレーター、テーマを編集できるCMSが当てはまります。",
+        time: "5分",
+        access: "テンプレートファイルを編集できること",
+        open: "すべてのページで読み込まれるHTMLを開きます。多くの場合は、headタグを含む共通のテンプレートです。静的サイトなら各HTMLファイル、テーマがあるならヘッダー用のテンプレートが該当します。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="article"
+></script>`,
+        verify: "記事のページを開き、括弧や句読点が続いている箇所を見てください。『「引用」』のような並びが詰まっていれば効いています。分かりにくいときは、ブラウザの検証ツールで本文の要素にmjkというクラスが付いているかを確かめられます。",
+        scope: "何も指定しなければ、本文らしい要素を上から順に探します。適用先が決まっているなら、data-targetにその要素のセレクターを書きます。ナビゲーションやフッターまで変わってしまうときも、これで狭められます。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-body"
+  data-style="book"
+></script>`,
+        revert: "貼った数行を消せば元に戻ります。Mojikumiが足すのは表示のための要素とクラスだけで、本文そのものは書き換えていません。保存されている記事のデータには何も残りません。",
+        trouble: [
+          "bodyの終わりに貼ると、CSSが届く前に本文が一度描画され、字組みの変わる瞬間が見えます。headの中に置いてください。",
+          "記事以外のページでも読み込まれますが、対象は本文の要素だけなので、ページごとに読み込みを分ける必要はありません。"
+        ]
+      },
+      {
+        id: "custom-code",
+        index: "02",
+        navLabel: "カスタムコード欄がある",
+        title: "管理画面にカスタムコード欄があるサービス",
+        summary:
+          "HTMLのファイルは触れないが、管理画面からコードを差し込める場合です。Webflow、Shopify、Ghost、Squarespaceなどが当てはまります。",
+        time: "5分",
+        access: "サイト全体の設定を変更できる管理者権限",
+        open: "管理画面で、コードを差し込む欄を探します。「カスタムコード」「Code Injection」「ヘッダーに追加するコード」などの名前で、サイト全体の設定にあります。ページ単位の設定ではなく、全ページ共通の欄を選びます。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="article"
+></script>`,
+        verify: "公開されている記事のページを開いて確認します。管理画面のプレビューでは編集用の要素が混ざるため、本番のページで見るほうが確実です。",
+        scope: "本文を囲む要素の名前はサービスごとに違います。記事ページで本文を右クリックして検証を開き、本文全体を囲んでいる要素のクラス名をdata-targetに書きます。",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-body"
+  data-style="article"
+></script>`,
+        revert: "カスタムコード欄から消して保存すれば元に戻ります。記事の内容には手を入れていないため、あとから別の方法へ移ることもできます。",
+        trouble: [
+          "編集画面の表示まで変わる場合、そのサービスは編集画面にも同じコードを読み込んでいます。data-targetを本文の要素だけに絞ってください。",
+          "保存しても反映されないときは、サービス側のキャッシュが残っている可能性があります。時間をおくか、キャッシュの削除を試してください。"
+        ]
+      }
+    ],
+    trouble: {
+      id: "trouble",
+      index: "03",
+      title: "うまくいかないとき",
+      navLabel: "うまくいかないとき",
+      body: "どの環境でも起きる症状です。原因の詳しい説明はDocsにあります。",
+      items: [
+        {
+          term: "何も変わらない",
+          description:
+            "本文の要素とdata-targetが一致していない可能性が高いです。検証ツールで本文の要素にmjkというクラスが付いているかを確認してください。付いていなければセレクターが違います。付いているのに変化が見えない場合は、そのブラウザがすでに標準の機能で同じ処理をしています。"
+        },
+        {
+          term: "適用範囲が広すぎる",
+          description:
+            "ナビゲーションやフッターまで変わる場合は、data-targetを本文の要素だけに絞ります。一部分だけ外したいときは、その要素にdata-no-mojikumiを付けます。"
+        },
+        {
+          term: "編集画面の表示が乱れる",
+          description:
+            "管理バーやブロックエディターの中では動かないようにしていますが、独自の作りだと届かないことがあります。data-targetを本文の要素だけに絞ると確実です。"
+        },
+        {
+          term: "表示が遅くなった気がする",
+          description:
+            "読み込むファイルは1つで、圧縮後6KB弱です。標準の機能で足りるブラウザでは、そもそも本文へ手を入れません。気になる場合はdata-precisionにnativeを指定すると、ブラウザの実装だけを使います。"
+        }
+      ]
+    },
+    nextStep: {
+      label: "次のステップ",
+      title: "自分の文章で確かめる",
+      link: "Playgroundを開く"
+    }
+  },
   docs: {
     title: "Docs",
     description: "Mojikumiの導入手順とパッケージ構成",
     eyebrow: "Documentation",
     heading: "段階的に導入する",
-    lead: "導入は、CSSプリセットを読み込むところから始まります。標準CSSだけでは揃わない環境には、DOMフォールバックを追加してください。ReactでもMarkdown / MDXでも手順は変わらず、本文の文字列に手を加えないという方針も共通です。",
+    lead: "導入は、スクリプトを1つ読み込むか、CSSプリセットを読み込むところから始まります。標準CSSだけでは揃わない環境には、DOMフォールバックを追加してください。ReactでもMarkdown / MDXでも手順は変わらず、本文の文字列に手を加えないという方針も共通です。",
     indexLabel: "このページ",
-    codeCopy: {
-      label: "コピー",
-      copied: "コピー済み",
-      action: "{title}のコードをコピー"
-    },
     sections: [
       {
-        id: "css",
+        id: "script",
         index: "01",
+        title: "スクリプトタグで使う",
+        navLabel: "スクリプトタグ",
+        language: "HTML",
+        body: "ビルド設定を持たないサイトでは、スクリプトを1つ読み込むだけで動作します。CSSはバンドルに含まれているため、読み込むファイルは1つです。設定はタグの属性で渡し、読み込み後に追加された記事も自動的に対象になります。",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>`,
+        table: {
+          head: ["属性", "既定値", "内容"],
+          rows: [
+            ["data-target", "auto", "本文のセレクター。autoは既知の本文要素を順に探します"],
+            ["data-style", "article", "article（記事向け）、book（書籍風）、headline（見出し重視）"],
+            ["data-precision", "auto", "native、auto、fullのいずれか"],
+            ["data-exclude", "なし", "追加で除外するセレクター。カンマ区切り"],
+            ["data-css", "true", "同梱CSSを読み込むかどうか"],
+            ["data-auto", "true", "falseにするとMojikumi.start()を呼ぶまで何もしません"]
+          ]
+        }
+      },
+      {
+        id: "css",
+        index: "02",
         title: "CSSだけで使う",
         navLabel: "CSS",
         language: "TSX",
@@ -130,7 +273,7 @@ export const ja: Dictionary = {
       },
       {
         id: "dom",
-        index: "02",
+        index: "03",
         title: "DOMフォールバックを追加する",
         navLabel: "DOM",
         language: "TypeScript",
@@ -145,7 +288,7 @@ const instance = mojikumi(".article", {
       },
       {
         id: "react",
-        index: "03",
+        index: "04",
         title: "Reactで使う",
         navLabel: "React",
         language: "TSX",
@@ -162,7 +305,7 @@ export function Article({ children }) {
       },
       {
         id: "mdx",
-        index: "04",
+        index: "05",
         title: "Markdown / MDXで使う",
         navLabel: "Markdown / MDX",
         language: "TypeScript",
@@ -174,11 +317,99 @@ export default {
     [rehypeMojikumi, { preset: "editorial" }]
   ]
 };`
+      },
+      {
+        id: "presets",
+        index: "06",
+        title: "プリセットを選ぶ",
+        navLabel: "プリセット",
+        body: "プリセットは、どの調整を行うかの組み合わせです。迷う場合はwebを選んでください。書籍に近い体裁が必要ならbook、見出しの文節改行を優先するならeditorial、約物の重なりだけを詰めたいならminimalが適します。nativeはブラウザの実装だけを使い、JavaScriptによる補完を行いません。",
+        table: {
+          head: ["調整", "web", "book", "editorial", "minimal", "native"],
+          rows: [
+            ["連続する約物", "○", "○", "○", "○", "○"],
+            ["行頭の調整", "○", "○", "○", "—", "○"],
+            ["行末の調整", "条件付き", "○", "○", "—", "○"],
+            ["和欧文間", "○", "○", "—", "—", "○"],
+            ["段落の字下げ", "—", "1em", "—", "—", "—"],
+            ["見出しの文節改行", "—", "—", "○", "—", "—"],
+            ["JSによる補完", "○", "○", "○", "○", "—"]
+          ]
+        }
+      },
+      {
+        id: "precision",
+        index: "07",
+        title: "ブラウザの実装との切り替え",
+        navLabel: "precision",
+        body: "precisionは、標準CSSとDOM補完のどちらをどこまで使うかの指定です。既定のautoでは、ブラウザが実際に約物を詰めているかを実測してから判断します。構文としては対応していても表示が変わらない実装があるため、対応表ではなく実測で切り替えています。",
+        table: {
+          head: ["値", "動作", "使いどころ"],
+          rows: [
+            ["native", "標準CSSのみを使用します", "JavaScriptを増やしたくない場合"],
+            ["auto", "不足している処理だけを補います", "通常はこれで十分です"],
+            ["full", "常にDOM補完を適用します", "検証時や、実装差を確認する場合"]
+          ]
+        }
+      },
+      {
+        id: "scope",
+        index: "08",
+        title: "適用範囲を変える",
+        navLabel: "適用範囲",
+        language: "HTML",
+        body: "コード、フォーム、編集中の領域、SVG、MathMLは、指定がなくても対象から外れます。任意の範囲を外したい場合は、その要素にdata-no-mojikumiを付けます。まとめて外すなら、excludeやdata-excludeにセレクターを渡します。",
+        code: `<span data-no-mojikumi>console.log("日本語")</span>`,
+        list: [
+          "既定の除外：script、style、code、pre、kbd、samp、textarea、input、select、option、contenteditable、svg、math",
+          "data-no-mojikumiを付けた要素と、その内部",
+          "data-excludeまたはexcludeで追加したセレクター"
+        ]
+      },
+      {
+        id: "api",
+        index: "09",
+        title: "プログラムから操作する",
+        navLabel: "API",
+        language: "JavaScript",
+        body: "スクリプトタグで読み込むと、グローバルのMojikumiから操作できます。data-autoをfalseにしておけば、開始のタイミングも自分で決められます。npmから使う場合は、同じ処理をmojikumiパッケージのmojikumi関数が担当します。",
+        code: `Mojikumi.start({ target: ".article", style: "book" });
+Mojikumi.refresh();
+Mojikumi.stop();`,
+        table: {
+          head: ["関数", "内容"],
+          rows: [
+            ["start(options)", "適用を開始し、以降に追加された記事も対象にします"],
+            ["refresh()", "行頭・行末の判定をやり直します"],
+            ["stop()", "生成した要素とクラス、読み込んだCSSをすべて取り除きます"]
+          ]
+        }
+      },
+      {
+        id: "self-host",
+        index: "10",
+        title: "自分のサーバーへ置く",
+        navLabel: "自己ホスト",
+        language: "HTML",
+        body: "CDNを使わない場合は、npmパッケージに含まれる同じファイルを自分のサーバーへ置けます。node_modules/mojikumi/dist/mojikumi.browser.jsを公開ディレクトリへコピーし、srcをそのパスに変えるだけです。動作は変わりません。",
+        code: `<script src="/assets/mojikumi.min.js" data-style="article"></script>`
+      },
+      {
+        id: "uninstall",
+        index: "11",
+        title: "元に戻す",
+        navLabel: "元に戻す",
+        body: "スクリプトタグを消す、あるいはstop()を呼ぶと、その場で元の状態に戻ります。Mojikumiは本文の文字列を書き換えないため、取り外したあとに痕跡は残りません。",
+        list: [
+          "生成した要素とクラスを取り除き、変更した属性を元の値へ戻します",
+          "本文の文字列は変更していないため、保存されたデータには何も残りません",
+          "スクリプトが読み込めなかった場合も、本文はそのまま表示されます"
+        ]
       }
     ],
     policy: {
       id: "policy",
-      index: "05",
+      index: "12",
       title: "設計方針",
       navLabel: "設計方針",
       items: [

@@ -28,6 +28,7 @@ export function SiteFooter({
         <div className="footer-links">
           <nav aria-label={footer.product}>
             <p className="footer-heading">{footer.product}</p>
+            <Link href={pageHref(locale, "start")}>{nav.start}</Link>
             <Link href={pageHref(locale, "docs")}>{nav.docs}</Link>
             <Link href={pageHref(locale, "playground")}>{nav.playground}</Link>
             <Link href={pageHref(locale, "benchmarks")}>{nav.benchmarks}</Link>

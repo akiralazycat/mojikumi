@@ -10,7 +10,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./css": "./dist/mojikumi.css"
+    "./browser": "./dist/mojikumi.browser.js",
+    "./css": "./dist/mojikumi.css",
+    "./mojikumi.min.css": "./dist/mojikumi.min.css"
   },
   "files": [
     "dist",

@@ -13,10 +13,16 @@ function rebuild(tokens: CodeToken[]): string {
   return tokens.map((token) => token.value).join("");
 }
 
+/* Every snippet the site shows, including the ones readers paste verbatim. */
+const snippets = [
+  ...ja.docs.sections.flatMap((section) => (section.code ? [section.code] : [])),
+  ...ja.start.guides.flatMap((guide) => [guide.code, guide.scopeCode])
+];
+
 describe("tokenize", () => {
   it("never loses or reorders a character", () => {
-    for (const section of ja.docs.sections) {
-      expect(rebuild(tokenize(section.code))).toBe(section.code);
+    for (const source of snippets) {
+      expect(rebuild(tokenize(source))).toBe(source);
     }
   });
 
