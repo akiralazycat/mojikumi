@@ -140,6 +140,8 @@ export type Dictionary = {
     heading: string;
     lead: string;
     regionLabel: string;
+    /** Japanese in both locales: it is the specimen the tool exists to set. */
+    sampleText: string;
     controls: {
       heading: string;
       reset: string;

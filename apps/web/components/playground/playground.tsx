@@ -35,9 +35,6 @@ const presetOptions: ControlOption<PresetName>[] = [
   { value: "native", label: "Native" }
 ];
 
-const sample =
-  "『行頭の括弧』は、半角分のアキを詰めると版面が揃います。\n\nNext.jsと日本語、GPT-5を使う100円の本。約物「（例）」が連続する場面や、改行直後の『括弧』も比較できます。";
-
 const presetRequirements: Record<
   PresetName,
   { start: boolean; both: boolean; autospace: boolean }
@@ -233,8 +230,8 @@ function RangeControl({
 }
 
 export function Playground({ dictionary }: { dictionary: Dictionary }) {
-  const { controls, status, samples } = dictionary.playground;
-  const [text, setText] = useState(sample);
+  const { controls, status, samples, sampleText } = dictionary.playground;
+  const [text, setText] = useState(sampleText);
   const [preset, setPreset] = useState<PresetName>("web");
   const [font, setFont] = useState<"serif" | "sans-serif">("serif");
   const [size, setSize] = useState(18);
@@ -313,7 +310,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
     allowsFallback && (precision === "full" || missing.length > 0);
 
   function reset() {
-    setText(sample);
+    setText(sampleText);
     setPreset("web");
     setFont("serif");
     setSize(18);
