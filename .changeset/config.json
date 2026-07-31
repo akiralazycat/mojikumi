@@ -18,6 +18,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@mojikumi/playground"
+    "@mojikumi/playground",
+    "@mojikumi/web",
+    "@mojikumi/cdn"
   ]
 }

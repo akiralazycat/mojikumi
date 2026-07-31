@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mojikumi/css": "0.1.1",
-    "@mojikumi/dom": "0.1.1",
-    "@mojikumi/react": "0.1.1",
+    "@mojikumi/css": "0.2.0",
+    "@mojikumi/dom": "0.2.0",
+    "@mojikumi/react": "0.2.0",
     "next": "^16.2.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
