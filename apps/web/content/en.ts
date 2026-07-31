@@ -158,7 +158,7 @@ export const en: Dictionary = {
 ></script>`,
         revert: "Delete the few lines you pasted. Mojikumi only ever adds elements and classes for display; your text was never rewritten, so nothing is left in what you have saved.",
         trouble: [
-          "Pasted at the end of the body, the stylesheet arrives after the article has been painted once, and you see the setting change. Put the tag in the head.",
+          "Pasted at the end of the body, the stylesheet arrives after the article has been painted once, and on a narrow screen the text shifts as it lands. In the head, nothing moves.",
           "It loads on pages other than articles, which is fine: only the body element is ever touched, so there is no need to load it conditionally."
         ]
       },
@@ -594,8 +594,26 @@ Mojikumi.stop();`,
         }
       },
       {
-        id: "self-host",
+        id: "version",
         index: "13",
+        title: "Pinning a version",
+        navLabel: "Pinning",
+        language: "HTML",
+        body: "What sits behind /v1/ is replaced whenever a fix ships. That is how a pasted tag receives improvements without being pasted again, and it also means our changes reach your site directly. To decide that timing yourself, use the URL with a version in it. Those files are never rewritten, so they are cached for a year.",
+        code: `<script
+  src="https://cdn.mojikumi.jp/{version}/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>`,
+        list: [
+          "The current release is {version}",
+          "A pinned URL never updates, so moving to a new release means editing the tag",
+          "To check that the file itself has not been swapped, generate a hash from it and add an integrity attribute"
+        ]
+      },
+      {
+        id: "self-host",
+        index: "14",
         title: "Serving it yourself",
         navLabel: "Self-hosting",
         language: "HTML",
@@ -604,7 +622,7 @@ Mojikumi.stop();`,
       },
       {
         id: "uninstall",
-        index: "14",
+        index: "15",
         title: "Taking it back out",
         navLabel: "Removing it",
         body: "Delete the script tag, or call stop(), and the page returns to how it was. Because the text is never rewritten, removing Mojikumi leaves nothing behind to clean up.",
@@ -617,7 +635,7 @@ Mojikumi.stop();`,
     ],
     policy: {
       id: "policy",
-      index: "15",
+      index: "16",
       title: "Design policy",
       navLabel: "Design policy",
       items: [

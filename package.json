@@ -28,7 +28,8 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "package:check": "node scripts/check-packages.mjs",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "measure:shift": "node scripts/measure-shift.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -40,6 +41,7 @@
     "@types/react-dom": "^19.1.7",
     "esbuild": "^0.28.1",
     "jsdom": "^26.1.0",
+    "playwright-core": "^1.56.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5.8.3",

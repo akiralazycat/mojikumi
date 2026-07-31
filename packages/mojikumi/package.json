@@ -15,6 +15,7 @@
       "import": "./dist/browser.js"
     },
     "./css": "./dist/mojikumi.css",
+    "./package.json": "./package.json",
     "./mojikumi.browser.js": "./dist/mojikumi.browser.js",
     "./mojikumi.min.css": "./dist/mojikumi.min.css"
   },

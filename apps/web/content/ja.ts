@@ -158,7 +158,7 @@ export const ja: Dictionary = {
 ></script>`,
         revert: "貼った数行を消せば元に戻ります。Mojikumiが足すのは表示のための要素とクラスだけで、本文そのものは書き換えていません。保存されている記事のデータには何も残りません。",
         trouble: [
-          "bodyの終わりに貼ると、CSSが届く前に本文が一度描画され、字組みの変わる瞬間が見えます。headの中に置いてください。",
+          "bodyの終わりに貼ると、CSSが届く前に本文が一度描画され、狭い画面では行が一度ずれます。headの中に置けば、これは起きません。",
           "記事以外のページでも読み込まれますが、対象は本文の要素だけなので、ページごとに読み込みを分ける必要はありません。"
         ]
       },
@@ -594,8 +594,26 @@ Mojikumi.stop();`,
         }
       },
       {
-        id: "self-host",
+        id: "version",
         index: "13",
+        title: "バージョンを固定する",
+        navLabel: "バージョン固定",
+        language: "HTML",
+        body: "/v1/は修正が出るたびに中身が入れ替わります。貼り直さずに改善を受け取れる代わりに、こちらの変更がそのまま届きます。変更のタイミングを自分で決めたい場合は、バージョンを含むURLを指定してください。こちらのファイルは書き換えられないため、1年間キャッシュされます。",
+        code: `<script
+  src="https://cdn.mojikumi.jp/{version}/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>`,
+        list: [
+          "現在の最新版は{version}です",
+          "固定したURLは更新されないため、新しい版へ移るときは書き換えが必要です",
+          "配信物が置き換わっていないことまで確かめるなら、ファイルからハッシュを作ってintegrity属性を付けます"
+        ]
+      },
+      {
+        id: "self-host",
+        index: "14",
         title: "自分のサーバーへ置く",
         navLabel: "自己ホスト",
         language: "HTML",
@@ -604,7 +622,7 @@ Mojikumi.stop();`,
       },
       {
         id: "uninstall",
-        index: "14",
+        index: "15",
         title: "元に戻す",
         navLabel: "元に戻す",
         body: "スクリプトタグを消す、あるいはstop()を呼ぶと、その場で元の状態に戻ります。Mojikumiは本文の文字列を書き換えないため、取り外したあとに痕跡は残りません。",
@@ -617,7 +635,7 @@ Mojikumi.stop();`,
     ],
     policy: {
       id: "policy",
-      index: "15",
+      index: "16",
       title: "設計方針",
       navLabel: "設計方針",
       items: [

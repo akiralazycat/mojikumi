@@ -1,8 +1,18 @@
 import Link from "next/link";
+import { version as mojikumiVersion } from "mojikumi/package.json";
 import type { Dictionary, DocsTable, Locale } from "../../content";
 import { pageHref } from "../../lib/site";
 import { ArrowRightIcon } from "../icons";
 import { Snippet } from "../snippet";
+
+/*
+ * The published version is read at build time rather than written into the
+ * copy. Written down, it would be two more strings to update at every release,
+ * and the one nobody remembers is the one people paste.
+ */
+function withVersion(text: string): string {
+  return text.replaceAll("{version}", mojikumiVersion);
+}
 
 /*
  * Wide reference tables scroll on their own rather than pushing the page
@@ -74,11 +84,11 @@ export function DocsPage({
             <section id={section.id} key={section.id}>
               <p className="section-number">{section.index}</p>
               <h2>{section.title}</h2>
-              {section.body ? <p>{section.body}</p> : null}
+              {section.body ? <p>{withVersion(section.body)}</p> : null}
               {section.code && section.language ? (
                 <Snippet
                   language={section.language}
-                  source={section.code}
+                  source={withVersion(section.code)}
                   title={section.title}
                   labels={dictionary.codeCopy}
                 />
@@ -87,7 +97,7 @@ export function DocsPage({
               {section.list ? (
                 <ul>
                   {section.list.map((item) => (
-                    <li key={item}>{item}</li>
+                    <li key={item}>{withVersion(item)}</li>
                   ))}
                 </ul>
               ) : null}

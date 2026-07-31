@@ -178,7 +178,8 @@ export default {
 | `@mojikumi/rehype` | Markdown・MDX向け静的マークアップ |
 
 詳細は[仕様](./SPEC.md)、[互換性方針](./COMPATIBILITY.md)、
-[フォント検証表](./FONT-MATRIX.md)、[npm公開手順](./RELEASING.md)を参照してください。
+[フォント検証表](./FONT-MATRIX.md)、[計測記録](./BENCHMARKS.md)、
+[npm公開手順](./RELEASING.md)を参照してください。
 
 ## 設計原則
 
