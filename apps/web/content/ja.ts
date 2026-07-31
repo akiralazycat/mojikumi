@@ -107,10 +107,10 @@ export const ja: Dictionary = {
   },
   docs: {
     title: "Docs",
-    description: "Mojikumiの導入方法とパッケージ構成",
+    description: "Mojikumiの導入手順とパッケージ構成",
     eyebrow: "Documentation",
-    heading: "小さく導入し必要な分だけ補う",
-    lead: "まず標準CSSを適用し、それでも揃わない環境にだけDOMフォールバックを足します。ReactでもMDXでも手順は同じで、本文の文字列に手を入れない方針は変わりません。",
+    heading: "最小構成から始めて、必要な分だけ足す",
+    lead: "導入は、CSSプリセットを読み込むところから始まります。標準CSSだけでは揃わない環境には、DOMフォールバックを追加してください。ReactでもMarkdown / MDXでも手順は変わらず、本文の文字列に手を加えないという方針も共通です。",
     indexLabel: "このページ",
     sections: [
       {
@@ -118,7 +118,7 @@ export const ja: Dictionary = {
         index: "01",
         title: "CSSだけで使う",
         navLabel: "CSS",
-        body: "まずはCSSプリセットを読み込んで、本文の要素にクラスを付けるだけです。標準CSSを理解するブラウザは、この時点で約物のアキを詰めはじめます。ビルド設定もJavaScriptも増えません。プリセットはbook、web、editorial、minimalの4種類があり、詰めの強さが違います。",
+        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物のアキが詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -130,7 +130,7 @@ export const ja: Dictionary = {
         index: "02",
         title: "DOMフォールバックを追加する",
         navLabel: "DOM",
-        body: "標準CSSがまだ届かないブラウザにも同じ見た目を届けたいときは、DOM層を足します。約物が連続する箇所や、行頭・行末に来た括弧など、CSSだけでは揃わない位置を実行時に測って補います。precisionをautoにしておけば、対応済みのブラウザでは何もしません。",
+        body: "標準CSSが未実装のブラウザでも同じ表示を得たい場合は、DOM層を追加します。約物が連続する箇所や、行頭・行末に置かれた括弧など、CSSだけでは揃わない位置を実行時に計測して補正する層です。precisionをautoに設定しておけば、対応済みのブラウザでは処理そのものが実行されません。",
         code: `import "mojikumi/css";
 import { mojikumi } from "mojikumi";
 
@@ -144,7 +144,7 @@ const instance = mojikumi(".article", {
         index: "03",
         title: "Reactで使う",
         navLabel: "React",
-        body: "サーバーでは通常のHTMLを書き出し、ブラウザに届いてから必要な分だけ補います。囲むだけのComponentと、既存の要素に付けるHookのどちらでも使えるので、いまのレイアウトを組み替えずに差し込めます。",
+        body: "サーバーでは通常のHTMLを出力し、ブラウザに届いた時点で不足分だけを補います。要素を囲むComponentと、既存の要素に適用するHookのどちらでも利用できるため、現在のレイアウトを組み替える必要はありません。",
         code: `import { Mojikumi } from "@mojikumi/react";
 
 export function Article({ children }) {
@@ -160,7 +160,7 @@ export function Article({ children }) {
         index: "04",
         title: "Markdown / MDXで使う",
         navLabel: "Markdown / MDX",
-        body: "rehypeプラグインとして組み込むと、記事の本文にプリセットが適用されます。原稿のMarkdownはそのままで、書き手が字組みを意識する必要はありません。コードブロックや数式は対象から外れるので、記号の並びが崩れる心配もありません。",
+        body: "rehypeプラグインとして組み込むと、記事本文にプリセットが適用されます。原稿のMarkdownは変更する必要がなく、書き手が字組みを意識することもありません。コードブロックと数式は処理の対象から除外されるため、記号の並びが崩れることはありません。",
         code: `import rehypeMojikumi from "@mojikumi/rehype";
 
 export default {
@@ -176,10 +176,10 @@ export default {
       title: "設計方針",
       navLabel: "設計方針",
       items: [
-        "まず標準CSSで動く。ブラウザが対応していれば、それだけで完結します",
-        "本文の文字列は書き換えない。コピーした文章も、読み上げの内容も元のままです",
-        "ブラウザの対応が進むほど、読み込むコードは自然と減っていきます",
-        "約物メトリクスを持たない書体では、無理に詰めません"
+        "まず標準CSSで動作し、ブラウザが対応していればそれだけで完結します",
+        "本文の文字列は書き換えないため、コピーした文章も読み上げの内容も元のまま保たれます",
+        "ブラウザの対応が進むほど、読み込まれるコードは自然に減っていきます",
+        "約物メトリクスを備えていない書体では、詰めを適用しません"
       ]
     },
     nextStep: {
@@ -190,10 +190,10 @@ export default {
   },
   playground: {
     title: "Playground",
-    description: "未調整、YakuHanJP、標準CSS、Mojikumiの日本語字組みを比較します",
+    description: "約物調整なし、YakuHanJP、標準CSS、Mojikumiの4つで日本語の字組みを比較します",
     eyebrow: "Interactive comparison",
     heading: "同じ文章で字組みを比べる",
-    lead: "約物調整なし、YakuHanJP、標準CSS、Mojikumiの4つを、同じ文章で並べて表示します。文字サイズや行幅、書体を動かしながら、どこがどう変わるのかを目で確かめられます。入力欄の文章はブラウザの中だけで処理されます。",
+    lead: "約物調整なし、YakuHanJP、標準CSS、Mojikumiの4つを、同じ文章で並べて表示します。文字サイズ、行幅、書体を切り替えながら、どこがどう変わるのかを比較できます。入力欄の文章はブラウザ内でのみ処理され、外部へ送信されることはありません。",
     regionLabel: "Mojikumi比較ツール",
     controls: {
       heading: "組版設定",
@@ -217,7 +217,7 @@ export default {
       nativeOnly: "Nativeプリセット：標準CSSのみ",
       supplementing: "不足機能を補完中：",
       native: "このブラウザでは標準CSSを使用中",
-      note: "Autoは、いま使っているブラウザが対応している標準CSSを優先します。Fallbackに切り替えると、未対応のブラウザで見えるはずの補完結果を強制的に表示します。",
+      note: "Autoは、ご利用のブラウザが対応している標準CSSを優先します。Fallbackに切り替えると、標準CSSに未対応のブラウザで表示されるはずの補完結果を強制的に描画します。",
       missingSeparator: "・",
       missing: {
         punctuation: "約物間",
@@ -237,7 +237,7 @@ export default {
       },
       native: {
         title: "Native CSS",
-        note: "現在のブラウザの標準実装"
+        note: "ご利用のブラウザの標準実装"
       },
       mojikumi: {
         title: "Mojikumi",
@@ -247,18 +247,18 @@ export default {
       }
     },
     credit:
-      "YakuHanJPの比較には、Yaku Han JP v4.1.1（© Qrac、OFL-1.1 AND MIT）の約物サブセットを自己ホストして使用しています。地の文には、この書体が切り出された元であるNoto Sans JPを合わせています。"
+      "YakuHanJPとの比較には、Yaku Han JP v4.1.1（© Qrac、OFL-1.1 AND MIT）の約物サブセットを自己ホストして使用しています。地の文には、このサブセットの切り出し元であるNoto Sans JPを組み合わせています。"
   },
   benchmarks: {
     title: "Benchmarks",
-    description: "Mojikumiの性能計測方針と公開予定の指標",
+    description: "Mojikumiの性能計測の方針と、公開予定の指標",
     eyebrow: "Performance & compatibility",
-    heading: "速さと補完の小ささを測る",
-    lead: "Mojikumiは、ブラウザの標準実装が育つほど仕事が減っていく設計です。処理にかかる時間だけでなく、補完のために追加されるDOMの量や、組み直しのコストも合わせて記録します。",
+    heading: "処理速度と補完量を測る",
+    lead: "Mojikumiは、ブラウザの標準実装が広がるほど処理量が減る設計です。そのため計測では、処理にかかる時間に加えて、補完のために追加されるDOMの量と、組み直しに要するコストも記録します。",
     status: {
       label: "Current status",
       title: "計測環境を準備しています",
-      body: "いま進めているのは、何度測っても同じ数字が出る条件を固める作業です。端末やブラウザのバージョンが変われば結果も動くため、条件を書き残せないうちは数値を出しません。それまでのあいだ、実際の速さと見え方はPlaygroundで直接確かめられます。",
+      body: "現在は、再現性のある計測条件を確定させる作業を進めています。端末やブラウザのバージョンが変われば結果も変動するため、条件を明記できない段階で数値を公開することはしません。それまでのあいだ、実際の処理速度と表示はPlaygroundで直接ご確認いただけます。",
       link: "Playgroundで確かめる"
     },
     metrics: {
@@ -267,19 +267,19 @@ export default {
       items: [
         {
           term: "初期処理",
-          description: "本文をはじめて解析し、必要なアキを入れ終えるまでの時間"
+          description: "本文を最初に解析し、必要なアキの挿入を終えるまでの時間"
         },
         {
           term: "再評価",
-          description: "ウィンドウ幅が変わったときや、書体が読み込まれたあとに組み直す時間"
+          description: "ウィンドウ幅の変更後、または書体の読み込み完了後に組み直しへ要する時間"
         },
         {
           term: "DOM増加量",
-          description: "補完のために追加される要素の数。少ないほど、標準CSSだけで足りている"
+          description: "補完のために追加される要素の数。少ないほど標準CSSだけで足りていることを示す"
         },
         {
           term: "メモリ",
-          description: "長い記事や、複数の記事を同時に開いたときのヒープ使用量"
+          description: "長文の記事、および複数の記事を同時に開いた場合のヒープ使用量"
         }
       ]
     },
@@ -290,13 +290,13 @@ export default {
         { term: "Chromium", description: "最新版 / macOS・Linux" },
         { term: "Firefox", description: "最新版 / macOS・Linux" },
         { term: "WebKit", description: "最新版 / macOS" },
-        { term: "Content", description: "1千字・1万字・複数段落の3種類" }
+        { term: "Content", description: "1,000字・10,000字・複数段落の3種類" }
       ]
     },
     method: {
       label: "Method",
       title: "再現できる結果だけを公開する",
-      body: "計測に使ったコード、入力した文章、ブラウザのバージョン、書体の条件はリポジトリに残しています。同じ手順をたどれば、手元でも近い数字が出るはずです。このページに載せるのは、CIの固定条件で得られた結果だけで、その場で動かすライブ計測は端末の状態に左右されるため別扱いにします。"
+      body: "計測に使用したコード、入力した文章、ブラウザのバージョン、書体の条件は、すべてリポジトリに記録しています。同じ手順をたどれば、お手元でも近い数値が得られるはずです。このページに掲載するのは、CIの固定条件で得られた結果に限ります。その場で実行するライブ計測は端末の状態に左右されるため、別の扱いとします。"
     }
   },
   privacy: {
