@@ -7,3 +7,4 @@ coverage/
 *.tsbuildinfo
 /packages/*/README.md
 /packages/*/LICENSE
+/examples/*/package-lock.json

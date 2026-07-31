@@ -149,6 +149,9 @@ export function Article({ children }) {
 SSRでは通常のHTMLとクラスだけを出し、必要なDOM補完はマウント後に行います。
 `useMojikumi()` Hookも利用できます。
 
+動く最小構成は[`examples/next-app`](./examples/next-app)にあります。そのまま
+コピーして出発点にできます。
+
 ## Markdown / MDXで使う
 
 ```ts

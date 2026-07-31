@@ -449,8 +449,71 @@ export function Article({ children }) {
 }`
       },
       {
-        id: "mdx",
+        id: "astro",
         index: "05",
+        title: "Astroで使う",
+        navLabel: "Astro",
+        language: "Astro",
+        body: "Astroが出力するのは静的なHTMLなので、コンポーネントのscriptタグから呼び出します。フロントマターでCSSを読み込み、クライアント側のscriptでDOM層を適用します。ページ遷移でDOMが差し替わる構成では、astro:page-loadでもう一度呼んでください。",
+        code: `---
+import "mojikumi/css";
+---
+
+<article class="article" lang="ja"><slot /></article>
+
+<script>
+  import { mojikumi } from "mojikumi";
+  mojikumi(".article", { preset: "book" });
+</script>`
+      },
+      {
+        id: "vue",
+        index: "06",
+        title: "Vue / Nuxtで使う",
+        navLabel: "Vue / Nuxt",
+        language: "Vue",
+        body: "onMountedはブラウザでしか実行されないため、Nuxtのサーバーレンダリングでも本文はそのまま出力されます。コンポーネントが破棄されるときにdestroyを呼び、生成した要素を残さないようにします。",
+        code: `<script setup>
+import { onBeforeUnmount, onMounted, ref } from "vue";
+import { createMojikumi } from "mojikumi";
+
+const root = ref(null);
+let instance;
+
+onMounted(() => {
+  instance = createMojikumi({ preset: "book" }).mount(root.value);
+});
+
+onBeforeUnmount(() => instance?.destroy());
+</script>
+
+<template>
+  <article ref="root" lang="ja"><slot /></article>
+</template>`
+      },
+      {
+        id: "svelte",
+        index: "07",
+        title: "SvelteKitで使う",
+        navLabel: "SvelteKit",
+        language: "Svelte",
+        body: "$effectはブラウザでのみ実行されるため、サーバーレンダリングの結果には手が入りません。返した関数が後片付けになるので、コンポーネントが消えるときにdestroyが呼ばれます。",
+        code: `<script>
+  import { createMojikumi } from "mojikumi";
+
+  let root;
+
+  $effect(() => {
+    const instance = createMojikumi({ preset: "book" }).mount(root);
+    return () => instance.destroy();
+  });
+</script>
+
+<article bind:this={root} lang="ja"><slot /></article>`
+      },
+      {
+        id: "mdx",
+        index: "08",
         title: "Markdown / MDXで使う",
         navLabel: "Markdown / MDX",
         language: "TypeScript",
@@ -465,7 +528,7 @@ export default {
       },
       {
         id: "presets",
-        index: "06",
+        index: "09",
         title: "プリセットを選ぶ",
         navLabel: "プリセット",
         body: "プリセットは、どの調整を行うかの組み合わせです。迷う場合はwebを選んでください。書籍に近い体裁が必要ならbook、見出しの文節改行を優先するならeditorial、約物の重なりだけを詰めたいならminimalが適します。nativeはブラウザの実装だけを使い、JavaScriptによる補完を行いません。",
@@ -484,7 +547,7 @@ export default {
       },
       {
         id: "precision",
-        index: "07",
+        index: "10",
         title: "ブラウザの実装との切り替え",
         navLabel: "precision",
         body: "precisionは、標準CSSとDOM補完のどちらをどこまで使うかの指定です。既定のautoでは、ブラウザが実際に約物を詰めているかを実測してから判断します。構文としては対応していても表示が変わらない実装があるため、対応表ではなく実測で切り替えています。",
@@ -499,7 +562,7 @@ export default {
       },
       {
         id: "scope",
-        index: "08",
+        index: "11",
         title: "適用範囲を変える",
         navLabel: "適用範囲",
         language: "HTML",
@@ -513,7 +576,7 @@ export default {
       },
       {
         id: "api",
-        index: "09",
+        index: "12",
         title: "プログラムから操作する",
         navLabel: "API",
         language: "JavaScript",
@@ -532,7 +595,7 @@ Mojikumi.stop();`,
       },
       {
         id: "self-host",
-        index: "10",
+        index: "13",
         title: "自分のサーバーへ置く",
         navLabel: "自己ホスト",
         language: "HTML",
@@ -541,7 +604,7 @@ Mojikumi.stop();`,
       },
       {
         id: "uninstall",
-        index: "11",
+        index: "14",
         title: "元に戻す",
         navLabel: "元に戻す",
         body: "スクリプトタグを消す、あるいはstop()を呼ぶと、その場で元の状態に戻ります。Mojikumiは本文の文字列を書き換えないため、取り外したあとに痕跡は残りません。",
@@ -554,7 +617,7 @@ Mojikumi.stop();`,
     ],
     policy: {
       id: "policy",
-      index: "12",
+      index: "15",
       title: "設計方針",
       navLabel: "設計方針",
       items: [
