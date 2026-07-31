@@ -348,38 +348,41 @@ main {
 }
 
 /*
- * Sections settle in as they come up the viewport, on a scroll timeline rather
- * than a clock: an element that is already on screen when the page loads sits
- * past the end of its range and so is simply at rest, which is what keeps the
- * first paint of a server-rendered page complete and readable. Browsers
- * without scroll-driven animations get the resting state and nothing else.
+ * Sections settle in as they come up the viewport. The resting state is the
+ * visible one and nothing here is scoped to a class the server does not send,
+ * so a page that never runs the script — or a reader who asked for less motion
+ * — gets the finished layout on the first paint.
  *
- * Scoped to the page-transition wrapper's "ready" state rather than applied
- * unconditionally: a client-side navigation pins the incoming page at
- * data-page-state="enter" for a couple of frames (see PageTransition), and a
- * view-timeline sampled during that window can latch onto whatever partial
- * progress the layout had at that instant instead of the section's true,
- * settled position — leaving it faded and never revisited, since nothing
- * scrolls afterward to force a resample. Withholding the animation until
- * "ready" means it only ever attaches once layout has stopped moving, so the
- * first sample it takes is already correct.
+ * This used to ride a `view()` scroll timeline, which reads much better but
+ * has no way to correct itself: the timeline samples the progress of a section
+ * against the layout of the moment, and when the layout moves afterwards —
+ * a webfont swapping in, the Mojikumi runtime rewriting a paragraph — nothing
+ * resamples it unless the reader happens to scroll again. A section could sit
+ * at whatever fraction of the fade it had reached and stay there, which is
+ * exactly the half-faded CTA that kept showing up. So the reveal is a latch
+ * now: useSectionReveal hides a section only while the observer reports it off
+ * screen, and releases it the first time it intersects and stops watching it.
+ * Progress only ever moves toward visible, so a later layout shift has nothing
+ * left to corrupt.
  */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .page-transition[data-page-state="ready"] .section-block,
-    .page-transition[data-page-state="ready"] .closing-panel,
-    .page-transition[data-page-state="ready"] .docs-content section,
-    .page-transition[data-page-state="ready"] .start-choice,
-    .page-transition[data-page-state="ready"] .next-step,
-    .page-transition[data-page-state="ready"] .benchmark-status,
-    .page-transition[data-page-state="ready"] .benchmark-results,
-    .page-transition[data-page-state="ready"] .benchmark-grid article,
-    .page-transition[data-page-state="ready"] .method-note,
-    .page-transition[data-page-state="ready"] .legal-content section + section {
-      animation: settle-in linear both;
-      animation-range: entry 0% entry 22%;
-      animation-timeline: view();
-    }
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+
+  /*
+   * A one-shot animation with no fill, rather than a transition on a resting
+   * state. It means `shown` declares nothing that outlives the fade: the
+   * section is back to its own opacity and its own transform the moment the
+   * animation ends, so a card that leans on a transform of its own — the hover
+   * lift on .start-choice — keeps it, and the transition it declares for that
+   * lift is not competing with one from here. Having no fill also means the
+   * fade cannot outlast itself: once the 620ms are up the section is held at
+   * nothing at all, rather than pinned to a value this rule chose for it.
+   */
+  [data-reveal="shown"] {
+    animation: settle-in 620ms var(--ease-out);
   }
 }
 
