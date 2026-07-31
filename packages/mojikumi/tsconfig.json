@@ -11,5 +11,6 @@
     { "path": "../presets" },
     { "path": "../dom" }
   ],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }

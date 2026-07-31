@@ -47,6 +47,14 @@ try {
     const paths = new Set(pack.files.map(({ path }) => path));
     const requiredPaths = ["package.json", "README.md", "LICENSE", "CHANGELOG.md"];
 
+    /*
+     * The CDN serves these out of the published tarball, so a release that
+     * forgot to bundle them would take the paste-and-go route down with it.
+     */
+    if (packageName === "mojikumi") {
+      requiredPaths.push("dist/mojikumi.browser.js", "dist/mojikumi.min.css");
+    }
+
     for (const requiredPath of requiredPaths) {
       if (!paths.has(requiredPath)) {
         throw new Error(`${packageName} is missing ${requiredPath}`);

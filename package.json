@@ -14,9 +14,11 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build:packages && npm run build --workspace @mojikumi/playground && npm run build --workspace @mojikumi/web",
+    "build": "npm run build:packages && npm run build:browser && npm run build --workspace @mojikumi/playground && npm run build --workspace @mojikumi/web",
     "build:web": "npm run build:packages && npm run build --workspace @mojikumi/web",
+    "build:cdn": "npm run build:packages && npm run build:browser && node apps/cdn/build.mjs",
     "build:packages": "npm run clean && tsc -b packages/core packages/presets packages/dom packages/react packages/rehype packages/mojikumi && node scripts/build-css.mjs",
+    "build:browser": "node scripts/build-browser.mjs",
     "dev": "npm run dev --workspace @mojikumi/web",
     "dev:playground": "npm run dev --workspace @mojikumi/playground",
     "test": "vitest run",
@@ -36,6 +38,7 @@
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "esbuild": "^0.28.1",
     "jsdom": "^26.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
