@@ -91,7 +91,7 @@ export const en: Dictionary = {
       title: "Half a character wide, and the page reads differently",
       body: "The same passage, set once without punctuation adjustment and once with Mojikumi. Watch the half-character of space around the brackets and punctuation close up, the unevenness go out of the setting, and more of the text fit on each line.",
       sampleText:
-        "『日本語組版処理の要件（JLREQ）』を片手に、入れ子の括弧を試してみます。《引用のなかに「注記（補足）」を置く場合》はどうなるか。出典を〈著者名『書名』出版社、2026年、12頁〉と添えるとどうなるか。括弧が続くところほど、空白の差ははっきり出ます。",
+        "『日本語組版処理の要件（JLREQ）』は、行末に置いた終わり括弧類や句読点について「その後ろを原則として二分アキとする」と定めたうえで、行の調整処理で詰めてベタ組にしてもよい、と述べています〈W3C技術ノート、2012年、3.1.9〉。約物が連続する箇所、たとえば「『引用』」や〈補足（注記）〉でアキを重ねないのも、同じ体裁上の判断です。",
       beforeLabel: "Unadjusted",
       beforeNote: "Adjacent brackets keep both halves of the space built into their glyphs.",
       afterLabel: "Mojikumi",
