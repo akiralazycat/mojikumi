@@ -12,6 +12,7 @@
     "@mojikumi/css": "0.2.1",
     "@mojikumi/dom": "0.2.1",
     "@mojikumi/react": "0.2.1",
+    "mojikumi": "0.2.1",
     "next": "^16.2.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
