@@ -9,7 +9,7 @@ export const ja: Dictionary = {
     defaultTitle: "Mojikumi — Webの日本語を端正にする",
     titleTemplate: "%s — Mojikumi",
     description:
-      "括弧や句読点まわりのアキ、和文と欧文のあいだの間隔。ブラウザだけでは揃いきらない日本語の字組みを、標準CSSを土台に整えます。",
+      "括弧や句読点のまわりに残る半字ぶんの空白と、和文と欧文のあいだの間隔。ブラウザだけでは揃いきらない日本語の字組みを、標準CSSを土台に整えます。",
     ogAlt: "Mojikumi — Webの日本語を端正にする"
   },
   nav: {
@@ -40,11 +40,11 @@ export const ja: Dictionary = {
   home: {
     title: "Mojikumi — Webの日本語を端正にする",
     description:
-      "括弧や句読点まわりのアキ、和文と欧文のあいだの間隔。ブラウザだけでは揃いきらない日本語の字組みを、標準CSSを土台に整えます。",
+      "括弧や句読点のまわりに残る半字ぶんの空白と、和文と欧文のあいだの間隔。ブラウザだけでは揃いきらない日本語の字組みを、標準CSSを土台に整えます。",
     eyebrow: "Japanese typography compatibility layer",
     headlineLead: "Webの日本語を",
     headlineAccent: "端正にする",
-    lead: "括弧や句読点のまわりに空きすぎるアキ、和文と欧文が隣り合うときの窮屈さ。ブラウザだけではまだ揃いきらない部分を、標準CSSを土台にそっと整えます。読み手が気づかないくらい自然に、本文が締まります。",
+    lead: "括弧や句読点のまわりに空きすぎる空白と、和文と欧文が隣り合うときの窮屈さ。ブラウザだけではまだ揃いきらない部分を、標準CSSを土台にそっと整えます。読み手が気づかないくらい自然に、本文が締まります。",
     primaryAction: "Playgroundで比較する",
     secondaryAction: "導入方法を見る",
     specimenLabel: "TYPE SAMPLE / 01",
@@ -88,14 +88,14 @@ export const ja: Dictionary = {
     },
     compare: {
       eyebrow: "Before / After",
-      title: "一文字ぶんの差が、読み心地を変える",
-      body: "同じ一文を、約物調整なしとMojikumiで組んでみます。括弧の前後や句読点のあとに空くアキが詰まり、行の長さが揃うのがわかります。",
+      title: "半字ぶんの差が、読み心地を変える",
+      body: "同じ文章を、約物調整なしとMojikumiで組んでみます。括弧や句読点のまわりに残った半字ぶんの空白が詰まり、行の長さが揃うのがわかります。",
       sampleText:
-        "『組版』は、文字と文字のあいだ（アキ）を整える仕事です。Webでも、JLREQが示す原則は変わりません。",
+        "『日本語組版処理の要件（JLREQ）』は、行頭・行末の約物について「半字ぶんの空白をあける」と定めています。《見出しのなかに「引用（一次資料）」を置く場合》も、出典を〈著者名『書名』出版社、2026年、12頁〉と添える場合も、原則は同じです。",
       beforeLabel: "約物調整なし",
-      beforeNote: "括弧や句読点の前後に、全角ぶんのアキがそのまま残ります。",
+      beforeNote: "括弧が隣り合うところに、半字ぶんの空白がふたつ分そのまま残ります。",
       afterLabel: "Mojikumi",
-      afterNote: "アキを半角ぶんに詰め、和文と欧文のあいだには逆に間隔を入れます。",
+      afterNote: "余った空白を半字ぶん詰め、和文と欧文のあいだには逆に少しスペースを入れます。",
       link: "Playgroundでもっと試す"
     },
     closing: {
@@ -118,7 +118,7 @@ export const ja: Dictionary = {
         index: "01",
         title: "CSSだけで使う",
         navLabel: "CSS",
-        body: "まずはCSSプリセットを読み込んで、本文の要素にクラスを付けるだけです。標準CSSを理解するブラウザは、この時点で約物のアキを詰めはじめます。ビルド設定もJavaScriptも増えません。プリセットはbook、web、editorial、minimalの4種類があり、詰めの強さが違います。",
+        body: "まずはCSSプリセットを読み込んで、本文の要素にクラスを付けるだけです。標準CSSを理解するブラウザは、この時点で約物まわりの空白を詰めはじめます。ビルド設定もJavaScriptも増えません。プリセットはbook、web、editorial、minimalの4種類があり、詰めの強さが違います。",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -267,7 +267,7 @@ export default {
       items: [
         {
           term: "初期処理",
-          description: "本文をはじめて解析し、必要なアキを入れ終えるまでの時間"
+          description: "本文をはじめて解析し、空白を整え終えるまでの時間"
         },
         {
           term: "再評価",

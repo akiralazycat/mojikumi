@@ -472,6 +472,12 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
                   : samples.mojikumi.noteNative}
             </small>
           </header>
+          {/*
+           * Observation stays on. React replaces these paragraphs whenever the
+           * text changes, which throws away the generated markup, and the
+           * measure slider moves the line breaks without touching the DOM at
+           * all. The mutation and resize observers are what pick both up.
+           */}
           <Mojikumi
             key={font}
             as="div"
@@ -479,7 +485,6 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             lang="ja"
             preset={preset}
             precision={precision}
-            observe={false}
             debug={debug}
             style={sampleStyle}
           >
