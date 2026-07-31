@@ -196,6 +196,8 @@ export default {
     heading: "Compare the same passage",
     lead: "No adjustment, YakuHanJP, standard CSS and Mojikumi, all set from the same text. Change the size, the measure and the typeface to see exactly what moves and where. Whatever you type stays inside your browser.",
     regionLabel: "Mojikumi comparison tool",
+    sampleText:
+      "『日本語組版処理の要件（JLREQ）』は、行頭に置く始め括弧類の扱いに、ひとつの正解を定めていません。「改行行頭の字下げは全角アキ、折返し行頭は天付きとする」。これがJIS X 4051の採用した方式で、岩波書店の組版もこれにならいます〈W3C技術ノート、2012年、3.1.5〉。\n\n「改行行頭の字下げは二分アキ、折返し行頭は天付きとする」。こちらを選んだのが、講談社、新潮社、文藝春秋、中央公論新社、筑摩書房といった文芸書の版元です。会話の多い小説では、行頭が下がりすぎるという判断からでした。\n\n和文と欧文のあいだにも決まりがあります。「欧字・アラビア数字の前後に配置される平仮名、片仮名又は漢字等との字間は、四分アキとする」（同3.2.6）。HTMLやCSS、2026年のような表記が本文に混ざるほど、この差は効いてきます。",
     controls: {
       heading: "Settings",
       reset: "Reset",
