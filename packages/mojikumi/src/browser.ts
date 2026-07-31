@@ -161,8 +161,10 @@ export function selectRoots(root: Document, target: string | null): Element[] {
 }
 
 /*
- * First in the head, so a page's own rules keep winning. The stylesheet is in
- * a cascade layer, so this is belt and braces rather than the mechanism.
+ * First in the head, so a page's own rules keep winning. Nearly all of the
+ * stylesheet is in a cascade layer, so this is belt and braces rather than the
+ * mechanism; the fallback hooks that sit outside the layer are held up by
+ * specificity instead, and do not care where they land.
  */
 function injectStylesheet(root: Document): void {
   if (!STYLESHEET) return;
