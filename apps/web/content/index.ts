@@ -10,8 +10,11 @@ export function getDictionary(locale: Locale): Dictionary {
 
 export { locales };
 export type {
+  CodeCopyLabels,
   Dictionary,
   DocsSection,
+  DocsTable,
+  Guide,
   LegalPage,
   LegalSection,
   Locale,

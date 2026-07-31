@@ -8,6 +8,7 @@ export const npmUrl = "https://www.npmjs.com/package/mojikumi";
 
 export const pagePaths = {
   home: "/",
+  start: "/start/",
   docs: "/docs/",
   playground: "/playground/",
   benchmarks: "/benchmarks/",
@@ -22,6 +23,7 @@ export const pageKeys = Object.keys(pagePaths) as PageKey[];
 /** Relative weight for the sitemap: what a first-time visitor should find. */
 const pagePriority: Record<PageKey, number> = {
   home: 1,
+  start: 0.9,
   docs: 0.9,
   playground: 0.9,
   benchmarks: 0.5,
@@ -60,18 +62,8 @@ export function switchLocalePath(locale: Locale, pathname: string): string {
 export function buildMetadata(locale: Locale, page: PageKey): Metadata {
   const dictionary = getDictionary(locale);
   const path = pagePaths[page];
-  const content =
-    page === "home"
-      ? dictionary.home
-      : page === "docs"
-        ? dictionary.docs
-        : page === "playground"
-          ? dictionary.playground
-          : page === "benchmarks"
-            ? dictionary.benchmarks
-            : page === "privacy"
-              ? dictionary.privacy
-              : dictionary.terms;
+  /* Every page key names its own section of the dictionary. */
+  const content = dictionary[page];
 
   return {
     title: page === "home" ? dictionary.meta.defaultTitle : content.title,

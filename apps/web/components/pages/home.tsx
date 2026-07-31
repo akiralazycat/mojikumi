@@ -25,13 +25,13 @@ export function HomePage({
         <div className="hero-actions">
           <Link
             className="button button-primary"
-            href={pageHref(locale, "playground")}
+            href={pageHref(locale, "start")}
           >
             {home.primaryAction}
           </Link>
           <Link
             className="button button-secondary"
-            href={pageHref(locale, "docs")}
+            href={pageHref(locale, "playground")}
           >
             {home.secondaryAction}
           </Link>

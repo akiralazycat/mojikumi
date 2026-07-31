@@ -355,6 +355,7 @@ main {
     .section-block,
     .closing-panel,
     .docs-content section,
+    .start-choice,
     .next-step,
     .benchmark-status,
     .benchmark-grid article,
@@ -1301,6 +1302,171 @@ main {
   line-height: 2;
 }
 
+/* The step headings inside a guide: smaller than a section, still mincho. */
+.docs-content h3 {
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 44px 0 14px;
+}
+
+.docs-content h3 + p {
+  margin-top: 0;
+}
+
+/*
+ * Reference tables are wider than the measure on a phone, so the table scrolls
+ * inside its own box rather than pushing the article sideways.
+ */
+.docs-table {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin: 26px 0 0;
+  overflow-x: auto;
+}
+
+.docs-table table {
+  border-collapse: collapse;
+  min-width: 100%;
+  width: max-content;
+}
+
+.docs-table th,
+.docs-table td {
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-sm);
+  padding: 13px 18px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.docs-table thead th {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.docs-table tbody th {
+  color: var(--primary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.docs-table tbody td {
+  color: var(--muted);
+}
+
+.docs-table tbody tr:last-child th,
+.docs-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* What the reader has to have before starting: time, and permissions. */
+.guide-meta {
+  display: grid;
+  gap: 12px 40px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.guide-meta dt {
+  color: var(--muted-soft);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0 0 6px;
+}
+
+.guide-meta dd {
+  color: var(--ink);
+  font-size: var(--text-md);
+  margin: 0;
+}
+
+.trouble-list {
+  display: grid;
+  gap: 30px;
+  margin: 26px 0 0;
+}
+
+.trouble-list dt {
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.trouble-list dd {
+  color: var(--muted);
+  font-size: var(--text-lg);
+  line-height: 2;
+  margin: 0;
+}
+
+.start-choices {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 60px;
+}
+
+.start-choice {
+  align-content: start;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--surface-shadow-soft);
+  color: inherit;
+  display: grid;
+  gap: 18px 0;
+  padding: 30px clamp(26px, 3vw, 40px) 34px;
+  text-decoration: none;
+  transition:
+    border-color 400ms var(--ease-out),
+    box-shadow 400ms var(--ease-out),
+    transform 400ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .start-choice:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--surface-shadow);
+    transform: translateY(-2px);
+  }
+}
+
+.start-choice h3 {
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 500;
+  margin: 0;
+}
+
+.start-choice p {
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.95;
+  margin: -6px 0 0;
+}
+
+.start-choice-more {
+  color: var(--muted-soft);
+  display: inline-flex;
+}
+
+.start-pending {
+  color: var(--muted-soft);
+  font-size: var(--text-sm);
+  line-height: 1.9;
+  margin: 30px 0 0;
+  max-width: 720px;
+}
+
 /*
  * The card is the wrapper, not the `pre`: the bar above the snippet has to sit
  * inside the same rounded, clipped box, and the `pre` itself has to keep its
@@ -2125,7 +2291,8 @@ main {
 
   .principle-grid,
   .compare-pair,
-  .benchmark-grid {
+  .benchmark-grid,
+  .start-choices {
     grid-template-columns: 1fr;
   }
 
@@ -2209,8 +2376,13 @@ main {
   }
 
   .principle-grid,
-  .compare-pair {
+  .compare-pair,
+  .start-choices {
     margin-top: 42px;
+  }
+
+  .guide-meta {
+    grid-template-columns: 1fr;
   }
 
   .package-list > div {
@@ -2300,6 +2472,7 @@ main {
   .site-header,
   .hero-specimen,
   .principle-grid article,
+  .start-choice,
   .compare-card,
   .package-list,
   .docs-index,

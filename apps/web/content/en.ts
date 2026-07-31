@@ -15,6 +15,7 @@ export const en: Dictionary = {
   nav: {
     label: "Main navigation",
     home: "Mojikumi home",
+    start: "Get started",
     docs: "Docs",
     playground: "Playground",
     benchmarks: "Benchmarks",
@@ -22,6 +23,11 @@ export const en: Dictionary = {
     menu: "Menu",
     close: "Close",
     settings: "Display settings"
+  },
+  codeCopy: {
+    label: "Copy",
+    copied: "Copied",
+    action: "Copy the code for {title}"
   },
   theme: {
     label: "Color theme",
@@ -45,8 +51,8 @@ export const en: Dictionary = {
     headlineLead: "Japanese type,",
     headlineAccent: "quietly set right",
     lead: "The gaping space around brackets and punctuation, the cramped join where Japanese meets Latin text. Mojikumi settles what browsers cannot yet, building on standard CSS. Your readers will never notice the work, only that the page sits right.",
-    primaryAction: "Compare in the Playground",
-    secondaryAction: "Read the docs",
+    primaryAction: "Put it on your own site",
+    secondaryAction: "Try it in the Playground",
     specimenLabel: "TYPE SAMPLE / 01",
     specimenText:
       "『美しい本文』は、文字そのものだけでなく、文字と文字のあいだに宿ります。",
@@ -102,22 +108,159 @@ export const en: Dictionary = {
       link: "Open the Playground"
     }
   },
+  start: {
+    title: "Get started",
+    description: "How to put Mojikumi on the site you already have",
+    eyebrow: "Getting started",
+    heading: "One tag is the whole installation",
+    lead: "There is no build step to set up. If your site lets you paste code into its settings, your body copy will be set differently in about five minutes. If you do not like it, delete what you pasted and the page is exactly as it was.",
+    indexLabel: "On this page",
+    choose: {
+      eyebrow: "Choose",
+      title: "Where can you paste code?",
+      body: "Where the code goes changes which screen you open and how you check the result. Pick whichever is closer to your setup. The code itself is the same either way.",
+      pending:
+        "Instructions for WordPress, Shopify and the rest are added as each one is checked on a real site. Until then, either route below does the same job."
+    },
+    steps: {
+      requirements: "What you need",
+      time: "Time",
+      access: "Access",
+      open: "Where to go",
+      paste: "The code to paste",
+      verify: "Check that it worked",
+      scope: "Change what it applies to",
+      revert: "Undo it",
+      trouble: "Common problems here"
+    },
+    guides: [
+      {
+        id: "html",
+        index: "01",
+        navLabel: "You can edit HTML",
+        title: "Sites where you can edit the HTML",
+        summary:
+          "For anywhere you can open the template files: your own site, a static site generator, or a CMS whose theme you can edit.",
+        time: "5 minutes",
+        access: "Permission to edit template files",
+        open: "Open the HTML that every page loads. Usually that is the shared template containing the head tag: individual HTML files on a static site, or the header template if your site has a theme.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="article"
+></script>`,
+        verify: "Open an article and find a place where two brackets meet, or a comma runs into one. Where that gap has closed up, it is working. If you cannot tell by eye, your browser's inspector will show a class of mjk on the body element.",
+        scope: "Left alone, Mojikumi looks through the containers it knows until it finds your body text. If you know which element holds it, name it in data-target. That is also the fix when navigation or the footer changes along with the article.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".post-body"
+  data-style="book"
+></script>`,
+        revert: "Delete the few lines you pasted. Mojikumi only ever adds elements and classes for display; your text was never rewritten, so nothing is left in what you have saved.",
+        trouble: [
+          "Pasted at the end of the body, the stylesheet arrives after the article has been painted once, and you see the setting change. Put the tag in the head.",
+          "It loads on pages other than articles, which is fine: only the body element is ever touched, so there is no need to load it conditionally."
+        ]
+      },
+      {
+        id: "custom-code",
+        index: "02",
+        navLabel: "You have a code field",
+        title: "Services with a custom code field",
+        summary:
+          "For anywhere you cannot open the HTML but can paste code in the settings: Webflow, Shopify, Ghost, Squarespace and others.",
+        time: "5 minutes",
+        access: "Admin rights over the site settings",
+        open: "Find the field your service uses for injected code. It is usually called custom code, code injection, or something about the header, and it lives in the settings for the whole site. Choose the site-wide field rather than a per-page one.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="article"
+></script>`,
+        verify: "Check on a published article rather than in the editor's preview, where the editing chrome is mixed into the page and can change what you see.",
+        scope: "Every service names its body container differently. On a published article, inspect the body text and give data-target the class of the element wrapping all of it.",
+        scopeCode: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".article-body"
+  data-style="article"
+></script>`,
+        revert: "Clear the field and save. Nothing was written into your articles, so you can move to another approach whenever you like.",
+        trouble: [
+          "If the editor itself starts looking different, your service loads the same code into its editing screen. Narrow data-target to the body element only.",
+          "If saving changes nothing, the service may still be serving a cached page. Wait, or clear the cache from its settings."
+        ]
+      }
+    ],
+    trouble: {
+      id: "trouble",
+      index: "03",
+      title: "When it does not work",
+      navLabel: "When it does not work",
+      body: "Symptoms that come up whatever you are running. The explanations behind them are in the docs.",
+      items: [
+        {
+          term: "Nothing changed",
+          description:
+            "Most likely data-target does not match your body element. Check in the inspector whether that element has a class of mjk. If it does not, the selector is wrong. If it does and the page still looks the same, your browser is already doing this work itself."
+        },
+        {
+          term: "Too much changed",
+          description:
+            "If navigation or the footer moved too, narrow data-target to the body element. To leave one passage out, mark that element with data-no-mojikumi."
+        },
+        {
+          term: "The editor looks wrong",
+          description:
+            "Admin bars and block editors are skipped, but a service with its own arrangement can slip through. Narrowing data-target to the body element settles it."
+        },
+        {
+          term: "The page feels slower",
+          description:
+            "There is one file to load, just under 6KB compressed. Where the browser can do the work itself, nothing touches your text at all. If you would rather it never did, set data-precision to native."
+        }
+      ]
+    },
+    nextStep: {
+      label: "Next step",
+      title: "Try it on your own writing",
+      link: "Open the Playground"
+    }
+  },
   docs: {
     title: "Docs",
     description: "How to adopt Mojikumi, and how the packages fit together",
     eyebrow: "Documentation",
     heading: "Start small, add only what you need",
-    lead: "Apply the standard CSS first, then add the DOM fallback only where it is still needed. React and MDX follow the same steps, and the rule never changes: the text itself is left alone.",
+    lead: "Start with one script tag, or with the CSS preset, then add the DOM fallback only where it is still needed. React and MDX follow the same steps, and the rule never changes: the text itself is left alone.",
     indexLabel: "On this page",
-    codeCopy: {
-      label: "Copy",
-      copied: "Copied",
-      action: "Copy the code for {title}"
-    },
     sections: [
       {
-        id: "css",
+        id: "script",
         index: "01",
+        title: "Use it from a script tag",
+        navLabel: "Script tag",
+        language: "HTML",
+        body: "On a site with no build step, one script is the whole installation. The stylesheet travels inside the bundle, so there is a single file to load, the tag carries its own settings, and articles that arrive after load are picked up on their own.",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>`,
+        table: {
+          head: ["Attribute", "Default", "What it does"],
+          rows: [
+            ["data-target", "auto", "Selector for the body text; auto looks through the containers it knows"],
+            ["data-style", "article", "article, book, or headline"],
+            ["data-precision", "auto", "native, auto, or full"],
+            ["data-exclude", "none", "Extra selectors to leave alone, comma separated"],
+            ["data-css", "true", "Whether to load the bundled stylesheet"],
+            ["data-auto", "true", "Set to false and nothing happens until Mojikumi.start() is called"]
+          ]
+        }
+      },
+      {
+        id: "css",
+        index: "02",
         title: "Use the CSS on its own",
         navLabel: "CSS",
         language: "TSX",
@@ -130,7 +273,7 @@ export const en: Dictionary = {
       },
       {
         id: "dom",
-        index: "02",
+        index: "03",
         title: "Add the DOM fallback",
         navLabel: "DOM",
         language: "TypeScript",
@@ -145,7 +288,7 @@ const instance = mojikumi(".article", {
       },
       {
         id: "react",
-        index: "03",
+        index: "04",
         title: "Use it with React",
         navLabel: "React",
         language: "TSX",
@@ -162,7 +305,7 @@ export function Article({ children }) {
       },
       {
         id: "mdx",
-        index: "04",
+        index: "05",
         title: "Use it with Markdown / MDX",
         navLabel: "Markdown / MDX",
         language: "TypeScript",
@@ -174,11 +317,99 @@ export default {
     [rehypeMojikumi, { preset: "editorial" }]
   ]
 };`
+      },
+      {
+        id: "presets",
+        index: "06",
+        title: "Choosing a preset",
+        navLabel: "Presets",
+        body: "A preset is a set of adjustments taken together. Choose web if you are unsure. Take book where the page should read like a printed one, editorial where headings should break on phrase boundaries, and minimal to close up runs of punctuation and nothing else. Native uses only what the browser provides and never runs the fallback.",
+        table: {
+          head: ["Adjustment", "web", "book", "editorial", "minimal", "native"],
+          rows: [
+            ["Runs of punctuation", "○", "○", "○", "○", "○"],
+            ["Line starts", "○", "○", "○", "—", "○"],
+            ["Line ends", "Conditional", "○", "○", "—", "○"],
+            ["Japanese with Latin", "○", "○", "—", "—", "○"],
+            ["Paragraph indent", "—", "1em", "—", "—", "—"],
+            ["Heading phrase breaks", "—", "—", "○", "—", "—"],
+            ["JavaScript fallback", "○", "○", "○", "○", "—"]
+          ]
+        }
+      },
+      {
+        id: "precision",
+        index: "07",
+        title: "Deferring to the browser",
+        navLabel: "precision",
+        body: "Precision decides how far the standard CSS is trusted before the DOM layer steps in. On auto, Mojikumi measures whether the browser is actually closing up punctuation before deciding, because some implementations accept the syntax and change nothing on screen. That is a measurement, not a support table.",
+        table: {
+          head: ["Value", "Behavior", "When to use it"],
+          rows: [
+            ["native", "Standard CSS only", "When no extra JavaScript is wanted"],
+            ["auto", "Supplies only what is missing", "Almost always the right answer"],
+            ["full", "Always runs the fallback", "Testing, or comparing implementations"]
+          ]
+        }
+      },
+      {
+        id: "scope",
+        index: "08",
+        title: "Changing what it applies to",
+        navLabel: "Scope",
+        language: "HTML",
+        body: "Code, form controls, anything being edited, SVG and MathML are left out without being asked. To exclude a particular passage, mark it with data-no-mojikumi. To exclude a set of them, pass selectors through exclude or data-exclude.",
+        code: `<span data-no-mojikumi>console.log("日本語")</span>`,
+        list: [
+          "Excluded by default: script, style, code, pre, kbd, samp, textarea, input, select, option, contenteditable, svg, math",
+          "Any element marked data-no-mojikumi, and everything inside it",
+          "Any selector added through data-exclude or exclude"
+        ]
+      },
+      {
+        id: "api",
+        index: "09",
+        title: "Driving it from code",
+        navLabel: "API",
+        language: "JavaScript",
+        body: "Loaded from a script tag, Mojikumi is available as a global. Set data-auto to false and the timing is yours to choose. From npm, the mojikumi package exposes the same behavior through its mojikumi function.",
+        code: `Mojikumi.start({ target: ".article", style: "book" });
+Mojikumi.refresh();
+Mojikumi.stop();`,
+        table: {
+          head: ["Function", "What it does"],
+          rows: [
+            ["start(options)", "Applies Mojikumi, and keeps applying it to articles added later"],
+            ["refresh()", "Measures line starts and line ends again"],
+            ["stop()", "Removes the generated elements, the classes and the stylesheet"]
+          ]
+        }
+      },
+      {
+        id: "self-host",
+        index: "10",
+        title: "Serving it yourself",
+        navLabel: "Self-hosting",
+        language: "HTML",
+        body: "If you would rather not use the CDN, the npm package carries the same file. Copy node_modules/mojikumi/dist/mojikumi.browser.js somewhere your site serves it from and point src at that path. Nothing else changes.",
+        code: `<script src="/assets/mojikumi.min.js" data-style="article"></script>`
+      },
+      {
+        id: "uninstall",
+        index: "11",
+        title: "Taking it back out",
+        navLabel: "Removing it",
+        body: "Delete the script tag, or call stop(), and the page returns to how it was. Because the text is never rewritten, removing Mojikumi leaves nothing behind to clean up.",
+        list: [
+          "Generated elements and classes are removed, and changed attributes are put back",
+          "The text was never altered, so nothing lingers in what you have saved",
+          "If the script fails to load at all, the article still reads"
+        ]
       }
     ],
     policy: {
       id: "policy",
-      index: "05",
+      index: "12",
       title: "Design policy",
       navLabel: "Design policy",
       items: [
