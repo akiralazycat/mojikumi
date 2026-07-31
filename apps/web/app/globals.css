@@ -2227,7 +2227,7 @@ main {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr 1fr;
-  padding-block: 16px;
+  padding: 34px 0 16px;
 }
 
 .benchmark-grid article {
