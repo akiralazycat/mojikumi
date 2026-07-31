@@ -353,19 +353,29 @@ main {
  * past the end of its range and so is simply at rest, which is what keeps the
  * first paint of a server-rendered page complete and readable. Browsers
  * without scroll-driven animations get the resting state and nothing else.
+ *
+ * Scoped to the page-transition wrapper's "ready" state rather than applied
+ * unconditionally: a client-side navigation pins the incoming page at
+ * data-page-state="enter" for a couple of frames (see PageTransition), and a
+ * view-timeline sampled during that window can latch onto whatever partial
+ * progress the layout had at that instant instead of the section's true,
+ * settled position — leaving it faded and never revisited, since nothing
+ * scrolls afterward to force a resample. Withholding the animation until
+ * "ready" means it only ever attaches once layout has stopped moving, so the
+ * first sample it takes is already correct.
  */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .section-block,
-    .closing-panel,
-    .docs-content section,
-    .start-choice,
-    .next-step,
-    .benchmark-status,
-    .benchmark-results,
-    .benchmark-grid article,
-    .method-note,
-    .legal-content section + section {
+    .page-transition[data-page-state="ready"] .section-block,
+    .page-transition[data-page-state="ready"] .closing-panel,
+    .page-transition[data-page-state="ready"] .docs-content section,
+    .page-transition[data-page-state="ready"] .start-choice,
+    .page-transition[data-page-state="ready"] .next-step,
+    .page-transition[data-page-state="ready"] .benchmark-status,
+    .page-transition[data-page-state="ready"] .benchmark-results,
+    .page-transition[data-page-state="ready"] .benchmark-grid article,
+    .page-transition[data-page-state="ready"] .method-note,
+    .page-transition[data-page-state="ready"] .legal-content section + section {
       animation: settle-in linear both;
       animation-range: entry 0% entry 22%;
       animation-timeline: view();
