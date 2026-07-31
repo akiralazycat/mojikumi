@@ -1,18 +1,16 @@
 {
-  "name": "@mojikumi/web",
-  "version": "0.1.0",
+  "name": "mojikumi-example-next-app",
+  "version": "0.0.0",
   "private": true,
+  "description": "Minimal Next.js App Router project using Mojikumi",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "start": "next start"
   },
   "dependencies": {
-    "@mojikumi/css": "0.2.1",
-    "@mojikumi/dom": "0.2.1",
-    "@mojikumi/react": "0.2.1",
-    "mojikumi": "0.2.1",
+    "@mojikumi/react": "^0.2.1",
+    "mojikumi": "^0.2.1",
     "next": "^16.2.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

@@ -149,6 +149,9 @@ export function Article({ children }) {
 SSRでは通常のHTMLとクラスだけを出し、必要なDOM補完はマウント後に行います。
 `useMojikumi()` Hookも利用できます。
 
+動く最小構成は[`examples/next-app`](./examples/next-app)にあります。そのまま
+コピーして出発点にできます。
+
 ## Markdown / MDXで使う
 
 ```ts
@@ -175,7 +178,8 @@ export default {
 | `@mojikumi/rehype` | Markdown・MDX向け静的マークアップ |
 
 詳細は[仕様](./SPEC.md)、[互換性方針](./COMPATIBILITY.md)、
-[フォント検証表](./FONT-MATRIX.md)、[npm公開手順](./RELEASING.md)を参照してください。
+[フォント検証表](./FONT-MATRIX.md)、[計測記録](./BENCHMARKS.md)、
+[npm公開手順](./RELEASING.md)を参照してください。
 
 ## 設計原則
 

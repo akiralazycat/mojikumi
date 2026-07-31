@@ -158,7 +158,7 @@ export const en: Dictionary = {
 ></script>`,
         revert: "Delete the few lines you pasted. Mojikumi only ever adds elements and classes for display; your text was never rewritten, so nothing is left in what you have saved.",
         trouble: [
-          "Pasted at the end of the body, the stylesheet arrives after the article has been painted once, and you see the setting change. Put the tag in the head.",
+          "Pasted at the end of the body, the stylesheet arrives after the article has been painted once, and on a narrow screen the text shifts as it lands. In the head, nothing moves.",
           "It loads on pages other than articles, which is fine: only the body element is ever touched, so there is no need to load it conditionally."
         ]
       },
@@ -450,8 +450,71 @@ export function Article({ children }) {
 }`
       },
       {
-        id: "mdx",
+        id: "astro",
         index: "05",
+        title: "Use it with Astro",
+        navLabel: "Astro",
+        language: "Astro",
+        body: "Astro ships static HTML, so the call goes in a component's script tag: the stylesheet in the frontmatter, the DOM layer on the client. Where a view transition swaps the document, call it again on astro:page-load.",
+        code: `---
+import "mojikumi/css";
+---
+
+<article class="article" lang="ja"><slot /></article>
+
+<script>
+  import { mojikumi } from "mojikumi";
+  mojikumi(".article", { preset: "book" });
+</script>`
+      },
+      {
+        id: "vue",
+        index: "06",
+        title: "Use it with Vue / Nuxt",
+        navLabel: "Vue / Nuxt",
+        language: "Vue",
+        body: "onMounted only runs in the browser, so what Nuxt renders on the server is your markup untouched. Destroy the instance as the component goes, and nothing it generated outlives it.",
+        code: `<script setup>
+import { onBeforeUnmount, onMounted, ref } from "vue";
+import { createMojikumi } from "mojikumi";
+
+const root = ref(null);
+let instance;
+
+onMounted(() => {
+  instance = createMojikumi({ preset: "book" }).mount(root.value);
+});
+
+onBeforeUnmount(() => instance?.destroy());
+</script>
+
+<template>
+  <article ref="root" lang="ja"><slot /></article>
+</template>`
+      },
+      {
+        id: "svelte",
+        index: "07",
+        title: "Use it with SvelteKit",
+        navLabel: "SvelteKit",
+        language: "Svelte",
+        body: "An $effect runs in the browser only, leaving the server-rendered output alone. The function it returns is the teardown, so the instance is destroyed with the component.",
+        code: `<script>
+  import { createMojikumi } from "mojikumi";
+
+  let root;
+
+  $effect(() => {
+    const instance = createMojikumi({ preset: "book" }).mount(root);
+    return () => instance.destroy();
+  });
+</script>
+
+<article bind:this={root} lang="ja"><slot /></article>`
+      },
+      {
+        id: "mdx",
+        index: "08",
         title: "Use it with Markdown / MDX",
         navLabel: "Markdown / MDX",
         language: "TypeScript",
@@ -466,7 +529,7 @@ export default {
       },
       {
         id: "presets",
-        index: "06",
+        index: "09",
         title: "Choosing a preset",
         navLabel: "Presets",
         body: "A preset is a set of adjustments taken together. Choose web if you are unsure. Take book where the page should read like a printed one, editorial where headings should break on phrase boundaries, and minimal to close up runs of punctuation and nothing else. Native uses only what the browser provides and never runs the fallback.",
@@ -485,7 +548,7 @@ export default {
       },
       {
         id: "precision",
-        index: "07",
+        index: "10",
         title: "Deferring to the browser",
         navLabel: "precision",
         body: "Precision decides how far the standard CSS is trusted before the DOM layer steps in. On auto, Mojikumi measures whether the browser is actually closing up punctuation before deciding, because some implementations accept the syntax and change nothing on screen. That is a measurement, not a support table.",
@@ -500,7 +563,7 @@ export default {
       },
       {
         id: "scope",
-        index: "08",
+        index: "11",
         title: "Changing what it applies to",
         navLabel: "Scope",
         language: "HTML",
@@ -514,7 +577,7 @@ export default {
       },
       {
         id: "api",
-        index: "09",
+        index: "12",
         title: "Driving it from code",
         navLabel: "API",
         language: "JavaScript",
@@ -532,8 +595,26 @@ Mojikumi.stop();`,
         }
       },
       {
+        id: "version",
+        index: "13",
+        title: "Pinning a version",
+        navLabel: "Pinning",
+        language: "HTML",
+        body: "What sits behind /v1/ is replaced whenever a fix ships. That is how a pasted tag receives improvements without being pasted again, and it also means our changes reach your site directly. To decide that timing yourself, use the URL with a version in it. Those files are never rewritten, so they are cached for a year.",
+        code: `<script
+  src="https://cdn.mojikumi.jp/{version}/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+></script>`,
+        list: [
+          "The current release is {version}",
+          "A pinned URL never updates, so moving to a new release means editing the tag",
+          "To check that the file itself has not been swapped, generate a hash from it and add an integrity attribute"
+        ]
+      },
+      {
         id: "self-host",
-        index: "10",
+        index: "14",
         title: "Serving it yourself",
         navLabel: "Self-hosting",
         language: "HTML",
@@ -542,7 +623,7 @@ Mojikumi.stop();`,
       },
       {
         id: "uninstall",
-        index: "11",
+        index: "15",
         title: "Taking it back out",
         navLabel: "Removing it",
         body: "Delete the script tag, or call stop(), and the page returns to how it was. Because the text is never rewritten, removing Mojikumi leaves nothing behind to clean up.",
@@ -555,7 +636,7 @@ Mojikumi.stop();`,
     ],
     policy: {
       id: "policy",
-      index: "12",
+      index: "16",
       title: "Design policy",
       navLabel: "Design policy",
       items: [
