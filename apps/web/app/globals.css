@@ -78,6 +78,15 @@
   /* The air an article leaves around itself, and the footer's own run-up. */
   --article-band: 72px;
   --footer-gap: 40px;
+  /*
+   * 14px is a gutter: it reads as the seam between two cards standing side by
+   * side, where the eye already has a vertical edge to separate them. Once the
+   * grid stacks on a phone that same figure has to carry the rhythm between
+   * whole cards instead, and against the 30/34px a card pads itself with it
+   * closes up — the stack reads as one slab with rules across it. So the row
+   * gap opens to something nearer the padding it sits between.
+   */
+  --card-stack-gap: 24px;
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   background: var(--bg);
@@ -2389,6 +2398,7 @@ main {
   .benchmark-grid,
   .start-choices {
     grid-template-columns: 1fr;
+    row-gap: var(--card-stack-gap);
   }
 
   .principle-grid article {
