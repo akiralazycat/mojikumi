@@ -89,9 +89,9 @@ export const en: Dictionary = {
     compare: {
       eyebrow: "Before / After",
       title: "Half a character wide, and the page reads differently",
-      body: "The same passage, set once without punctuation adjustment and once with Mojikumi. Watch the half-character of space around the brackets and punctuation close up, and the line endings fall into place.",
+      body: "The same passage, set once without punctuation adjustment and once with Mojikumi. Watch the half-character of space around the brackets and punctuation close up, the unevenness go out of the setting, and more of the text fit on each line.",
       sampleText:
-        "『日本語組版処理の要件（JLREQ）』は、行頭・行末の約物について「半字ぶんの空白をあける」と定めています。《見出しのなかに「引用（一次資料）」を置く場合》も、出典を〈著者名『書名』出版社、2026年、12頁〉と添える場合も、原則は同じです。",
+        "『日本語組版処理の要件（JLREQ）』を片手に、入れ子の括弧を試してみます。《引用のなかに「注記（補足）」を置く場合》はどうなるか。出典を〈著者名『書名』出版社、2026年、12頁〉と添えるとどうなるか。括弧が続くところほど、空白の差ははっきり出ます。",
       beforeLabel: "Unadjusted",
       beforeNote: "Adjacent brackets keep both halves of the space built into their glyphs.",
       afterLabel: "Mojikumi",
