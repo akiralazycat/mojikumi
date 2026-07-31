@@ -7,7 +7,27 @@ afterEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
   Reflect.deleteProperty(window, "CSS");
+  Reflect.deleteProperty(Range.prototype, "getClientRects");
 });
+
+/** jsdom does no layout, so line context has to be told where things landed. */
+function rectList(rect: Partial<DOMRect>): DOMRectList {
+  const value = rect as DOMRect;
+  return { length: 1, item: () => value, 0: value } as unknown as DOMRectList;
+}
+
+function stubRects(element: Element, rect: Partial<DOMRect>): void {
+  element.getClientRects = () => rectList(rect);
+}
+
+/** jsdom has no Range.getClientRects to spy on, so define one. */
+function stubRangeRects(rect: Partial<DOMRect>): void {
+  Object.defineProperty(Range.prototype, "getClientRects", {
+    configurable: true,
+    writable: true,
+    value: () => rectList(rect)
+  });
+}
 
 describe("DOM fallback", () => {
   it("wraps only required boundaries and restores the original text", () => {
@@ -170,6 +190,59 @@ describe("DOM fallback", () => {
 
     expect(token.classList.contains("mjk-line-start")).toBe(true);
     expect(token.dataset.mjkContext).toBe("paragraph-start");
+    instance.destroy();
+  });
+
+  /*
+   * The next paragraph always renders on another line, so comparing against it
+   * would mark every paragraph-final closing bracket as a line end no matter
+   * where on the line it actually sat.
+   */
+  it("does not read the next paragraph as the end of this line", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文（例）</p><p>次の段落。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const token = target.querySelector<HTMLElement>(
+      "p:first-of-type [data-mjk-line-end-candidate]"
+    )!;
+    stubRects(token, { top: 0, left: 0, width: 18, height: 18 });
+    // Whatever the following paragraph measures, it is not this line.
+    stubRangeRects({ top: 36, left: 0, width: 18, height: 18 });
+
+    measureLineContext(target);
+
+    expect(token.classList.contains("mjk-line-end")).toBe(false);
+    expect(token.dataset.mjkContext).toBeUndefined();
+    instance.destroy();
+  });
+
+  it("still trims a closing bracket that wraps to the end of a line", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文（例）そのあとに続く文章。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const token = target.querySelector<HTMLElement>(
+      "[data-mjk-line-end-candidate]"
+    )!;
+    stubRects(token, { top: 0, left: 0, width: 18, height: 18 });
+    // The text after it inside the same paragraph starts on the next line.
+    stubRangeRects({ top: 36, left: 0, width: 18, height: 18 });
+
+    measureLineContext(target);
+
+    expect(token.classList.contains("mjk-line-end")).toBe(true);
+    expect(token.dataset.mjkContext).toBe("line-end");
     instance.destroy();
   });
 

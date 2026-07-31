@@ -9,7 +9,7 @@ export const ja: Dictionary = {
     defaultTitle: "Mojikumi — Webの日本語を端正にする",
     titleTemplate: "%s — Mojikumi",
     description:
-      "ブラウザの実装だけでは揃いきらない日本語の字組みを、標準CSSを土台に整えるライブラリです。括弧まわりのアキや和欧文間の間隔を、本文の文字列を書き換えずに調整します。",
+      "ブラウザの実装だけでは揃いきらない日本語の字組みを、標準CSSを土台に整えるライブラリです。括弧まわりの空白や和欧文間の間隔を、本文の文字列を書き換えずに調整します。",
     ogAlt: "Mojikumi — Webの日本語を端正にする"
   },
   nav: {
@@ -40,7 +40,7 @@ export const ja: Dictionary = {
   home: {
     title: "Mojikumi — Webの日本語を端正にする",
     description:
-      "ブラウザの実装だけでは揃いきらない日本語の字組みを、標準CSSを土台に整えるライブラリです。括弧まわりのアキや和欧文間の間隔を、本文の文字列を書き換えずに調整します。",
+      "ブラウザの実装だけでは揃いきらない日本語の字組みを、標準CSSを土台に整えるライブラリです。括弧まわりの空白や和欧文間の間隔を、本文の文字列を書き換えずに調整します。",
     eyebrow: "Japanese typography compatibility layer",
     headlineLead: "Webの日本語を",
     headlineAccent: "端正にする",
@@ -88,14 +88,14 @@ export const ja: Dictionary = {
     },
     compare: {
       eyebrow: "Before / After",
-      title: "半角一文字分の差が、読み心地を変える",
-      body: "同じ一文を、約物調整なしの状態とMojikumiを適用した状態で並べています。括弧の前後や句読点のあとに空いていたアキが詰まり、行の長さが揃うことを確認できます。",
+      title: "半字ぶんの差が、読み心地を変える",
+      body: "同じ文章を、約物調整なしの状態とMojikumiを適用した状態で並べています。括弧の前後や句読点のあとに空いていた半字ぶんの空白が詰まり、字面のムラが消えて一行に入る字数が増えます。",
       sampleText:
-        "『組版』は、文字と文字のあいだ（アキ）を整える仕事です。Webでも、JLREQが示す原則は変わりません。",
+        "『日本語組版処理の要件（JLREQ）』は、行末に置いた終わり括弧類や句読点について「その後ろを原則として二分アキとする」と定めたうえで、行の調整処理で詰めてベタ組にしてもよい、と述べています〈W3C技術ノート、2012年、3.1.9〉。約物が連続する箇所、たとえば「『引用』」や〈補足（注記）〉でアキを重ねないのも、同じ体裁上の判断です。",
       beforeLabel: "約物調整なし",
-      beforeNote: "括弧や句読点の前後に、全角分のアキがそのまま残った状態です。",
+      beforeNote: "括弧が隣り合う箇所に、半字ぶんの空白がふたつ分そのまま残った状態です。",
       afterLabel: "Mojikumi",
-      afterNote: "約物のアキを半角分まで詰め、和文と欧文のあいだには逆に間隔を挿入します。",
+      afterNote: "その重なりを半字ぶん詰め、和文と欧文のあいだには逆に間隔を挿入します。",
       link: "Playgroundでもっと試す"
     },
     closing: {
@@ -118,7 +118,7 @@ export const ja: Dictionary = {
         index: "01",
         title: "CSSだけで使う",
         navLabel: "CSS",
-        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物のアキが詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
+        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -267,7 +267,7 @@ export default {
       items: [
         {
           term: "初期処理",
-          description: "本文を最初に解析し、必要なアキの挿入を終えるまでの時間"
+          description: "本文を最初に解析し、必要な空白の調整を終えるまでの時間"
         },
         {
           term: "再評価",

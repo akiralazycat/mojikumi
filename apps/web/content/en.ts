@@ -89,13 +89,13 @@ export const en: Dictionary = {
     compare: {
       eyebrow: "Before / After",
       title: "Half a character wide, and the page reads differently",
-      body: "The same sentence, set once without punctuation adjustment and once with Mojikumi. Watch the space collapse around the brackets and after the punctuation, and the line endings fall into place.",
+      body: "The same passage, set once without punctuation adjustment and once with Mojikumi. Watch the half-character of space around the brackets and punctuation close up, the unevenness go out of the setting, and more of the text fit on each line.",
       sampleText:
-        "『組版』は、文字と文字のあいだ（アキ）を整える仕事です。Webでも、JLREQが示す原則は変わりません。",
+        "『日本語組版処理の要件（JLREQ）』は、行末に置いた終わり括弧類や句読点について「その後ろを原則として二分アキとする」と定めたうえで、行の調整処理で詰めてベタ組にしてもよい、と述べています〈W3C技術ノート、2012年、3.1.9〉。約物が連続する箇所、たとえば「『引用』」や〈補足（注記）〉でアキを重ねないのも、同じ体裁上の判断です。",
       beforeLabel: "Unadjusted",
-      beforeNote: "Brackets and punctuation keep the full-width space built into the glyph.",
+      beforeNote: "Adjacent brackets keep both halves of the space built into their glyphs.",
       afterLabel: "Mojikumi",
-      afterNote: "That space is halved, while a little breathing room opens between Japanese and Latin.",
+      afterNote: "Half a character of that space closes up, while a little breathing room opens between Japanese and Latin.",
       link: "Try more in the Playground"
     },
     closing: {
