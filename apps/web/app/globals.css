@@ -299,6 +299,20 @@ input[type="range"] {
 }
 
 /*
+ * The gap above the sticky header. One token for the two rules that have to
+ * agree: the shell's top padding, which sets where the header starts, and the
+ * header's own `top`, which sets where it pins. Any difference between them is
+ * spent as a jump on the first scroll, so the breakpoint that tightens the gap
+ * re-declares this rather than either rule. It is deliberately not in the
+ * palette block at the top of the file: that block is `:root,
+ * :root[data-theme="light"]`, and the extra attribute would outweigh a plain
+ * `:root` override inside a media query.
+ */
+:root {
+  --header-inset: 14px;
+}
+
+/*
  * Page gutters ramp with the viewport: ~14px each side on a phone, ~56px on a
  * wide screen, where the measure also stops growing.
  */
@@ -311,7 +325,7 @@ main {
 
 .site-shell {
   min-height: 100vh;
-  padding-top: 14px;
+  padding-top: var(--header-inset);
 }
 
 /*
@@ -321,14 +335,11 @@ main {
  * page on it at once rather than leaving it faded out.
  */
 .page-transition {
-  transition:
-    opacity 460ms var(--ease-out),
-    transform 620ms var(--ease);
+  transition: opacity 460ms var(--ease-out);
 }
 
 .page-transition[data-page-state="enter"] {
   opacity: 0;
-  transform: translate3d(0, 14px, 0);
   transition: none;
 }
 
@@ -376,7 +387,7 @@ main {
   min-height: 66px;
   padding: 8px 10px 8px 14px;
   position: sticky;
-  top: 14px;
+  top: var(--header-inset);
   transform: translateZ(0);
   z-index: 50;
 }
@@ -2136,11 +2147,14 @@ main {
 }
 
 @media (max-width: 760px) {
+  :root {
+    --header-inset: 10px;
+  }
+
   .site-header {
     border-radius: 20px;
     min-height: 58px;
     padding: 8px 8px 8px 12px;
-    top: 10px;
   }
 
   .brand {
