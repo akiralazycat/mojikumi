@@ -79,14 +79,14 @@
   --article-band: 72px;
   --footer-gap: 40px;
   /*
-   * 14px is a gutter: it reads as the seam between two cards standing side by
-   * side, where the eye already has a vertical edge to separate them. Once the
-   * grid stacks on a phone that same figure has to carry the rhythm between
-   * whole cards instead, and against the 30/34px a card pads itself with it
-   * closes up — the stack reads as one slab with rules across it. So the row
-   * gap opens to something nearer the padding it sits between.
+   * The rhythm between cards standing one above the other. A card carries its
+   * own padding — 30/34px on a phone, up to 86px on a wide screen — and the
+   * space between two of them has to read as wider than the space inside one,
+   * or the stack closes into a single slab with rules drawn across it. Sitting
+   * side by side they need far less, because the eye already has a vertical
+   * edge to divide them; that gutter stays at the 14px each grid declares.
    */
-  --card-stack-gap: 24px;
+  --card-stack-gap: clamp(24px, 2.4vw, 40px);
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   background: var(--bg);
@@ -1120,7 +1120,15 @@ main {
   text-spacing-trim: space-all;
 }
 
+/*
+ * The card in the right-hand column is a list of five rows and is as tall as
+ * those rows: left to stretch, it grows to match whatever the prose beside it
+ * happens to measure, and since that column gets narrower — and so taller —
+ * as the screen widens, the card ends up holding open a hundred pixels of
+ * nothing under its last row on a wide display.
+ */
 .section-split {
+  align-items: start;
   display: grid;
   gap: clamp(50px, 9vw, 150px);
   grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1.12fr);
@@ -2199,8 +2207,21 @@ main {
   display: grid;
   gap: clamp(32px, 7vw, 100px);
   grid-template-columns: minmax(260px, 0.8fr) 1.2fr;
-  margin-top: 34px;
   padding: clamp(30px, 5vw, 54px);
+}
+
+/*
+ * Benchmarks is the one page whose every section is a card. Elsewhere a card
+ * is separated from what follows by a band of transparent padding — the
+ * section it sits in pads by 72px or more — but here the cards are the
+ * sections, so their borders meet with nothing in between and the page reads
+ * as one long panel divided by hairlines. Each one holds the next off itself.
+ */
+.benchmark-status,
+.benchmark-results,
+.benchmark-grid,
+.method-note {
+  margin-top: var(--card-stack-gap);
 }
 
 .benchmark-status div {
@@ -2249,7 +2270,6 @@ main {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr 1fr;
-  padding: 34px 0 16px;
 }
 
 .benchmark-grid article {
