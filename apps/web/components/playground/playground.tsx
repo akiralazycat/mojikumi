@@ -10,12 +10,15 @@ import {
 } from "react";
 import { detectNativeSupport } from "@mojikumi/dom";
 import { Mojikumi } from "@mojikumi/react";
+import { PRESETS } from "mojikumi";
 import type { Dictionary } from "../../content";
 import { CheckIcon, ChevronDownIcon } from "../icons";
+import { Snippet } from "../snippet";
 import { TextEditor } from "./text-editor";
 
-type PresetName = "web" | "book" | "editorial" | "minimal" | "native";
+type PresetName = "minimal" | "article" | "book";
 type Precision = "auto" | "full";
+type Overrides = { justify?: boolean; indent?: boolean };
 type SupportState = {
   trim: boolean;
   trimStart: boolean;
@@ -28,23 +31,10 @@ type ControlOption<T extends string> = {
 };
 
 const presetOptions: ControlOption<PresetName>[] = [
-  { value: "web", label: "Web" },
-  { value: "book", label: "Book" },
-  { value: "editorial", label: "Editorial" },
   { value: "minimal", label: "Minimal" },
-  { value: "native", label: "Native" }
+  { value: "article", label: "Article" },
+  { value: "book", label: "Book" }
 ];
-
-const presetRequirements: Record<
-  PresetName,
-  { start: boolean; both: boolean; autospace: boolean }
-> = {
-  web: { start: true, both: false, autospace: true },
-  book: { start: true, both: true, autospace: true },
-  editorial: { start: true, both: true, autospace: false },
-  minimal: { start: false, both: false, autospace: false },
-  native: { start: true, both: true, autospace: true }
-};
 
 function Paragraphs({ text }: { text: string }) {
   return text.split(/\n{2,}/u).map((paragraph, index) => (
@@ -229,17 +219,80 @@ function RangeControl({
   );
 }
 
+function ToggleControl({
+  label,
+  checked,
+  onChange
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="debug-control">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span className="check-mark" aria-hidden="true">
+        <CheckIcon size={12} />
+      </span>
+      <span>{label}</span>
+    </label>
+  );
+}
+
 export function Playground({ dictionary }: { dictionary: Dictionary }) {
   const { controls, status, samples, sampleText } = dictionary.playground;
   const [text, setText] = useState(sampleText);
-  const [preset, setPreset] = useState<PresetName>("web");
+  const [preset, setPreset] = useState<PresetName>("minimal");
   const [font, setFont] = useState<"serif" | "sans-serif">("serif");
   const [size, setSize] = useState(18);
   const [width, setWidth] = useState(24);
   const [precision, setPrecision] = useState<Precision>("auto");
   const [debug, setDebug] = useState(false);
+  /*
+   * Only what the reader changed away from the preset. Everything downstream
+   * reads the effective value, and the snippet prints just these — so what it
+   * hands over is the shortest tag that reproduces what is on screen.
+   */
+  const [overrides, setOverrides] = useState<Overrides>({});
   const [support, setSupport] = useState<SupportState | null>(null);
   const editorLabelId = useId();
+
+  const defaults = PRESETS[preset];
+  const justify = overrides.justify ?? defaults.justify;
+  const indent = overrides.indent ?? Boolean(defaults.indent);
+
+  function choosePreset(next: PresetName) {
+    setPreset(next);
+    setOverrides({});
+  }
+
+  function override(key: keyof Overrides, value: boolean) {
+    setOverrides((current) => {
+      const next = { ...current, [key]: value };
+      /* Back at the preset's own answer is the same as never having said. */
+      if (value === (key === "indent" ? Boolean(defaults.indent) : defaults[key])) {
+        delete next[key];
+      }
+      return next;
+    });
+  }
+
+  const snippet = [
+    "<script",
+    '  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"',
+    `  data-style="${preset}"`,
+    ...(overrides.justify === undefined
+      ? []
+      : [`  data-justify="${overrides.justify}"`]),
+    ...(overrides.indent === undefined
+      ? []
+      : [`  data-indent="${overrides.indent}"`]),
+    "></script>"
+  ].join("\n");
 
   const fontOptions: ControlOption<"serif" | "sans-serif">[] = [
     { value: "serif", label: controls.fontSerif },
@@ -285,10 +338,17 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
       ? "YakuHanMP, var(--font-display)"
       : "YakuHanJP, var(--font-yakuhan-sans)";
 
+  /*
+   * The three comparison cards take the alignment being demonstrated, so that
+   * the only difference left between them is the typography. The Mojikumi card
+   * is not given one: the preset decides it there, and an inline value would
+   * also beat the check that withdraws justification from a line it wrecked.
+   */
   const sampleStyle = {
     "--sample-width": `${width}em`,
     "--sample-font": baseFont,
-    fontSize: `${size}px`
+    fontSize: `${size}px`,
+    textAlign: justify ? "justify" : "start"
   } as CSSProperties;
 
   const yakuhanStyle = {
@@ -296,22 +356,35 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
     "--sample-font": yakuhanFont
   } as CSSProperties;
 
-  const requirements = presetRequirements[preset];
+  const mojikumiStyle = {
+    "--sample-width": `${width}em`,
+    "--sample-font": baseFont,
+    fontSize: `${size}px`
+  } as CSSProperties;
+
+  /*
+   * Line ends only count as missing where the text is justified: a ragged line
+   * has nothing to the right of its final comma, so trimming it is not a
+   * feature this setting is going without.
+   */
   const missing = support
     ? [
         !support.trim && status.missing.punctuation,
-        requirements.start && !support.trimStart && status.missing.lineStart,
-        requirements.both && !support.trimBoth && status.missing.lineEnd,
-        requirements.autospace && !support.autospace && status.missing.autospace
+        defaults.lineStartTrim && !support.trimStart && status.missing.lineStart,
+        defaults.lineEndTrim &&
+          justify &&
+          !support.trimBoth &&
+          status.missing.lineEnd,
+        defaults.autospace && !support.autospace && status.missing.autospace
       ].filter(Boolean)
     : [];
-  const allowsFallback = preset !== "native";
-  const usingFallback =
-    allowsFallback && (precision === "full" || missing.length > 0);
+  /* This playground only offers auto and full, so the fallback is never off. */
+  const usingFallback = precision === "full" || missing.length > 0;
 
   function reset() {
     setText(sampleText);
-    setPreset("web");
+    setPreset("minimal");
+    setOverrides({});
     setFont("serif");
     setSize(18);
     setWidth(24);
@@ -345,7 +418,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             label={controls.preset}
             value={preset}
             options={presetOptions}
-            onChange={setPreset}
+            onChange={choosePreset}
           />
 
           <SegmentedControl
@@ -383,17 +456,36 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
           />
         </div>
 
-        <label className="debug-control">
-          <input
-            type="checkbox"
-            checked={debug}
-            onChange={(event) => setDebug(event.target.checked)}
+        <p className="preset-note">{controls.presetNotes[preset]}</p>
+
+        <div className="modifier-controls">
+          <ToggleControl
+            label={controls.justify}
+            checked={justify}
+            onChange={(value) => override("justify", value)}
           />
-          <span className="check-mark" aria-hidden="true">
-            <CheckIcon size={12} />
-          </span>
-          <span>{controls.debug}</span>
-        </label>
+          <ToggleControl
+            label={controls.indent}
+            checked={indent}
+            onChange={(value) => override("indent", value)}
+          />
+          <ToggleControl
+            label={controls.debug}
+            checked={debug}
+            onChange={setDebug}
+          />
+        </div>
+
+        {/* What is on screen, as the tag that reproduces it. */}
+        <div className="playground-snippet">
+          <p>{controls.snippetNote}</p>
+          <Snippet
+            language="HTML"
+            source={snippet}
+            title={dictionary.playground.title}
+            labels={dictionary.codeCopy}
+          />
+        </div>
       </aside>
 
       <section className="comparison" aria-live="polite">
@@ -407,13 +499,9 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             />
             <strong>
               {precision === "full"
-                ? allowsFallback
-                  ? status.fallbackDemo
-                  : status.nativeOnly
+                ? status.fallbackDemo
                 : missing.length > 0
-                  ? allowsFallback
-                    ? `${status.supplementing}${missing.join(status.missingSeparator)}`
-                    : status.nativeOnly
+                  ? `${status.supplementing}${missing.join(status.missingSeparator)}`
                   : status.native}
             </strong>
           </div>
@@ -449,7 +537,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             <small>{samples.native.note}</small>
           </header>
           <div
-            className="sample-text mjk mjk-native"
+            className="sample-text mjk mjk-minimal"
             lang="ja"
             style={sampleStyle}
           >
@@ -464,9 +552,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             <small>
               {usingFallback
                 ? samples.mojikumi.noteFallback
-                : preset === "native"
-                  ? samples.mojikumi.noteNativeOnly
-                  : samples.mojikumi.noteNative}
+                : samples.mojikumi.noteNative}
             </small>
           </header>
           {/*
@@ -483,7 +569,9 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
             preset={preset}
             precision={precision}
             debug={debug}
-            style={sampleStyle}
+            justify={justify}
+            indent={indent}
+            style={mojikumiStyle}
           >
             <Paragraphs text={text} />
           </Mojikumi>

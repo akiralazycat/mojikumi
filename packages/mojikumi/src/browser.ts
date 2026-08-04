@@ -8,7 +8,7 @@
  */
 import { createMojikumi } from "@mojikumi/dom";
 import type { MojikumiInstance, Precision } from "@mojikumi/dom";
-import { isPresetName, type PresetName } from "@mojikumi/presets";
+import { resolvePresetName, type PresetName } from "@mojikumi/presets";
 
 /* Both are replaced at bundle time; the fallbacks keep the source runnable. */
 declare const __MOJIKUMI_CSS__: string;
@@ -21,13 +21,11 @@ export const version =
   typeof __MOJIKUMI_VERSION__ === "string" ? __MOJIKUMI_VERSION__ : "0.0.0";
 
 /*
- * Named for what the reader gets, not for how it is implemented. The preset
- * names stay available for anyone who has read the docs.
+ * `headline` used to name a preset of its own. Heading phrase breaks are a
+ * modifier now, so the name resolves to the preset plus that modifier.
  */
-const STYLE_ALIASES: Record<string, PresetName> = {
-  article: "web",
-  book: "book",
-  headline: "editorial"
+const STYLE_MODIFIERS: Record<string, { headingBreak?: boolean }> = {
+  headline: { headingBreak: true }
 };
 
 /*
@@ -62,6 +60,14 @@ export interface StartOptions {
   /** `article`, `book`, `headline`, or a preset name. */
   style?: string | undefined;
   precision?: string | undefined;
+  /** `false` to drop the preset's paragraph indent, or a length such as `2em`. */
+  indent?: boolean | string | undefined;
+  /** `false` to leave the right edge ragged in a preset that justifies. */
+  justify?: boolean | string | undefined;
+  /** `true` to hang punctuation into the margin. WebKit only, today. */
+  hanging?: boolean | string | undefined;
+  /** `true` to break headings on phrase boundaries where the browser can. */
+  headingBreak?: boolean | string | undefined;
   /** Extra selectors to leave alone, comma separated when it comes from HTML. */
   exclude?: string | readonly string[] | undefined;
   /** Set to false when the stylesheet is already loaded separately. */
@@ -75,6 +81,11 @@ export interface ResolvedStartOptions {
   target: string | null;
   preset: PresetName;
   precision: Precision;
+  /** undefined leaves the decision to the preset. */
+  indent: boolean | string | undefined;
+  justify: boolean | undefined;
+  hanging: boolean | undefined;
+  headingBreak: boolean | undefined;
   exclude: readonly string[];
   css: boolean;
   auto: boolean;
@@ -96,8 +107,9 @@ function parseList(
 
 function parsePreset(value: string | undefined): PresetName {
   const name = value?.trim().toLowerCase();
-  if (!name) return "web";
-  return STYLE_ALIASES[name] ?? (isPresetName(name) ? name : "web");
+  if (!name) return "minimal";
+  if (name === "headline") return "minimal";
+  return resolvePresetName(name) ?? "minimal";
 }
 
 function parsePrecision(value: string | undefined): Precision {
@@ -106,12 +118,40 @@ function parsePrecision(value: string | undefined): Precision {
   return "auto";
 }
 
+const DENIALS = ["false", "off", "no", "0", "none"];
+const ASSENTS = ["true", "on", "yes", "1"];
+
 /** Anything but an explicit denial reads as yes: the defaults are the point. */
 function parseBoolean(value: boolean | string | undefined): boolean {
   if (typeof value === "boolean") return value;
   if (value === undefined) return true;
-  const text = value.trim().toLowerCase();
-  return !(text === "false" || text === "off" || text === "no" || text === "0");
+  return !DENIALS.includes(value.trim().toLowerCase());
+}
+
+/*
+ * A modifier has three answers, not two. Absent means "whatever the preset
+ * says", which is not the same as `false` — `data-mojikumi-indent="false"` on a
+ * book has to drop the indent, while leaving the attribute off has to keep it.
+ */
+function parseModifier(
+  value: boolean | string | undefined
+): boolean | undefined {
+  if (typeof value === "boolean") return value;
+  const text = value?.trim().toLowerCase();
+  if (!text) return undefined;
+  if (DENIALS.includes(text)) return false;
+  if (ASSENTS.includes(text)) return true;
+  return undefined;
+}
+
+/** As above, but a length such as `2em` passes through as the amount. */
+function parseIndent(
+  value: boolean | string | undefined
+): boolean | string | undefined {
+  const modifier = parseModifier(value);
+  if (modifier !== undefined || typeof value !== "string") return modifier;
+  const text = value.trim();
+  return text || undefined;
 }
 
 export function resolveStartOptions(
@@ -123,6 +163,12 @@ export function resolveStartOptions(
     target: !target || target === "auto" ? null : target,
     preset: parsePreset(options.style),
     precision: parsePrecision(options.precision),
+    indent: parseIndent(options.indent),
+    justify: parseModifier(options.justify),
+    hanging: parseModifier(options.hanging),
+    headingBreak:
+      parseModifier(options.headingBreak) ??
+      STYLE_MODIFIERS[options.style?.trim().toLowerCase() ?? ""]?.headingBreak,
     exclude: parseList(options.exclude),
     css: parseBoolean(options.css),
     auto: parseBoolean(options.auto)
@@ -201,7 +247,13 @@ function mountAll(
   const factory = createMojikumi({
     preset: options.preset,
     precision: options.precision,
-    exclude: options.exclude
+    exclude: options.exclude,
+    ...(options.indent === undefined ? {} : { indent: options.indent }),
+    ...(options.justify === undefined ? {} : { justify: options.justify }),
+    ...(options.hanging === undefined ? {} : { hanging: options.hanging }),
+    ...(options.headingBreak === undefined
+      ? {}
+      : { headingBreak: options.headingBreak })
   });
 
   for (const element of selectRoots(root, options.target)) {
@@ -317,6 +369,10 @@ export function readScriptOptions(
     target: dataset.target,
     style: dataset.style,
     precision: dataset.precision,
+    indent: dataset.indent,
+    justify: dataset.justify,
+    hanging: dataset.hanging,
+    headingBreak: dataset.headingBreak,
     exclude: dataset.exclude,
     css: dataset.css,
     auto: dataset.auto

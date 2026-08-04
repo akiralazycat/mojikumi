@@ -1,5 +1,7 @@
+import { getPreset } from "@mojikumi/presets";
 import { resolveOptions } from "./options.js";
 import {
+  measureJustification,
   measureLineContext,
   processElement,
   requiresAutospaceFallback,
@@ -22,6 +24,7 @@ function applyRootAttributes(
   const originalClass = root.getAttribute("class");
   const originalLang = root.getAttribute("lang");
   const originalDebug = root.getAttribute("data-mjk-debug");
+  const originalStyle = root.getAttribute("style");
 
   root.classList.add("mjk", `mjk-${options.presetName}`);
   if (options.debug) root.setAttribute("data-mjk-debug", "");
@@ -35,7 +38,53 @@ function applyRootAttributes(
     else root.setAttribute("lang", originalLang);
     if (originalDebug === null) root.removeAttribute("data-mjk-debug");
     else root.setAttribute("data-mjk-debug", originalDebug);
+    if (originalStyle === null) root.removeAttribute("style");
+    else root.setAttribute("style", originalStyle);
   };
+}
+
+/*
+ * A modifier earns a class only where it disagrees with the preset it is
+ * overriding, because the preset's own class already says the rest. Stating the
+ * agreement instead would put `text-align: start` on every ragged root, and a
+ * page that centres a pull quote inside the article would lose it.
+ */
+function syncModifierClasses(
+  root: Element,
+  options: ResolvedMojikumiOptions
+): void {
+  const preset = getPreset(options.presetName);
+  const modifiers: [string, string, boolean, boolean][] = [
+    [
+      "mjk-indented",
+      "mjk-flush",
+      Boolean(options.preset.indent),
+      Boolean(preset.indent)
+    ],
+    ["mjk-justified", "mjk-ragged", options.preset.justify, preset.justify],
+    ["mjk-hanging", "mjk-no-hanging", options.preset.hanging, preset.hanging],
+    [
+      "mjk-heading-break",
+      "mjk-no-heading-break",
+      options.preset.headingBreak,
+      preset.headingBreak
+    ]
+  ];
+
+  for (const [on, off, resolved, byPreset] of modifiers) {
+    root.classList.toggle(on, resolved && !byPreset);
+    root.classList.toggle(off, !resolved && byPreset);
+  }
+
+  /*
+   * Only an amount the caller asked for goes inline. Writing the preset's own
+   * 1em there would beat `--mjk-paragraph-indent` set in the page's stylesheet,
+   * which is the supported way to change it without touching JavaScript.
+   */
+  const indent = options.preset.indent;
+  if (typeof indent === "string" && indent !== preset.indent) {
+    (root as HTMLElement).style?.setProperty("--mjk-paragraph-indent", indent);
+  }
 }
 
 function syncRootClasses(
@@ -45,7 +94,7 @@ function syncRootClasses(
 ): void {
   root.classList.toggle(
     "mjk-fallback",
-    options.precision !== "native" && options.preset.fallback
+    options.precision !== "native"
   );
   root.classList.toggle(
     "mjk-punctuation-fallback",
@@ -55,9 +104,10 @@ function syncRootClasses(
     "mjk-autospace-fallback",
     requiresAutospaceFallback(options, support)
   );
+  syncModifierClasses(root, options);
   root.classList.toggle(
     "mjk-force-fallback",
-    options.precision === "full" && options.preset.fallback
+    options.precision === "full"
   );
   root.classList.toggle("mjk-tst-native", support.textSpacingTrim);
   root.classList.toggle(
@@ -81,15 +131,26 @@ export function createMojikumi(options: MojikumiOptions = {}) {
       let mutationObserver: MutationObserver | undefined;
       let resizeObserver: ResizeObserver | undefined;
 
+      /*
+       * Justification first: giving a block back its ragged edge changes where
+       * the line ends sit, and line context has to describe the layout that the
+       * reader is actually going to see.
+       */
+      const measure = () => {
+        measureJustification(element);
+        measureLineContext(element);
+      };
+
       const scheduleMeasurement = () => {
         if (frame) view?.cancelAnimationFrame(frame);
         if (view?.requestAnimationFrame) {
           frame = view.requestAnimationFrame(() => {
             frame = 0;
-            if (!destroyed) measureLineContext(element);
+            if (destroyed) return;
+            measure();
           });
         } else {
-          measureLineContext(element);
+          measure();
         }
       };
 
@@ -121,7 +182,7 @@ export function createMojikumi(options: MojikumiOptions = {}) {
         mutationObserver?.disconnect();
         restoreGeneratedMarkup(element);
         syncRootClasses(element, resolved, support);
-        if (resolved.precision !== "native" && resolved.preset.fallback) {
+        if (resolved.precision !== "native") {
           processElement(element, resolved, support);
         }
         scheduleMeasurement();
