@@ -290,8 +290,10 @@ input[type="range"] {
  * line would move the indentation, and labels, headings and controls are short
  * enough that justifying them only opens gaps.
  *
- * The four Playground cards share one rule on purpose: they are only
- * comparable while every one of them is set the same way.
+ * The Playground cards are not in here. Their alignment follows the preset
+ * being demonstrated — the three comparison cards inline it, the Mojikumi card
+ * lets the preset decide — because a rule here would win over both and the
+ * preset picker would change nothing anyone could see.
  */
 .hero-copy,
 .section-heading > p:not(.eyebrow),
@@ -306,7 +308,6 @@ input[type="range"] {
 .benchmark-results p,
 .method-note p,
 .benchmark-grid dd,
-.sample-text p,
 .comparison-credit {
   text-align: justify;
 }
@@ -2615,4 +2616,52 @@ main {
     -webkit-backdrop-filter: none;
     background: var(--bg);
   }
+}
+
+/*
+ * The modifiers, and the tag that reproduces what they add up to. Trying a
+ * setting and pasting it should be the same gesture.
+ */
+.preset-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 14px 0 0;
+}
+
+.modifier-controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modifier-controls .debug-control {
+  margin-top: 0;
+}
+
+.playground-snippet {
+  margin-top: 20px;
+}
+
+.playground-snippet > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 8px;
+}
+
+.playground-snippet .code-block {
+  margin: 0;
+}
+
+/* The style choice sits with the snippet it changes, not at the top of the page. */
+.style-picker {
+  margin: 0 0 12px;
+}
+
+.style-picker > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 8px 0 0;
 }

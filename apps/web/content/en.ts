@@ -122,6 +122,14 @@ export const en: Dictionary = {
       pending:
         "Each set of instructions is written against the standard theme for that service. On a theme you have changed, the class around your body text may differ; the step on changing scope shows how to find the name your own site uses. Services where we cannot yet confirm that injected code reaches the body text, such as Wix and STUDIO, are not listed."
     },
+    style: {
+      label: "Which setting to install",
+      notes: {
+        minimal: "Only what standard CSS can reach, leaving your design where it is.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      }
+    },
     steps: {
       requirements: "What you need",
       time: "Time",
@@ -523,7 +531,7 @@ onBeforeUnmount(() => instance?.destroy());
 
 export default {
   rehypePlugins: [
-    [rehypeMojikumi, { preset: "editorial" }]
+    [rehypeMojikumi, { preset: "article" }]
   ]
 };`
       },
@@ -532,19 +540,32 @@ export default {
         index: "09",
         title: "Choosing a preset",
         navLabel: "Presets",
-        body: "A preset is a set of adjustments taken together. Choose web if you are unsure. Take book where the page should read like a printed one, editorial where headings should break on phrase boundaries, and minimal to close up runs of punctuation and nothing else. Native uses only what the browser provides and never runs the fallback.",
+        body: "The presets are three steps towards print composition. Minimal is the compromise that standard CSS can reach on its own, and it leaves line ends alone. Article justifies the text and trims the line ends, which is what Mojikumi is for. Book adds the paragraph indent and the hanging punctuation of a printed page. Minimal is the default and article is the one to choose if you are unsure. Trimming a line end needs justification, and justification needs the DOM fallback until browsers ship text-spacing-trim: trim-both, so a page that says nothing is not signed up for that. The retired names web, editorial and native still resolve.",
         table: {
-          head: ["Adjustment", "web", "book", "editorial", "minimal", "native"],
+          head: ["Adjustment", "minimal", "article", "book"],
           rows: [
-            ["Runs of punctuation", "○", "○", "○", "○", "○"],
-            ["Line starts", "○", "○", "○", "—", "○"],
-            ["Line ends", "Conditional", "○", "○", "—", "○"],
-            ["Japanese with Latin", "○", "○", "—", "—", "○"],
-            ["Paragraph indent", "—", "1em", "—", "—", "—"],
-            ["Heading phrase breaks", "—", "—", "○", "—", "—"],
-            ["JavaScript fallback", "○", "○", "○", "○", "—"]
+            ["Runs of punctuation", "○", "○", "○"],
+            ["Line starts", "○", "○", "○"],
+            ["Japanese with Latin", "○", "○", "○"],
+            ["Justified", "—", "○", "○"],
+            ["Line ends", "Conditional", "○", "○"],
+            ["Paragraph indent", "—", "—", "1em"],
+            ["Hanging punctuation", "—", "—", "○"]
           ]
         }
+      },
+      {
+        id: "modifiers",
+        index: "09",
+        title: "Choosing the indent and the justification",
+        navLabel: "Modifiers",
+        body: "Whether paragraphs are indented and whether the text is set flush to both edges are decisions about the page rather than about Japanese typography, so they are not fixed by the preset. Leave indent and justify out and the preset decides; set either and it wins, which is how you keep the composition of book while dropping its indent. Setting justify to false also stops line ends being trimmed, since that trim only shows in a justified line.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="book"
+  data-indent="false"
+></script>`
       },
       {
         id: "precision",
@@ -677,6 +698,14 @@ Mojikumi.stop();`,
       sizeUnit: "px",
       width: "Measure",
       widthUnit: "em",
+      justify: "Set flush to both edges",
+      indent: "Indent the first line of a paragraph",
+      presetNotes: {
+        minimal: "Only what standard CSS can reach. Line ends are left alone.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      },
+      snippetNote: "Paste this to get exactly what you see.",
       debug: "Show punctuation classes and adjustments"
     },
     status: {

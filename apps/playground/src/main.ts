@@ -2,6 +2,7 @@ import "@mojikumi/css/mojikumi.css";
 import {
   createMojikumi,
   detectNativeSupport,
+  PRESETS,
   type MojikumiInstance,
   type Precision,
   type PresetName
@@ -11,13 +12,22 @@ import "./style.css";
 const SAMPLE =
   "『行頭の括弧』は、半角分のアキを詰めると版面が揃います。\n\nNext.jsと日本語、GPT-5を使う100円の本。約物「（例）」が連続する場面や、改行直後の『括弧』も比較できます。";
 
-const requirements = {
-  web: { start: true, both: false, autospace: true },
-  book: { start: true, both: true, autospace: true },
-  editorial: { start: true, both: true, autospace: false },
-  minimal: { start: false, both: false, autospace: false },
-  native: { start: true, both: true, autospace: true }
-} as const;
+/*
+ * Derived rather than written out, so the status line cannot drift from what
+ * the presets actually ask for. `both` follows the justified presets only: a
+ * ragged line has nothing to the right of its final comma, so trimming it is
+ * not a feature this preset is missing.
+ */
+const requirements = Object.fromEntries(
+  Object.entries(PRESETS).map(([name, preset]) => [
+    name,
+    {
+      start: preset.lineStartTrim,
+      both: Boolean(preset.lineEndTrim) && preset.justify,
+      autospace: preset.autospace
+    }
+  ])
+) as Record<PresetName, { start: boolean; both: boolean; autospace: boolean }>;
 
 const elements = {
   input: document.querySelector<HTMLTextAreaElement>("#input")!,
@@ -77,7 +87,7 @@ function render() {
     required.both && !support.textSpacingTrimBoth && "行末",
     required.autospace && !support.textAutospace && "和欧文間"
   ].filter(Boolean);
-  const allowsFallback = preset !== "native";
+  const allowsFallback = precision !== "native";
   const usingFallback =
     allowsFallback && (precision === "full" || missing.length > 0);
   elements.compatStatus.innerHTML = `
@@ -87,11 +97,11 @@ function render() {
         precision === "full"
           ? allowsFallback
             ? "DOMフォールバックを再現中"
-            : "Nativeプリセット：標準CSSのみ"
+            : "precision: native：標準CSSのみ"
           : missing.length
             ? allowsFallback
               ? `不足機能を補完中：${missing.join("・")}`
-              : "Nativeプリセット：標準CSSのみ"
+              : "precision: native：標準CSSのみ"
             : "このブラウザでは標準CSSを使用中"
       }</strong>
     </div>
@@ -99,7 +109,7 @@ function render() {
   `;
   elements.enhancedStatus.textContent = usingFallback
     ? "標準CSS ＋ DOM補完"
-    : preset === "native"
+    : precision === "native"
       ? "標準CSSのみ"
       : "標準CSSをそのまま使用";
 
@@ -113,7 +123,7 @@ function render() {
 
 function reset() {
   elements.input.value = SAMPLE;
-  elements.preset.value = "web";
+  elements.preset.value = "minimal";
   elements.font.value = "serif";
   elements.precision.value = "auto";
   elements.size.value = "18";
