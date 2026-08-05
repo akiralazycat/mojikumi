@@ -132,6 +132,22 @@ function planFor(
     return undefined;
   }
 
+  /*
+   * Where the preset hangs punctuation and the browser can do it, the line-end
+   * work is split by what each mechanism can reach: hanging takes the stops
+   * and commas — every one of them, since the preset asks with `force-end` —
+   * and the trim keeps the closing brackets, which hanging-punctuation has no
+   * value for. Handing the stops over is not just avoiding double payment: a
+   * hung glyph takes no space in the line, so it cannot re-break anything, and
+   * the one class of line end the trim keeps losing to instability is exactly
+   * the class hanging settles for free. `full` rehearses a browser that has
+   * neither feature, so there the trim plays every part.
+   */
+  const hangsStops =
+    Boolean(options.preset.hanging) &&
+    support.hangingPunctuation &&
+    options.precision !== "full";
+
   const analysis = analyzeText(text, {
     punctuationClusters: clusterFallback,
     autospace: autospaceFallback
@@ -155,8 +171,8 @@ function planFor(
       lineFallback &&
       trimsLineEnds(options) &&
       (token.class === "closing" ||
-        token.class === "comma" ||
-        token.class === "period");
+        (!hangsStops &&
+          (token.class === "comma" || token.class === "period")));
 
     if (
       pairAfter ||
