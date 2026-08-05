@@ -214,6 +214,65 @@ describe("DOM fallback", () => {
     instance.destroy();
   });
 
+  /*
+   * Where the browser hangs punctuation, force-end owns every line-final stop
+   * and comma, so wrapping them would only pay for the same glyph twice — and
+   * the closing brackets, which hanging has no value for, stay with the trim.
+   */
+  it("leaves stops to native hanging punctuation and keeps the brackets", () => {
+    Object.defineProperty(window, "CSS", {
+      configurable: true,
+      value: {
+        supports(property: string) {
+          return property === "hanging-punctuation";
+        }
+      }
+    });
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例）を確認する。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "auto",
+      observe: false
+    }).mount(target);
+
+    const candidates = [
+      ...target.querySelectorAll("[data-mjk-line-end-candidate]")
+    ].map((token) => token.textContent);
+    expect(candidates).toEqual(["）"]);
+
+    instance.destroy();
+  });
+
+  /* `full` rehearses a browser that has no native features, hanging included. */
+  it("keeps wrapping stops in full precision even where hanging exists", () => {
+    Object.defineProperty(window, "CSS", {
+      configurable: true,
+      value: {
+        supports(property: string) {
+          return property === "hanging-punctuation";
+        }
+      }
+    });
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例）を確認する。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const candidates = [
+      ...target.querySelectorAll("[data-mjk-line-end-candidate]")
+    ].map((token) => token.textContent);
+    expect(candidates).toContain("、");
+    expect(candidates).toContain("）");
+
+    instance.destroy();
+  });
+
   it("trims opening punctuation at a paragraph start in fallback mode", () => {
     document.body.innerHTML =
       '<article id="target"><p>『引用』を確認する。</p></article>';

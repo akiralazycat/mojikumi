@@ -146,16 +146,29 @@
   }
 
   /*
-   * Hanging punctuation puts a line-final comma outside the measure so the text
-   * itself stays flush, which is one of the ways a printed page answers a
+   * Hanging punctuation puts a line-final stop or comma outside the measure so
+   * the text itself stays flush, which is how the literary publishers answer a
    * comma that cannot start the next line. WebKit is the only engine that
    * implements it today.
+   *
+   * `force-end`, not `allow-end`. Where the browser hangs stops and commas,
+   * the DOM fallback leaves them to it and keeps only the closing brackets
+   * hanging cannot take — so a conditional hang would leave every comma that
+   * happened to fit sitting a half-em short of the margin, with neither
+   * treatment claiming it. Forced, every line-final stop hangs and the right
+   * edge reads as one decision. On a line that does not reach the measure the
+   * two render identically, so forcing costs the ragged case nothing.
    */
   :where(.mjk-hanging, .mjk-book, [data-mjk-preset="book"]) {
-    hanging-punctuation: first allow-end;
+    hanging-punctuation: first force-end;
   }
 
-  :where(.mjk-no-hanging) {
+  /*
+   * `full` exists to show what a browser without the native features would
+   * render, and hanging is a native feature: leave it out of the rehearsal,
+   * and the line-end trims play its part.
+   */
+  :where(.mjk-no-hanging, .mjk-force-fallback) {
     hanging-punctuation: none;
   }
 

@@ -200,6 +200,14 @@
 html {
   background: var(--bg);
   scroll-behavior: smooth;
+  /*
+   * iOS Safari sizes text by cluster heuristics unless told not to, and the
+   * Mojikumi sample card — its paragraphs split into token spans — can be
+   * judged a different cluster from the three plain cards beside it, showing
+   * the same slider value at a different size.
+   */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
