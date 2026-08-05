@@ -477,19 +477,27 @@ interface LineDecision {
   lineEnd: boolean;
 }
 
-/**
- * How many times a decision is checked against the layout it produced.
+/*
+ * An adjustment can invalidate its own reason: pulling a line-final comma in by
+ * a half-em can free exactly enough room for a half-width digit to join the
+ * line, and the comma the measurement called line-final is now mid-line. Worse,
+ * the escape is circular — withdrawing the trim sends the digit back down, and
+ * the line is asking to be trimmed again. Measuring every candidate at once and
+ * then reconciling cannot settle this: each layout demands the other's
+ * adjustments, and a reconciliation that can only withdraw ends up stripping
+ * most of a paragraph that was composed correctly.
  *
- * An adjustment can invalidate its own reason: pulling a line-final bracket in
- * by a half-em can leave room for the next character, the browser takes it, and
- * the bracket the measurement called line-final is now mid-line with a negative
- * margin — sitting on top of the character that moved up. Worse, the two states
- * can alternate forever, because dropping the adjustment puts the character
- * back. So verification only ever takes adjustments back, never re-applies
- * them, which both stops the cycle and leaves the safe state: no adjustment,
- * and the line as the browser composed it.
+ * What does settle it is the browser's own line breaker being greedy. Lines are
+ * broken front to back, so a margin on a token can only move the breaks on its
+ * own line and after it — everything decided earlier stays where it is. The
+ * candidates are therefore settled in document order, each measured in the
+ * layout that every earlier decision has already produced, and each application
+ * checked once against itself: an adjustment that survives cannot be disturbed
+ * again, and one that undoes its own reason is withdrawn on the spot and stays
+ * withdrawn — that cycle has no other exit, and the safe state is the line as
+ * the browser composed it.
  */
-const VERIFY_PASSES = 2;
+const WALK_PASSES = 3;
 
 /** Reads geometry. Writing anything here would cost a layout per token. */
 function readLineContext(
@@ -585,6 +593,11 @@ export function measureLineContext(root: Element): void {
     return value;
   };
 
+  /*
+   * A batched first pass: read every candidate against the clean layout, then
+   * write once. Most decisions survive the walk below untouched, so this puts
+   * the common case at two layouts instead of one per candidate.
+   */
   for (const decision of decisions) {
     const read = readLineContext(root, view, decision, ragged);
     decision.wrappedLineStart = read.wrappedLineStart;
@@ -592,23 +605,53 @@ export function measureLineContext(root: Element): void {
   }
   for (const decision of decisions) applyLineContext(decision);
 
-  for (let pass = 0; pass < VERIFY_PASSES; pass += 1) {
-    const stale = decisions
-      .filter((decision) => decision.wrappedLineStart || decision.lineEnd)
-      .filter((decision) => {
-        const read = readLineContext(root, view, decision, ragged);
-        return (
-          (decision.wrappedLineStart && !read.wrappedLineStart) ||
-          (decision.lineEnd && !read.lineEnd)
-        );
-      });
-    if (stale.length === 0) break;
+  /*
+   * The document-order walk. `candidates` came from querySelectorAll, so the
+   * decisions are already in document order. A decision that undid its own
+   * reason is remembered and not offered again: without that, every later pass
+   * would replay its apply-and-withdraw at two layouts a try.
+   *
+   * The walk repeats while it is still changing something, because a
+   * withdrawal early in the text can re-break the lines after it and leave a
+   * candidate the walk had already passed sitting untrimmed on a boundary. A
+   * pass that changes nothing reads a settled layout and writes nothing, so
+   * the common case stays at one pass.
+   */
+  const vetoed = new Set<LineDecision>();
+  for (let pass = 0; pass < WALK_PASSES; pass += 1) {
+    let changed = false;
 
-    for (const decision of stale) {
-      decision.wrappedLineStart = false;
-      decision.lineEnd = false;
+    for (const decision of decisions) {
+      const read = readLineContext(root, view, decision, ragged);
+      const wantStart = read.wrappedLineStart && !vetoed.has(decision);
+      const wantEnd = read.lineEnd && !vetoed.has(decision);
+      if (
+        wantStart === decision.wrappedLineStart &&
+        wantEnd === decision.lineEnd
+      ) {
+        continue;
+      }
+
+      changed = true;
+      decision.wrappedLineStart = wantStart;
+      decision.lineEnd = wantEnd;
+      applyLineContext(decision);
+
+      if (wantStart || wantEnd) {
+        const again = readLineContext(root, view, decision, ragged);
+        if (
+          (wantStart && !again.wrappedLineStart) ||
+          (wantEnd && !again.lineEnd)
+        ) {
+          decision.wrappedLineStart = false;
+          decision.lineEnd = false;
+          applyLineContext(decision);
+          vetoed.add(decision);
+        }
+      }
     }
-    for (const decision of stale) applyLineContext(decision);
+
+    if (!changed) break;
   }
 }
 
