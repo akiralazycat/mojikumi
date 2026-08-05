@@ -246,7 +246,12 @@ function ToggleControl({
 export function Playground({ dictionary }: { dictionary: Dictionary }) {
   const { controls, status, samples, sampleText } = dictionary.playground;
   const [text, setText] = useState(sampleText);
-  const [preset, setPreset] = useState<PresetName>("minimal");
+  /*
+   * The library defaults to `minimal`, but the Playground exists to show what
+   * Mojikumi can do, and `article` is the preset that does it. A visitor's
+   * first render should be the full treatment, not the compromise.
+   */
+  const [preset, setPreset] = useState<PresetName>("article");
   const [font, setFont] = useState<"serif" | "sans-serif">("serif");
   const [size, setSize] = useState(18);
   const [width, setWidth] = useState(24);
@@ -383,7 +388,7 @@ export function Playground({ dictionary }: { dictionary: Dictionary }) {
 
   function reset() {
     setText(sampleText);
-    setPreset("minimal");
+    setPreset("article");
     setOverrides({});
     setFont("serif");
     setSize(18);

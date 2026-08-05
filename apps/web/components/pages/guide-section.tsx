@@ -18,6 +18,11 @@ function withStyle(source: string, style: StyleName): string {
   return source.replace(/data-style="[^"]*"/gu, `data-style="${style}"`);
 }
 
+/*
+ * All three descriptions stay on screen at once. This is a decision made once,
+ * by reading — a segmented control shows only the selected note, which makes
+ * comparing the options a matter of clicking through them and remembering.
+ */
 function StylePicker({
   label,
   notes,
@@ -32,23 +37,24 @@ function StylePicker({
   const name = useId();
 
   return (
-    <fieldset className="segmented-field style-picker">
+    <fieldset className="style-picker">
       <legend>{label}</legend>
-      <div className="segmented-control">
-        {STYLES.map((style) => (
-          <label key={style}>
-            <input
-              type="radio"
-              name={name}
-              value={style}
-              checked={style === value}
-              onChange={() => onChange(style)}
-            />
-            <span>{style}</span>
-          </label>
-        ))}
-      </div>
-      <p>{notes[value]}</p>
+      {STYLES.map((style) => (
+        <label className="style-option" key={style}>
+          <input
+            type="radio"
+            name={name}
+            value={style}
+            checked={style === value}
+            onChange={() => onChange(style)}
+          />
+          <span className="style-option-mark" aria-hidden="true" />
+          <span className="style-option-body">
+            <strong>{style}</strong>
+            <span>{notes[style]}</span>
+          </span>
+        </label>
+      ))}
     </fieldset>
   );
 }
@@ -67,7 +73,7 @@ export function GuideSection({
   dictionary: Dictionary;
 }) {
   const { steps, style } = dictionary.start;
-  const [chosen, setChosen] = useState<StyleName>("minimal");
+  const [chosen, setChosen] = useState<StyleName>("article");
 
   return (
     <section id={guide.id}>
@@ -91,17 +97,17 @@ export function GuideSection({
       <p>{guide.open}</p>
 
       <h3>{steps.paste}</h3>
-      <StylePicker
-        label={style.label}
-        notes={style.notes}
-        value={chosen}
-        onChange={setChosen}
-      />
       <Snippet
         language={guide.language}
         source={withStyle(guide.code, chosen)}
         title={guide.title}
         labels={dictionary.codeCopy}
+      />
+      <StylePicker
+        label={style.label}
+        notes={style.notes}
+        value={chosen}
+        onChange={setChosen}
       />
 
       <h3>{steps.verify}</h3>
