@@ -338,6 +338,59 @@ describe("DOM fallback", () => {
   });
 
   /*
+   * Withdrawing one adjustment re-breaks the lines after it, and a candidate
+   * that measurement had already visited can land back on a boundary. A pass
+   * that only withdraws would leave it untrimmed — this is the regression where
+   * a whole paragraph's line starts and ends lost their trims to one unstable
+   * comma — so the walk has to come back and re-apply what the settled layout
+   * asks for.
+   */
+  it("keeps a trim whose boundary depends on another decision settling", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例のように続く。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const comma = target.querySelector<HTMLElement>(
+      "[data-mjk-line-end-candidate]"
+    )!;
+    const bracket = target.querySelector<HTMLElement>(
+      "[data-mjk-line-start-candidate]"
+    )!;
+    stubRects(comma, { top: 0, left: 0, width: 18, height: 18 });
+    stubRects(bracket, { top: 0, left: 0, width: 18, height: 18 });
+    /*
+     * Both tokens measure against the text between them. While the comma's
+     * trim is applied, the character after the comma has room on the comma's
+     * line, so that text reads as top 0: the comma is mid-line (its trim is
+     * unstable) and the bracket no longer starts a line. Once the comma's trim
+     * is withdrawn, the text drops back to the next line and the bracket's
+     * trim is the right answer again.
+     */
+    Object.defineProperty(Range.prototype, "getClientRects", {
+      configurable: true,
+      writable: true,
+      value: () =>
+        rectList(
+          comma.classList.contains("mjk-line-end")
+            ? { top: 0, left: 0, width: 18, height: 18 }
+            : { top: 36, left: 0, width: 18, height: 18 }
+        )
+    });
+
+    measureLineContext(target);
+
+    expect(comma.classList.contains("mjk-line-end")).toBe(false);
+    expect(bracket.classList.contains("mjk-wrapped-line-start")).toBe(true);
+    expect(bracket.dataset.mjkContext).toBe("wrapped-line-start");
+    instance.destroy();
+  });
+
+  /*
    * The preset asks for justified text with a zero-specificity rule, so a theme
    * that sets `text-align: left` wins. Trimming line ends there would move
    * nothing and could only change where the browser breaks.
