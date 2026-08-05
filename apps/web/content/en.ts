@@ -123,7 +123,7 @@ export const en: Dictionary = {
         "Each set of instructions is written against the standard theme for that service. On a theme you have changed, the class around your body text may differ; the step on changing scope shows how to find the name your own site uses. Services where we cannot yet confirm that injected code reaches the body text, such as Wix and STUDIO, are not listed."
     },
     style: {
-      label: "Which setting to install",
+      label: "Choose a style",
       notes: {
         minimal: "Only what standard CSS can reach, leaving your design where it is.",
         article: "Justified, with the line ends trimmed. Japanese body text reads this way.",

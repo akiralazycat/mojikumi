@@ -1627,7 +1627,13 @@ main {
   opacity: 1;
 }
 
-.docs-content pre {
+/*
+ * Scoped to the card, not to `.docs-content`: the Playground sidebar holds a
+ * snippet too, and a `pre` that misses this rule keeps its content-sized
+ * minimum width — one long CDN URL then pushes the whole column off a phone
+ * screen. `overflow-x: auto` is what lets the line scroll instead.
+ */
+.code-block pre {
   font-family: var(--font-code);
   font-size: var(--text-sm);
   line-height: 1.9;
@@ -1637,31 +1643,31 @@ main {
   tab-size: 2;
 }
 
-.docs-content pre .tok-keyword {
+.code-block .tok-keyword {
   color: var(--code-keyword);
 }
 
-.docs-content pre .tok-string {
+.code-block .tok-string {
   color: var(--code-string);
 }
 
-.docs-content pre .tok-tag {
+.code-block .tok-tag {
   color: var(--code-tag);
 }
 
-.docs-content pre .tok-attr {
+.code-block .tok-attr {
   color: var(--code-attr);
 }
 
-.docs-content pre .tok-number {
+.code-block .tok-number {
   color: var(--code-number);
 }
 
-.docs-content pre .tok-punctuation {
+.code-block .tok-punctuation {
   color: var(--code-punct);
 }
 
-.docs-content pre .tok-comment {
+.code-block .tok-comment {
   color: var(--code-comment);
   font-style: italic;
 }
@@ -1706,6 +1712,9 @@ main {
 
 .playground-controls {
   align-self: start;
+  /* A grid item's automatic minimum would let the snippet's longest line set
+     the column's width; the card must shrink and let the `pre` scroll. */
+  min-width: 0;
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   background: var(--glass-strong);
@@ -2654,14 +2663,91 @@ main {
   margin: 0;
 }
 
-/* The style choice sits with the snippet it changes, not at the top of the page. */
+/*
+ * The style choice is a small card under the snippet it rewrites. All three
+ * descriptions stay visible, so the options are compared by reading down the
+ * list, not by clicking through them.
+ */
 .style-picker {
-  margin: 0 0 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  margin: 14px 0 0;
+  min-width: 0;
+  padding: 14px 18px 6px;
 }
 
-.style-picker > p {
+.style-picker legend {
+  color: var(--muted);
+  /* Floated out of the fieldset's border box, where a legend otherwise sits. */
+  float: left;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  padding: 0;
+  width: 100%;
+}
+
+.style-option {
+  align-items: start;
+  clear: both;
+  column-gap: 11px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  padding: 9px 0;
+}
+
+.style-option + .style-option {
+  border-top: 1px solid var(--line);
+}
+
+.style-option input {
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
+.style-option-mark {
+  background: transparent;
+  background-clip: content-box;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  height: 16px;
+  margin-top: 3px;
+  padding: 3px;
+  width: 16px;
+}
+
+.style-option input:checked ~ .style-option-mark {
+  background-color: var(--primary-solid);
+  border-color: var(--primary-solid);
+}
+
+.style-option input:focus-visible ~ .style-option-mark {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.style-option-body {
+  display: grid;
+  gap: 2px;
+}
+
+.style-option-body strong {
+  font-family: var(--font-code);
+  font-size: var(--text-xs);
+}
+
+.style-option input:checked ~ .style-option-body strong {
+  color: var(--primary);
+}
+
+.style-option-body > span {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.7;
-  margin: 8px 0 0;
 }
