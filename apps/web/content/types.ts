@@ -173,6 +173,11 @@ export type Dictionary = {
       pending: string;
     };
     /* The seven headings every guide answers, written once. */
+    /** The one decision a reader makes before pasting. */
+    style: {
+      label: string;
+      notes: { minimal: string; article: string; book: string };
+    };
     steps: {
       requirements: string;
       time: string;
@@ -244,6 +249,11 @@ export type Dictionary = {
       sizeUnit: string;
       width: string;
       widthUnit: string;
+      justify: string;
+      indent: string;
+      /** One line each, so the choice can be made without reading the table. */
+      presetNotes: { minimal: string; article: string; book: string };
+      snippetNote: string;
       debug: string;
     };
     status: {
@@ -284,6 +294,16 @@ export type Dictionary = {
       title: string;
       body: string;
       link: string;
+    };
+    /* Every published table carries the conditions it was measured under. */
+    results: {
+      eyebrow: string;
+      title: string;
+      tables: {
+        caption: string;
+        note: string;
+        table: DocsTable;
+      }[];
     };
     metrics: {
       eyebrow: string;

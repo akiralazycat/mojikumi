@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { version as mojikumiVersion } from "mojikumi/package.json";
-import type { Dictionary, DocsTable, Locale } from "../../content";
+import type { Dictionary, Locale } from "../../content";
 import { pageHref } from "../../lib/site";
 import { ArrowRightIcon } from "../icons";
 import { Snippet } from "../snippet";
+import { Table } from "../table";
 
 /*
  * The published version is read at build time rather than written into the
@@ -12,43 +13,6 @@ import { Snippet } from "../snippet";
  */
 function withVersion(text: string): string {
   return text.replaceAll("{version}", mojikumiVersion);
-}
-
-/*
- * Wide reference tables scroll on their own rather than pushing the page
- * sideways, and the first cell of each row is a heading for that row.
- */
-function Table({ table }: { table: DocsTable }) {
-  return (
-    <div className="docs-table">
-      <table>
-        <thead>
-          <tr>
-            {table.head.map((cell) => (
-              <th key={cell} scope="col">
-                {cell}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {table.rows.map((row) => (
-            <tr key={row[0]}>
-              {row.map((cell, index) =>
-                index === 0 ? (
-                  <th key={index} scope="row">
-                    {cell}
-                  </th>
-                ) : (
-                  <td key={index}>{cell}</td>
-                )
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 export function DocsPage({

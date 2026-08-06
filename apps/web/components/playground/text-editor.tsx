@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ClipboardEvent } from "react";
 import { useMojikumi } from "@mojikumi/react";
 
-type PresetName = "web" | "book" | "editorial" | "minimal" | "native";
+type PresetName = "minimal" | "article" | "book";
 
 /*
  * The editable surface is a contenteditable host holding one <p> per paragraph,

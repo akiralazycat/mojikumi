@@ -18,8 +18,12 @@ import {
 
 function optionSignature(options: MojikumiOptions): string {
   return JSON.stringify({
-    preset: options.preset ?? "web",
+    preset: options.preset ?? "minimal",
     precision: options.precision ?? "auto",
+    indent: options.indent ?? null,
+    justify: options.justify ?? null,
+    hanging: options.hanging ?? null,
+    headingBreak: options.headingBreak ?? null,
     observe: options.observe ?? true,
     observeResize: options.observeResize,
     observeMutations: options.observeMutations,
@@ -51,6 +55,10 @@ export interface MojikumiProps extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
   preset?: MojikumiOptions["preset"];
   precision?: MojikumiOptions["precision"];
+  indent?: MojikumiOptions["indent"];
+  justify?: MojikumiOptions["justify"];
+  hanging?: MojikumiOptions["hanging"];
+  headingBreak?: MojikumiOptions["headingBreak"];
   observe?: boolean;
   observeResize?: boolean;
   observeMutations?: boolean;
@@ -70,8 +78,12 @@ export const Mojikumi = forwardRef<HTMLElement, MojikumiProps>(
       children,
       className,
       lang = "ja",
-      preset = "web",
+      preset = "minimal",
       precision = "auto",
+      indent,
+      justify,
+      hanging,
+      headingBreak,
       observe,
       observeResize,
       observeMutations,
@@ -84,6 +96,10 @@ export const Mojikumi = forwardRef<HTMLElement, MojikumiProps>(
     const options: MojikumiOptions = {
       preset,
       precision,
+      ...(indent === undefined ? {} : { indent }),
+      ...(justify === undefined ? {} : { justify }),
+      ...(hanging === undefined ? {} : { hanging }),
+      ...(headingBreak === undefined ? {} : { headingBreak }),
       ...(observe === undefined ? {} : { observe }),
       ...(observeResize === undefined ? {} : { observeResize }),
       ...(observeMutations === undefined ? {} : { observeMutations }),

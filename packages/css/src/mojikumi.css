@@ -10,46 +10,43 @@
     word-break: normal;
   }
 
+  /*
+   * Every preset trims line starts. `minimal` gets the line ends too wherever
+   * the browser will do them for free, which is the whole of what it gives up:
+   * it declines to start the DOM fallback for them, not the result.
+   *
+   * `web`, `editorial` and `native` are the names the first release shipped
+   * with. They are kept so that a page which pasted a class keeps its
+   * typography; all three now compose as `minimal`.
+   */
   :where(
-    .mjk-web,
+    .mjk-minimal,
+    .mjk-article,
     .mjk-book,
+    .mjk-web,
     .mjk-editorial,
     .mjk-native,
-    [data-mjk-preset="web"],
-    [data-mjk-preset="book"],
-    [data-mjk-preset="editorial"],
-    [data-mjk-preset="native"]
+    [data-mjk-preset="minimal"],
+    [data-mjk-preset="article"],
+    [data-mjk-preset="book"]
   ) {
     text-spacing-trim: trim-start;
   }
 
-  /*
-   * `web` is in here too. Its line-end trimming is conditional, meaning it is
-   * not worth starting the JS fallback for on its own, but where the browser
-   * can close up a line-final closing bracket for free it should.
-   */
   @supports (text-spacing-trim: trim-both) {
     :where(
-      .mjk-web,
+      .mjk-minimal,
+      .mjk-article,
       .mjk-book,
+      .mjk-web,
       .mjk-editorial,
       .mjk-native,
-      [data-mjk-preset="web"],
-      [data-mjk-preset="book"],
-      [data-mjk-preset="editorial"],
-      [data-mjk-preset="native"]
+      [data-mjk-preset="minimal"],
+      [data-mjk-preset="article"],
+      [data-mjk-preset="book"]
     ) {
       text-spacing-trim: trim-both;
     }
-  }
-
-  :where(
-    .mjk-editorial,
-    .mjk-minimal,
-    [data-mjk-preset="editorial"],
-    [data-mjk-preset="minimal"]
-  ) {
-    text-autospace: no-autospace;
   }
 
   /*
@@ -75,21 +72,104 @@
     text-autospace: no-autospace;
   }
 
+  /*
+   * `mjk-heading` puts this on one element; the modifier puts it on every
+   * heading in the root. `mjk-editorial` is the retired preset that used to
+   * carry it, kept so a pasted class still works.
+   */
   :where(
     .mjk-heading,
-    .mjk-editorial :is(h1, h2, h3, h4, h5, h6),
-    [data-mjk-preset="editorial"] :is(h1, h2, h3, h4, h5, h6)
+    .mjk-heading-break :is(h1, h2, h3, h4, h5, h6),
+    .mjk-editorial :is(h1, h2, h3, h4, h5, h6)
   ) {
     word-break: auto-phrase;
     text-wrap: balance;
   }
 
-  :where(.mjk-book p, [data-mjk-preset="book"] p) {
-    text-indent: 1em;
+  /*
+   * Print composition. A typesetter removes the half-em after a line-final
+   * comma so the line reaches the margin; in a ragged line there is nothing to
+   * the right of that comma, so the same removal moves nothing. Justification
+   * is what makes the trim visible, which is why `book` sets both and the
+   * ragged presets ask for neither.
+   *
+   * Headings stay ragged. Print does not justify a two-line title either.
+   */
+  :where(
+    .mjk-justified,
+    .mjk-article,
+    .mjk-book,
+    [data-mjk-preset="article"],
+    [data-mjk-preset="book"]
+  ) {
+    text-align: justify;
   }
 
+  :where(
+    .mjk-justified,
+    .mjk-article,
+    .mjk-book,
+    [data-mjk-preset="article"],
+    [data-mjk-preset="book"]
+  )
+    :is(h1, h2, h3, h4, h5, h6) {
+    text-align: start;
+  }
+
+  /*
+   * Whether paragraphs are indented is a decision about the page, not about
+   * Japanese typography, so it is a modifier rather than part of a preset:
+   * `book` turns it on, `mjk-flush` turns it off again, `mjk-indented` turns it
+   * on anywhere else. The amount is a variable so a page can change it without
+   * rewriting the rule.
+   */
+  :where(.mjk-book p, .mjk-indented p, [data-mjk-preset="book"] p) {
+    text-indent: var(--mjk-paragraph-indent, 1em);
+  }
+
+  /*
+   * A block the browser could not fill keeps its ragged edge. This cancels the
+   * justification Mojikumi asked for, and only that: a page that justifies its
+   * own prose has made that decision itself and keeps it.
+   */
+  :where(.mjk-overstretched) {
+    text-align: start;
+  }
+
+  /* The two cancels come last: every selector here has zero specificity. */
+  :where(.mjk-ragged) {
+    text-align: start;
+  }
+
+  :where(.mjk-flush p) {
+    text-indent: 0;
+  }
+
+  /*
+   * Hanging punctuation puts a line-final stop or comma outside the measure so
+   * the text itself stays flush, which is how the literary publishers answer a
+   * comma that cannot start the next line. WebKit is the only engine that
+   * implements it today.
+   *
+   * `force-end`, not `allow-end`. Where the browser hangs stops and commas,
+   * the DOM fallback leaves them to it and keeps only the closing brackets
+   * hanging cannot take — so a conditional hang would leave every comma that
+   * happened to fit sitting a half-em short of the margin, with neither
+   * treatment claiming it. Forced, every line-final stop hangs and the right
+   * edge reads as one decision. On a line that does not reach the measure the
+   * two render identically, so forcing costs the ragged case nothing.
+   */
   :where(.mjk-hanging, .mjk-book, [data-mjk-preset="book"]) {
-    hanging-punctuation: first allow-end;
+    hanging-punctuation: first force-end;
+  }
+
+  /*
+   * `full` exists to show what a browser without the native features would
+   * render, and hanging is a native feature: leave it out of the rehearsal,
+   * and the line-end trims play its part.
+   */
+  :where(.mjk-no-hanging, .mjk-force-fallback) {
+    hanging-punctuation: none;
   }
 
   :where([data-mjk-debug] .mjk-token) {
@@ -110,12 +190,6 @@
 
   :where([data-mjk-debug] .mjk-token) {
     position: relative;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :where(.mjk) {
-      scroll-behavior: auto;
-    }
   }
 }
 
@@ -148,4 +222,15 @@
 
 .mjk-fallback .mjk-line-end {
   margin-inline-end: var(--mjk-punctuation-adjustment);
+}
+
+/*
+ * A URL or an identifier is the one thing in a Japanese paragraph that cannot
+ * be broken, and in a justified line the browser pays for that by stretching
+ * the line in front of it. Letting it break anywhere costs nothing here: this
+ * only ever reaches a run Mojikumi wrapped because it was long and machine
+ * written, never a word someone wrote.
+ */
+.mjk-fallback .mjk-long-run {
+  word-break: break-all;
 }

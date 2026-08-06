@@ -1,6 +1,8 @@
 import {
   analyzeText,
+  computeUnbreakableRuns,
   isPunctuationClass,
+  MACHINE_MARK_PATTERN,
   segmentGraphemes,
   type MojikumiClass,
   type MojikumiToken
@@ -29,19 +31,29 @@ function shouldFallback(
   return precision === "full" || (precision === "auto" && !supported);
 }
 
+/**
+ * Whether the DOM fallback is allowed to take on line ends.
+ *
+ * Only a justified preset qualifies. Trimming the half-em after a line-final
+ * comma is invisible in ragged text — nothing sits to its right to be pulled in
+ * — so in a ragged line the adjustment cannot improve the line, and the one
+ * thing it can still do is persuade the browser to break somewhere else.
+ */
+export function trimsLineEnds(options: ResolvedMojikumiOptions): boolean {
+  return Boolean(options.preset.lineEndTrim) && options.preset.justify;
+}
+
 export function requiresPunctuationFallback(
   options: ResolvedMojikumiOptions,
   support: NativeFeatureSupport
 ): boolean {
-  if (options.precision === "native" || !options.preset.fallback) return false;
+  if (options.precision === "native") return false;
   if (options.precision === "full") return true;
 
   return Boolean(
     (options.preset.punctuationClusters && !support.textSpacingTrim) ||
       (options.preset.lineStartTrim && !support.textSpacingTrimStart) ||
-      (options.preset.lineEndTrim === "when-needed" &&
-        !support.textSpacingTrim) ||
-      (options.preset.lineEndTrim === true && !support.textSpacingTrimBoth)
+      (trimsLineEnds(options) && !support.textSpacingTrimBoth)
   );
 }
 
@@ -51,7 +63,7 @@ export function requiresAutospaceFallback(
 ): boolean {
   return Boolean(
     options.preset.autospace &&
-      options.preset.fallback &&
+      options.precision !== "native" &&
       shouldFallback(options.precision, support.textAutospace)
   );
 }
@@ -91,18 +103,50 @@ function collectTextNodes(
   return nodes;
 }
 
-function decorationsFor(
+interface TextPlan {
+  tokens: readonly MojikumiToken[];
+  decorations: Map<number, TokenDecoration>;
+  /** Start offset of an unbreakable run, to the offset just past its end. */
+  runs: Map<number, number>;
+}
+
+function planFor(
   text: string,
   options: ResolvedMojikumiOptions,
   support: NativeFeatureSupport
-): Map<number, TokenDecoration> {
+): TextPlan | undefined {
   const clusterFallback =
     options.preset.punctuationClusters &&
     requiresPunctuationFallback(options, support);
   const autospaceFallback = requiresAutospaceFallback(options, support);
   const lineFallback = requiresPunctuationFallback(options, support);
+  /*
+   * Only a justified block needs this: it is the stretching that makes a long
+   * URL expensive, and breaking one in ragged text would cost the reader a
+   * legible address for nothing.
+   */
+  const wantsRuns =
+    options.preset.justify && MACHINE_MARK_PATTERN.test(text);
 
-  if (!clusterFallback && !autospaceFallback && !lineFallback) return new Map();
+  if (!clusterFallback && !autospaceFallback && !lineFallback && !wantsRuns) {
+    return undefined;
+  }
+
+  /*
+   * Where the preset hangs punctuation and the browser can do it, the line-end
+   * work is split by what each mechanism can reach: hanging takes the stops
+   * and commas — every one of them, since the preset asks with `force-end` —
+   * and the trim keeps the closing brackets, which hanging-punctuation has no
+   * value for. Handing the stops over is not just avoiding double payment: a
+   * hung glyph takes no space in the line, so it cannot re-break anything, and
+   * the one class of line end the trim keeps losing to instability is exactly
+   * the class hanging settles for free. `full` rehearses a browser that has
+   * neither feature, so there the trim plays every part.
+   */
+  const hangsStops =
+    Boolean(options.preset.hanging) &&
+    support.hangingPunctuation &&
+    options.precision !== "full";
 
   const analysis = analyzeText(text, {
     punctuationClusters: clusterFallback,
@@ -125,10 +169,10 @@ function decorationsFor(
       token.class === "opening";
     const lineEndCandidate =
       lineFallback &&
-      Boolean(options.preset.lineEndTrim) &&
+      trimsLineEnds(options) &&
       (token.class === "closing" ||
-        token.class === "comma" ||
-        token.class === "period");
+        (!hangsStops &&
+          (token.class === "comma" || token.class === "period")));
 
     if (
       pairAfter ||
@@ -146,7 +190,14 @@ function decorationsFor(
     }
   }
 
-  return result;
+  const runs = new Map<number, number>();
+  if (wantsRuns) {
+    for (const run of computeUnbreakableRuns(analysis.tokens)) {
+      runs.set(run.offset, run.offset + run.length);
+    }
+  }
+
+  return { tokens: analysis.tokens, decorations: result, runs };
 }
 
 function createTokenSpan(
@@ -172,18 +223,32 @@ function createTokenSpan(
   return span;
 }
 
+/**
+ * Wraps a run whole. Breaking it into one span per character would let the
+ * browser break between them, which is the opposite of what the run is for.
+ */
+function createRunSpan(
+  document: Document,
+  value: string,
+  decoration: TokenDecoration | undefined
+): HTMLSpanElement {
+  const span = document.createElement("span");
+  span.dataset.mjkGenerated = "";
+  span.classList.add("mjk-long-run");
+  if (decoration?.autospaceBefore) span.classList.add("mjk-autospace-before");
+  span.textContent = value;
+  return span;
+}
+
 function transformTextNode(
   node: Text,
   options: ResolvedMojikumiOptions,
   support: NativeFeatureSupport
 ): void {
-  const decorations = decorationsFor(node.data, options, support);
-  if (decorations.size === 0) return;
+  const plan = planFor(node.data, options, support);
+  if (!plan || (plan.decorations.size === 0 && plan.runs.size === 0)) return;
 
-  const tokens = analyzeText(node.data, {
-    punctuationClusters: false,
-    autospace: false
-  }).tokens;
+  const { tokens, decorations, runs } = plan;
   const fragment = node.ownerDocument.createDocumentFragment();
   let textBuffer = "";
 
@@ -193,7 +258,25 @@ function transformTextNode(
     textBuffer = "";
   };
 
-  for (const token of tokens) {
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+    const runEnd = runs.get(token.offset);
+
+    if (runEnd !== undefined) {
+      flush();
+      while (index + 1 < tokens.length && tokens[index + 1]!.offset < runEnd) {
+        index += 1;
+      }
+      fragment.append(
+        createRunSpan(
+          node.ownerDocument,
+          node.data.slice(token.offset, runEnd),
+          decorations.get(token.offset)
+        )
+      );
+      continue;
+    }
+
     const decoration = decorations.get(token.offset);
     if (!decoration) {
       textBuffer += token.value;
@@ -212,6 +295,9 @@ export function restoreGeneratedMarkup(root: Element): void {
   ].filter((element) => element.closest(".mjk") === root);
   for (const element of generated.reverse()) {
     element.replaceWith(element.textContent ?? "");
+  }
+  for (const block of root.querySelectorAll(`.${OVERSTRETCHED}`)) {
+    block.classList.remove(OVERSTRETCHED);
   }
   root.normalize();
 }
@@ -287,6 +373,198 @@ function sameLine(
     : Math.abs(current.top - adjacent.top) < 1;
 }
 
+/**
+ * How full the least-filled line of a block has to be for justification to be
+ * worth keeping, as a fraction of the measure.
+ *
+ * Measured on Chromium 148 over widths from 12em to 30em: ordinary Japanese
+ * fills every line to 95% or more, while the lines that justification wrecked —
+ * the four or five characters left in front of something unbreakable — filled
+ * about a quarter. There is a wide, empty gap between the two, so the threshold
+ * does not have to be precise, only inside it.
+ */
+const JUSTIFY_MIN_FILL = 0.7;
+
+const OVERSTRETCHED = "mjk-overstretched";
+
+/*
+ * The two questions asked of a block's alignment, and both refuse to act on an
+ * answer they did not get. An environment without a layout engine reports an
+ * empty string, so `justify` is what the browser positively says is justified,
+ * and `ragged` what it positively says is not.
+ */
+function alignmentOf(view: Window, block: Element): string {
+  return view.getComputedStyle(block).textAlign;
+}
+
+function isJustified(view: Window, block: Element): boolean {
+  return alignmentOf(view, block) === "justify";
+}
+
+function isRagged(view: Window, block: Element): boolean {
+  const alignment = alignmentOf(view, block);
+  return alignment !== "" && alignment !== "justify";
+}
+
+function contentWidth(view: Window, block: HTMLElement): number {
+  const style = view.getComputedStyle(block);
+  const padding =
+    Number.parseFloat(style.paddingInlineStart || "0") +
+    Number.parseFloat(style.paddingInlineEnd || "0");
+  return block.clientWidth - (Number.isFinite(padding) ? padding : 0);
+}
+
+/**
+ * Groups the block's client rects into lines and asks whether the emptiest of
+ * them, the last excepted, is full enough to justify. One rect per inline box
+ * rather than one per character, so the cost follows the markup, not the text.
+ */
+function fillsItsLines(view: Window, block: HTMLElement): boolean {
+  const width = contentWidth(view, block);
+  if (!(width > 0)) return true;
+
+  const range = block.ownerDocument.createRange();
+  range.selectNodeContents(block);
+  const getClientRects = (
+    range as Range & { getClientRects?: () => DOMRectList }
+  ).getClientRects;
+  if (typeof getClientRects !== "function") return true;
+  const rects = getClientRects.call(range);
+
+  const lines = new Map<number, { min: number; max: number }>();
+  for (let index = 0; index < rects.length; index += 1) {
+    const rect = rectAt(rects, index);
+    if (!rect || (rect.width === 0 && rect.height === 0)) continue;
+    const line = lines.get(Math.round(rect.top));
+    if (line) {
+      line.min = Math.min(line.min, rect.left);
+      line.max = Math.max(line.max, rect.right);
+    } else {
+      lines.set(Math.round(rect.top), { min: rect.left, max: rect.right });
+    }
+  }
+  if (lines.size < 2) return true;
+
+  /* The last line is ragged in any setting, so it is not evidence. */
+  const tops = [...lines.keys()].sort((a, b) => a - b).slice(0, -1);
+  return tops.every((top) => {
+    const line = lines.get(top)!;
+    return (line.max - line.min) / width >= JUSTIFY_MIN_FILL;
+  });
+}
+
+/**
+ * Takes justification back from any block the browser cannot fill.
+ *
+ * Long URLs are wrapped so they can break, which covers what a page usually
+ * throws at a justified line. This is for the rest: a very long word, a narrow
+ * measure, a table of contents where every line is short. Giving up on the
+ * block is better than the alternative, because a line stretched to four times
+ * its natural spacing is worse than a ragged right edge.
+ */
+export function measureJustification(root: Element): void {
+  const view = root.ownerDocument.defaultView;
+  if (!view) return;
+
+  const blocks = [...root.querySelectorAll<HTMLElement>(BLOCK_SELECTOR)].filter(
+    (block) => block.closest(".mjk") === root
+  );
+  if (blocks.length === 0) return;
+
+  for (const block of blocks) block.classList.remove(OVERSTRETCHED);
+
+  const justified = blocks.filter((block) => {
+    /* Vertical writing is measured on the other axis; not yet supported. */
+    const writingMode = view.getComputedStyle(block).writingMode;
+    if (writingMode.startsWith("vertical")) return false;
+    return isJustified(view, block);
+  });
+  if (justified.length === 0) return;
+
+  for (const block of justified) block.classList.add(OVERSTRETCHED);
+  const keep = justified.filter((block) => fillsItsLines(view, block));
+  for (const block of keep) block.classList.remove(OVERSTRETCHED);
+}
+
+interface LineDecision {
+  token: HTMLElement;
+  paragraphStart: boolean;
+  wrappedLineStart: boolean;
+  lineEnd: boolean;
+}
+
+/*
+ * An adjustment can invalidate its own reason: pulling a line-final comma in by
+ * a half-em can free exactly enough room for a half-width digit to join the
+ * line, and the comma the measurement called line-final is now mid-line. Worse,
+ * the escape is circular — withdrawing the trim sends the digit back down, and
+ * the line is asking to be trimmed again. Measuring every candidate at once and
+ * then reconciling cannot settle this: each layout demands the other's
+ * adjustments, and a reconciliation that can only withdraw ends up stripping
+ * most of a paragraph that was composed correctly.
+ *
+ * What does settle it is the browser's own line breaker being greedy. Lines are
+ * broken front to back, so a margin on a token can only move the breaks on its
+ * own line and after it — everything decided earlier stays where it is. The
+ * candidates are therefore settled in document order, each measured in the
+ * layout that every earlier decision has already produced, and each application
+ * checked once against itself: an adjustment that survives cannot be disturbed
+ * again, and one that undoes its own reason is withdrawn on the spot and stays
+ * withdrawn — that cycle has no other exit, and the safe state is the line as
+ * the browser composed it.
+ */
+const WALK_PASSES = 3;
+
+/** Reads geometry. Writing anything here would cost a layout per token. */
+function readLineContext(
+  root: Element,
+  view: Window,
+  decision: LineDecision,
+  ragged: (token: Element) => boolean
+): { wrappedLineStart: boolean; lineEnd: boolean } {
+  const { token } = decision;
+  const rect = rectAt(token.getClientRects(), 0);
+  if (!rect || (rect.width === 0 && rect.height === 0)) {
+    return { wrappedLineStart: false, lineEnd: false };
+  }
+  const writingMode = view.getComputedStyle(token).writingMode;
+  let wrappedLineStart = false;
+  let lineEnd = false;
+
+  if (
+    !decision.paragraphStart &&
+    token.hasAttribute("data-mjk-line-start-candidate")
+  ) {
+    const previous = getTextRect(root, token, "previous");
+    wrappedLineStart = Boolean(
+      previous && !sameLine(rect, previous, writingMode)
+    );
+  }
+  /*
+   * The preset asked for justified text; the page may have said otherwise, and
+   * the page wins. Trimming a line-final comma in a block that ended up ragged
+   * moves nothing and can only talk the browser into a different break.
+   */
+  if (token.hasAttribute("data-mjk-line-end-candidate") && !ragged(token)) {
+    const next = getTextRect(root, token, "next");
+    lineEnd = Boolean(next && !sameLine(rect, next, writingMode));
+  }
+
+  return { wrappedLineStart, lineEnd };
+}
+
+function applyLineContext(decision: LineDecision): void {
+  const { token, paragraphStart, wrappedLineStart, lineEnd } = decision;
+  token.classList.toggle("mjk-line-start", paragraphStart || wrappedLineStart);
+  token.classList.toggle("mjk-wrapped-line-start", wrappedLineStart);
+  token.classList.toggle("mjk-line-end", lineEnd);
+
+  if (paragraphStart) token.dataset.mjkContext = "paragraph-start";
+  else if (wrappedLineStart) token.dataset.mjkContext = "wrapped-line-start";
+  else if (lineEnd) token.dataset.mjkContext = "line-end";
+  else delete token.dataset.mjkContext;
+}
+
 export function measureLineContext(root: Element): void {
   const view = root.ownerDocument.defaultView;
   if (!view) return;
@@ -296,6 +574,12 @@ export function measureLineContext(root: Element): void {
       "[data-mjk-line-start-candidate],[data-mjk-line-end-candidate]"
     )
   ].filter((token) => token.closest(".mjk") === root);
+  if (candidates.length === 0) return;
+
+  /*
+   * Clear first, then measure, then apply. Interleaving the three would measure
+   * each token in a layout that the tokens before it had already moved.
+   */
   for (const token of candidates) {
     token.classList.remove(
       "mjk-line-start",
@@ -303,31 +587,87 @@ export function measureLineContext(root: Element): void {
       "mjk-line-end"
     );
     delete token.dataset.mjkContext;
+  }
 
-    const rect = rectAt(token.getClientRects(), 0);
-    if (!rect || (rect.width === 0 && rect.height === 0)) continue;
-    const writingMode = view.getComputedStyle(token).writingMode;
+  const decisions: LineDecision[] = candidates.map((token) => ({
+    token,
+    paragraphStart:
+      token.hasAttribute("data-mjk-line-start-candidate") &&
+      !hasPreviousTextInBlock(root, token),
+    wrappedLineStart: false,
+    lineEnd: false
+  }));
 
-    if (token.hasAttribute("data-mjk-line-start-candidate")) {
-      const previous = getTextRect(root, token, "previous");
-      const paragraphStart = !hasPreviousTextInBlock(root, token);
-      const wrappedLineStart =
-        !paragraphStart &&
-        Boolean(previous && !sameLine(rect, previous, writingMode));
-      token.classList.toggle("mjk-line-start", paragraphStart || wrappedLineStart);
-      token.classList.toggle("mjk-wrapped-line-start", wrappedLineStart);
-      if (paragraphStart) token.dataset.mjkContext = "paragraph-start";
-      else if (wrappedLineStart) {
-        token.dataset.mjkContext = "wrapped-line-start";
+  const raggedBlocks = new Map<Element, boolean>();
+  const ragged = (token: Element) => {
+    const block = blockOf(root, token);
+    let value = raggedBlocks.get(block);
+    if (value === undefined) {
+      value = isRagged(view, block);
+      raggedBlocks.set(block, value);
+    }
+    return value;
+  };
+
+  /*
+   * A batched first pass: read every candidate against the clean layout, then
+   * write once. Most decisions survive the walk below untouched, so this puts
+   * the common case at two layouts instead of one per candidate.
+   */
+  for (const decision of decisions) {
+    const read = readLineContext(root, view, decision, ragged);
+    decision.wrappedLineStart = read.wrappedLineStart;
+    decision.lineEnd = read.lineEnd;
+  }
+  for (const decision of decisions) applyLineContext(decision);
+
+  /*
+   * The document-order walk. `candidates` came from querySelectorAll, so the
+   * decisions are already in document order. A decision that undid its own
+   * reason is remembered and not offered again: without that, every later pass
+   * would replay its apply-and-withdraw at two layouts a try.
+   *
+   * The walk repeats while it is still changing something, because a
+   * withdrawal early in the text can re-break the lines after it and leave a
+   * candidate the walk had already passed sitting untrimmed on a boundary. A
+   * pass that changes nothing reads a settled layout and writes nothing, so
+   * the common case stays at one pass.
+   */
+  const vetoed = new Set<LineDecision>();
+  for (let pass = 0; pass < WALK_PASSES; pass += 1) {
+    let changed = false;
+
+    for (const decision of decisions) {
+      const read = readLineContext(root, view, decision, ragged);
+      const wantStart = read.wrappedLineStart && !vetoed.has(decision);
+      const wantEnd = read.lineEnd && !vetoed.has(decision);
+      if (
+        wantStart === decision.wrappedLineStart &&
+        wantEnd === decision.lineEnd
+      ) {
+        continue;
+      }
+
+      changed = true;
+      decision.wrappedLineStart = wantStart;
+      decision.lineEnd = wantEnd;
+      applyLineContext(decision);
+
+      if (wantStart || wantEnd) {
+        const again = readLineContext(root, view, decision, ragged);
+        if (
+          (wantStart && !again.wrappedLineStart) ||
+          (wantEnd && !again.lineEnd)
+        ) {
+          decision.wrappedLineStart = false;
+          decision.lineEnd = false;
+          applyLineContext(decision);
+          vetoed.add(decision);
+        }
       }
     }
 
-    if (token.hasAttribute("data-mjk-line-end-candidate")) {
-      const next = getTextRect(root, token, "next");
-      const lineEnd = Boolean(next && !sameLine(rect, next, writingMode));
-      token.classList.toggle("mjk-line-end", lineEnd);
-      if (lineEnd) token.dataset.mjkContext = "line-end";
-    }
+    if (!changed) break;
   }
 }
 

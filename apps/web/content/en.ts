@@ -122,6 +122,14 @@ export const en: Dictionary = {
       pending:
         "Each set of instructions is written against the standard theme for that service. On a theme you have changed, the class around your body text may differ; the step on changing scope shows how to find the name your own site uses. Services where we cannot yet confirm that injected code reaches the body text, such as Wix and STUDIO, are not listed."
     },
+    style: {
+      label: "Choose a style",
+      notes: {
+        minimal: "Only what standard CSS can reach, leaving your design where it is.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      }
+    },
     steps: {
       requirements: "What you need",
       time: "Time",
@@ -523,7 +531,7 @@ onBeforeUnmount(() => instance?.destroy());
 
 export default {
   rehypePlugins: [
-    [rehypeMojikumi, { preset: "editorial" }]
+    [rehypeMojikumi, { preset: "article" }]
   ]
 };`
       },
@@ -532,19 +540,32 @@ export default {
         index: "09",
         title: "Choosing a preset",
         navLabel: "Presets",
-        body: "A preset is a set of adjustments taken together. Choose web if you are unsure. Take book where the page should read like a printed one, editorial where headings should break on phrase boundaries, and minimal to close up runs of punctuation and nothing else. Native uses only what the browser provides and never runs the fallback.",
+        body: "The presets are three steps towards print composition. Minimal is the compromise that standard CSS can reach on its own, and it leaves line ends alone. Article justifies the text and trims the line ends, which is what Mojikumi is for. Book adds the paragraph indent and the hanging punctuation of a printed page. Minimal is the default and article is the one to choose if you are unsure. Trimming a line end needs justification, and justification needs the DOM fallback until browsers ship text-spacing-trim: trim-both, so a page that says nothing is not signed up for that. The retired names web, editorial and native still resolve.",
         table: {
-          head: ["Adjustment", "web", "book", "editorial", "minimal", "native"],
+          head: ["Adjustment", "minimal", "article", "book"],
           rows: [
-            ["Runs of punctuation", "○", "○", "○", "○", "○"],
-            ["Line starts", "○", "○", "○", "—", "○"],
-            ["Line ends", "Conditional", "○", "○", "—", "○"],
-            ["Japanese with Latin", "○", "○", "—", "—", "○"],
-            ["Paragraph indent", "—", "1em", "—", "—", "—"],
-            ["Heading phrase breaks", "—", "—", "○", "—", "—"],
-            ["JavaScript fallback", "○", "○", "○", "○", "—"]
+            ["Runs of punctuation", "○", "○", "○"],
+            ["Line starts", "○", "○", "○"],
+            ["Japanese with Latin", "○", "○", "○"],
+            ["Justified", "—", "○", "○"],
+            ["Line ends", "Conditional", "○", "○"],
+            ["Paragraph indent", "—", "—", "1em"],
+            ["Hanging punctuation", "—", "—", "○"]
           ]
         }
+      },
+      {
+        id: "modifiers",
+        index: "09",
+        title: "Choosing the indent and the justification",
+        navLabel: "Modifiers",
+        body: "Whether paragraphs are indented and whether the text is set flush to both edges are decisions about the page rather than about Japanese typography, so they are not fixed by the preset. Leave indent and justify out and the preset decides; set either and it wins, which is how you keep the composition of book while dropping its indent. Setting justify to false also stops line ends being trimmed, since that trim only shows in a justified line.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="book"
+  data-indent="false"
+></script>`
       },
       {
         id: "precision",
@@ -677,6 +698,14 @@ Mojikumi.stop();`,
       sizeUnit: "px",
       width: "Measure",
       widthUnit: "em",
+      justify: "Set flush to both edges",
+      indent: "Indent the first line of a paragraph",
+      presetNotes: {
+        minimal: "Only what standard CSS can reach. Line ends are left alone.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      },
+      snippetNote: "Paste this to get exactly what you see.",
       debug: "Show punctuation classes and adjustments"
     },
     status: {
@@ -718,15 +747,72 @@ Mojikumi.stop();`,
   },
   benchmarks: {
     title: "Benchmarks",
-    description: "How Mojikumi measures performance, and what will be published",
+    description: "Measured processing cost and layout shift, with the conditions behind them",
     eyebrow: "Performance & compatibility",
     heading: "Measuring speed and the size of the fallback",
     lead: "Mojikumi is built to do less work as browser support grows. Alongside processing time, the number of elements the fallback adds and the cost of setting the text again are tracked continuously.",
     status: {
       label: "Current status",
-      title: "The measurement setup is being prepared",
-      body: "The work right now is pinning down conditions that produce the same numbers every run. Results move with the device and the browser version, so nothing is published until those conditions can be written down. In the meantime, the speed and the look of it can be checked directly in the Playground.",
+      title: "Measured on Chromium",
+      body: "Where the browser has the standard properties, a 10,000 character article gains exactly one element. That one is the injected style element; nothing is added to the text itself. Zero generated elements means standard CSS took all of the typography, which is what the design was for. Where the properties are missing the fallback runs and the first pass costs six to nine times as much. Firefox and WebKit are not measured yet, so the full column below stands in for them.",
       link: "Check it in the Playground"
+    },
+    results: {
+      eyebrow: "Results",
+      title: "What the measurements say",
+      tables: [
+        {
+          caption: "Processing cost",
+          note: "Chromium 148.0.7778.96, 1280px wide, the system serif, median of seven runs. auto is the path a reader on this browser actually gets; full forces the fallback instead of using the native properties, standing in for a browser without CSS Text Level 4.",
+          table: {
+            head: [
+              "Content",
+              "Path",
+              "First pass",
+              "Re-evaluation",
+              "Added DOM",
+              "Generated",
+              "Heap"
+            ],
+            rows: [
+              ["1k characters", "auto", "2.6ms", "0.2ms", "1", "0", "74KB"],
+              ["1k characters", "full", "15.2ms", "5.0ms", "136", "135", "197KB"],
+              ["10k characters", "auto", "5.5ms", "0.2ms", "1", "0", "88KB"],
+              [
+                "10k characters",
+                "full",
+                "45.6ms",
+                "140.5ms",
+                "1,243",
+                "1,242",
+                "250KB"
+              ],
+              ["10 articles", "auto", "7.4ms", "0.3ms", "1", "0", "120KB"],
+              [
+                "10 articles",
+                "full",
+                "48.9ms",
+                "148.5ms",
+                "1,351",
+                "1,350",
+                "288KB"
+              ]
+            ]
+          }
+        },
+        {
+          caption: "Layout shift",
+          note: "Same browser, against a bundle served with a 40ms delay, summing layout-shift entries. Eight paragraphs and forty gave the same result. Measured earlier on Chromium 141, the tag at the end of the body cost 0.033 on a phone. On 148 the untagged page already breaks its lines the way Mojikumi does, so the difference is gone.",
+          table: {
+            head: ["Placement", "Desktop 1280px", "Mobile 390px"],
+            rows: [
+              ["Not pasted", "0", "0"],
+              ["In the head", "0", "0"],
+              ["End of the body", "0", "0"]
+            ]
+          }
+        }
+      ]
     },
     metrics: {
       eyebrow: "Metrics",
@@ -754,16 +840,23 @@ Mojikumi.stop();`,
       eyebrow: "Matrix",
       title: "The environments we hold steady",
       items: [
-        { term: "Chromium", description: "Latest / macOS and Linux" },
-        { term: "Firefox", description: "Latest / macOS and Linux" },
-        { term: "WebKit", description: "Latest / macOS" },
-        { term: "Content", description: "Three shapes: 1k characters, 10k characters, many paragraphs" }
+        { term: "Chromium", description: "148.0.7778.96 / macOS. Measured" },
+        {
+          term: "Firefox",
+          description: "Not measured. One of the places the fallback really runs"
+        },
+        {
+          term: "WebKit",
+          description:
+            "Not measured. It has no text-spacing-trim, so the full column becomes a real reading"
+        },
+        { term: "Content", description: "Three shapes: 1k characters, 10k characters, 10 articles" }
       ]
     },
     method: {
       label: "Method",
       title: "Only results you can reproduce",
-      body: "The measurement code, the input text, the browser versions and the font conditions all live in the repository. Follow the same steps and you should land close to the same numbers. This page carries only what CI produced under fixed conditions; live measurements taken on the spot depend on the state of the machine, so they are kept separate."
+      body: "The measurement code is scripts/measure-cost.mjs and scripts/measure-shift.mjs in the repository, and BENCHMARKS.md carries the conditions and how to read them. npm run measure:cost and npm run measure:shift take you through the same steps. Numbers depend on the machine, so read the difference between conditions rather than any absolute value. Both measurements fail when an assumption of the design breaks: fallback markup on a browser that has the properties, and a shift from a tag in the head."
     }
   },
   privacy: {

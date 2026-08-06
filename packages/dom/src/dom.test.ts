@@ -157,7 +157,118 @@ describe("DOM fallback", () => {
     }).mount(target);
 
     expect(target.classList.contains("mjk-punctuation-fallback")).toBe(true);
+    // `mjk-book` already justifies; a modifier class would only restate it.
+    expect(instance.options.preset.justify).toBe(true);
+    expect(target.classList.contains("mjk-ragged")).toBe(false);
     expect(target.querySelector("[data-mjk-generated]")).not.toBeNull();
+
+    instance.destroy();
+  });
+
+  /*
+   * The same browser, the same missing `trim-both`, a ragged preset. Line-end
+   * trimming would move nothing here, so it is not a reason to start wrapping
+   * text and hand back the line-start trimming the browser was already doing.
+   */
+  it("leaves a ragged preset on native CSS when only trim-both is missing", () => {
+    Object.defineProperty(window, "CSS", {
+      configurable: true,
+      value: {
+        supports(property: string, value: string) {
+          if (property === "text-spacing-trim") {
+            return value === "normal" || value === "trim-start";
+          }
+          return property === "text-autospace";
+        }
+      }
+    });
+    document.body.innerHTML =
+      '<article id="target"><p>『引用』を確認する。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "editorial",
+      precision: "auto",
+      observe: false
+    }).mount(target);
+
+    expect(target.classList.contains("mjk-punctuation-fallback")).toBe(false);
+    expect(target.classList.contains("mjk-justified")).toBe(false);
+    expect(target.querySelector("[data-mjk-generated]")).toBeNull();
+
+    instance.destroy();
+  });
+
+  it("never wraps line-end candidates for a ragged preset", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文（例）そのあとに続く。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "web",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    expect(target.querySelector("[data-mjk-line-start-candidate]")).not.toBeNull();
+    expect(target.querySelector("[data-mjk-line-end-candidate]")).toBeNull();
+
+    instance.destroy();
+  });
+
+  /*
+   * Where the browser hangs punctuation, force-end owns every line-final stop
+   * and comma, so wrapping them would only pay for the same glyph twice — and
+   * the closing brackets, which hanging has no value for, stay with the trim.
+   */
+  it("leaves stops to native hanging punctuation and keeps the brackets", () => {
+    Object.defineProperty(window, "CSS", {
+      configurable: true,
+      value: {
+        supports(property: string) {
+          return property === "hanging-punctuation";
+        }
+      }
+    });
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例）を確認する。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "auto",
+      observe: false
+    }).mount(target);
+
+    const candidates = [
+      ...target.querySelectorAll("[data-mjk-line-end-candidate]")
+    ].map((token) => token.textContent);
+    expect(candidates).toEqual(["）"]);
+
+    instance.destroy();
+  });
+
+  /* `full` rehearses a browser that has no native features, hanging included. */
+  it("keeps wrapping stops in full precision even where hanging exists", () => {
+    Object.defineProperty(window, "CSS", {
+      configurable: true,
+      value: {
+        supports(property: string) {
+          return property === "hanging-punctuation";
+        }
+      }
+    });
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例）を確認する。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const candidates = [
+      ...target.querySelectorAll("[data-mjk-line-end-candidate]")
+    ].map((token) => token.textContent);
+    expect(candidates).toContain("、");
+    expect(candidates).toContain("）");
 
     instance.destroy();
   });
@@ -246,6 +357,125 @@ describe("DOM fallback", () => {
     instance.destroy();
   });
 
+  /*
+   * The half-em the trim frees can be enough for the next character to join the
+   * line, at which point the comma the measurement called line-final is sitting
+   * mid-line with a negative margin, on top of the character that moved up.
+   * Left alone the two states alternate, so the adjustment is withdrawn rather
+   * than re-applied.
+   */
+  it("takes back a line-end trim once the browser has re-broken the line", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあとに続く文章。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const token = target.querySelector<HTMLElement>(
+      "[data-mjk-line-end-candidate]"
+    )!;
+    stubRects(token, { top: 0, left: 0, width: 18, height: 18 });
+    Object.defineProperty(Range.prototype, "getClientRects", {
+      configurable: true,
+      writable: true,
+      value: () =>
+        rectList(
+          token.classList.contains("mjk-line-end")
+            ? { top: 0, left: 0, width: 18, height: 18 }
+            : { top: 36, left: 0, width: 18, height: 18 }
+        )
+    });
+
+    measureLineContext(target);
+
+    expect(token.classList.contains("mjk-line-end")).toBe(false);
+    expect(token.dataset.mjkContext).toBeUndefined();
+    instance.destroy();
+  });
+
+  /*
+   * Withdrawing one adjustment re-breaks the lines after it, and a candidate
+   * that measurement had already visited can land back on a boundary. A pass
+   * that only withdraws would leave it untrimmed — this is the regression where
+   * a whole paragraph's line starts and ends lost their trims to one unstable
+   * comma — so the walk has to come back and re-apply what the settled layout
+   * asks for.
+   */
+  it("keeps a trim whose boundary depends on another decision settling", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文、そのあと（例のように続く。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const comma = target.querySelector<HTMLElement>(
+      "[data-mjk-line-end-candidate]"
+    )!;
+    const bracket = target.querySelector<HTMLElement>(
+      "[data-mjk-line-start-candidate]"
+    )!;
+    stubRects(comma, { top: 0, left: 0, width: 18, height: 18 });
+    stubRects(bracket, { top: 0, left: 0, width: 18, height: 18 });
+    /*
+     * Both tokens measure against the text between them. While the comma's
+     * trim is applied, the character after the comma has room on the comma's
+     * line, so that text reads as top 0: the comma is mid-line (its trim is
+     * unstable) and the bracket no longer starts a line. Once the comma's trim
+     * is withdrawn, the text drops back to the next line and the bracket's
+     * trim is the right answer again.
+     */
+    Object.defineProperty(Range.prototype, "getClientRects", {
+      configurable: true,
+      writable: true,
+      value: () =>
+        rectList(
+          comma.classList.contains("mjk-line-end")
+            ? { top: 0, left: 0, width: 18, height: 18 }
+            : { top: 36, left: 0, width: 18, height: 18 }
+        )
+    });
+
+    measureLineContext(target);
+
+    expect(comma.classList.contains("mjk-line-end")).toBe(false);
+    expect(bracket.classList.contains("mjk-wrapped-line-start")).toBe(true);
+    expect(bracket.dataset.mjkContext).toBe("wrapped-line-start");
+    instance.destroy();
+  });
+
+  /*
+   * The preset asks for justified text with a zero-specificity rule, so a theme
+   * that sets `text-align: left` wins. Trimming line ends there would move
+   * nothing and could only change where the browser breaks.
+   */
+  it("does not trim line ends in a block the page left ragged", () => {
+    document.body.innerHTML =
+      '<article id="target"><p style="text-align: left">本文（例）そのあとに続く文章。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const token = target.querySelector<HTMLElement>(
+      "[data-mjk-line-end-candidate]"
+    )!;
+    stubRects(token, { top: 0, left: 0, width: 18, height: 18 });
+    stubRangeRects({ top: 36, left: 0, width: 18, height: 18 });
+
+    measureLineContext(target);
+
+    expect(token.classList.contains("mjk-line-end")).toBe(false);
+    instance.destroy();
+  });
+
   it("skips code and explicit opt-out regions", () => {
     document.body.innerHTML = `
       <article id="target">
@@ -311,6 +541,169 @@ describe("DOM fallback", () => {
     expect(instance.element.classList.contains("mjk-book")).toBe(true);
     expect(instance.element.getAttribute("lang")).toBe("ja");
     instance.destroy();
+  });
+});
+
+describe("unbreakable runs", () => {
+  it("wraps a URL whole so a justified line can break inside it", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>詳しくはhttps://example.com/2026/typography.htmlを参照。</p></article>';
+    const target = document.querySelector("#target")!;
+    const original = target.textContent;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "auto",
+      observe: false
+    }).mount(target);
+
+    const run = target.querySelector<HTMLElement>(".mjk-long-run");
+    expect(run?.textContent).toBe("https://example.com/2026/typography.html");
+    expect(target.textContent).toBe(original);
+
+    instance.destroy();
+    expect(target.textContent).toBe(original);
+    expect(target.querySelector(".mjk-long-run")).toBeNull();
+  });
+
+  /* Ragged text pays nothing for an unbreakable run, so it keeps the address. */
+  it("leaves runs alone where the text is not justified", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>詳しくはhttps://example.com/2026/typography.htmlを参照。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "web",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    expect(target.querySelector(".mjk-long-run")).toBeNull();
+    instance.destroy();
+  });
+
+  it("keeps the autospace before a run it swallowed", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>詳細はhttps://example.com/a/b/c/d/e/fです。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    const run = target.querySelector<HTMLElement>(".mjk-long-run");
+    expect(run?.classList.contains("mjk-autospace-before")).toBe(true);
+    instance.destroy();
+  });
+});
+
+describe("modifiers", () => {
+  it("drops the indent from book without touching the rest of it", () => {
+    document.body.innerHTML = '<article id="target"><p>本文です。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      indent: false,
+      precision: "native",
+      observe: false
+    }).mount(target);
+
+    expect(target.classList.contains("mjk-flush")).toBe(true);
+    expect(target.classList.contains("mjk-indented")).toBe(false);
+    expect(target.classList.contains("mjk-ragged")).toBe(false);
+    expect(instance.options.preset.justify).toBe(true);
+
+    instance.destroy();
+    expect(target.getAttribute("class")).toBeNull();
+  });
+
+  it("indents a ragged preset on request, at the amount asked for", () => {
+    document.body.innerHTML = '<article id="target"><p>本文です。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      indent: "2em",
+      precision: "native",
+      observe: false
+    }).mount(target);
+
+    expect(target.classList.contains("mjk-indented")).toBe(true);
+    expect(
+      (target as HTMLElement).style.getPropertyValue("--mjk-paragraph-indent")
+    ).toBe("2em");
+
+    instance.destroy();
+    expect(target.getAttribute("style")).toBeNull();
+  });
+
+  /*
+   * Turning justification off has to take line-end trimming with it. Trimming
+   * the half-em after a line-final comma only shows in a justified line.
+   */
+  it("stops trimming line ends when justification is turned off", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>本文（例）そのあとに続く。</p></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "book",
+      justify: false,
+      precision: "full",
+      observe: false
+    }).mount(target);
+
+    expect(target.classList.contains("mjk-ragged")).toBe(true);
+    expect(target.querySelector("[data-mjk-line-end-candidate]")).toBeNull();
+    expect(
+      target.querySelector("[data-mjk-line-start-candidate]")
+    ).not.toBeNull();
+
+    instance.destroy();
+  });
+
+  it("leaves the preset alone when no modifier is given", () => {
+    const untouched = resolveOptions({ preset: "book" });
+    expect(untouched.preset.indent).toBe("1em");
+    expect(untouched.preset.justify).toBe(true);
+
+    const overridden = resolveOptions({
+      preset: "book",
+      indent: false,
+      justify: false,
+      hanging: false
+    });
+    expect(overridden.preset.indent).toBe(false);
+    expect(overridden.preset.justify).toBe(false);
+    expect(overridden.preset.hanging).toBe(false);
+    expect(resolveOptions({ indent: true }).preset.indent).toBe("1em");
+  });
+
+  it("resolves a retired preset name to the one that replaced it", () => {
+    expect(resolveOptions({ preset: "web" }).presetName).toBe("minimal");
+    expect(resolveOptions({}).presetName).toBe("minimal");
+  });
+
+  it("carries hanging and heading breaks as modifiers", () => {
+    document.body.innerHTML = '<article id="target"><h2>見出し</h2></article>';
+    const target = document.querySelector("#target")!;
+    const instance = createMojikumi({
+      preset: "article",
+      hanging: true,
+      headingBreak: true,
+      precision: "native",
+      observe: false
+    }).mount(target);
+
+    expect(target.classList.contains("mjk-hanging")).toBe(true);
+    expect(target.classList.contains("mjk-heading-break")).toBe(true);
+
+    instance.destroy();
+
+    const withoutHanging = createMojikumi({
+      preset: "book",
+      hanging: false,
+      precision: "native",
+      observe: false
+    }).mount(target);
+    expect(target.classList.contains("mjk-no-hanging")).toBe(true);
+    withoutHanging.destroy();
   });
 });
 

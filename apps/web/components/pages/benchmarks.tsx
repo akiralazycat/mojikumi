@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Dictionary, Locale } from "../../content";
 import { pageHref } from "../../lib/site";
 import { ArrowRightIcon } from "../icons";
+import { Table } from "../table";
 
 export function BenchmarksPage({
   dictionary,
@@ -32,6 +33,18 @@ export function BenchmarksPage({
             <ArrowRightIcon size={16} />
           </Link>
         </div>
+      </section>
+
+      <section className="benchmark-results">
+        <p className="eyebrow">{benchmarks.results.eyebrow}</p>
+        <h2>{benchmarks.results.title}</h2>
+        {benchmarks.results.tables.map((entry) => (
+          <div key={entry.caption}>
+            <h3>{entry.caption}</h3>
+            <p>{entry.note}</p>
+            <Table table={entry.table} />
+          </div>
+        ))}
       </section>
 
       <section className="benchmark-grid">

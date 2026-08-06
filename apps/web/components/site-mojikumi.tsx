@@ -16,7 +16,7 @@ export function SiteMojikumi({
       as="div"
       className="site-shell"
       lang={locale}
-      preset="web"
+      preset="minimal"
       precision="auto"
       exclude={[".playground-controls", ".comparison"]}
     >

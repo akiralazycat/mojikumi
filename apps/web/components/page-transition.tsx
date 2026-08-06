@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { useSectionReveal } from "./section-reveal";
 
 /*
  * A client-side navigation replaces the whole page subtree, and the Mojikumi
@@ -15,12 +16,14 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
  * two frames later, once that work has drained. The transition then runs on
  * its own, with nothing mutating underneath it. The first render is left
  * alone: server-rendered markup should be readable the moment it paints, and
- * sections below the fold have their own scroll-driven reveal in globals.css.
+ * sections below the fold have their own reveal in useSectionReveal.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const ref = useRef<HTMLDivElement>(null);
   const settled = useRef(false);
+
+  useSectionReveal(ref);
 
   useLayoutEffect(() => {
     const element = ref.current;
