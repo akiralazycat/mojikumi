@@ -21,7 +21,12 @@
 <main>
   <p class="eyebrow">Version {{version}}</p>
   <h1>Mojikumiを読み込むためのファイル</h1>
-  <p>このドメインでは、Webサイトへ組み込むためのファイルだけを配信しています。導入の手順は<a href="https://mojikumi.jp/start/">mojikumi.jp/start/</a>にあります。同じファイルはnpmの<a href="https://www.npmjs.com/package/mojikumi">mojikumi</a>パッケージにも含まれているため、CDNを使わずに導入することもできます。</p>
+  <!--
+    No bare URL in the running text: `article` justifies, and the preset breaks
+    a long Latin run rather than opening a river, so mojikumi.jp/start/ splits
+    across the middle of the domain. Correct behaviour, poor as a link.
+  -->
+  <p>このドメインでは、Webサイトへ組み込むためのファイルだけを配信しています。導入の手順は、mojikumi.jpの<a href="https://mojikumi.jp/start/">はじめる</a>にあります。同じファイルはnpmの<a href="https://www.npmjs.com/package/mojikumi">mojikumi</a>パッケージにも含まれているため、CDNを使わずに導入することもできます。</p>
 
   <section>
     <h2>読み込む</h2>

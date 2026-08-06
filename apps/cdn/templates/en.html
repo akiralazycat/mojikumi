@@ -21,7 +21,12 @@
 <main>
   <p class="eyebrow">Version {{version}}</p>
   <h1>The files you load Mojikumi from</h1>
-  <p>This domain serves nothing but the files you put on a page. The guide to using them is at <a href="https://mojikumi.jp/en/start/">mojikumi.jp/en/start/</a>. The same files ship inside the <a href="https://www.npmjs.com/package/mojikumi">mojikumi</a> package on npm, if you would rather not load anything from a CDN.</p>
+  <!--
+    No bare URL in the running text: `article` justifies, and the preset breaks
+    a long Latin run rather than opening a river, so mojikumi.jp/en/start/
+    splits across the middle of the domain. Correct behaviour, poor as a link.
+  -->
+  <p>This domain serves nothing but the files you put on a page. <a href="https://mojikumi.jp/en/start/">The guide to using them</a> is on mojikumi.jp. The same files ship inside the <a href="https://www.npmjs.com/package/mojikumi">mojikumi</a> package on npm, if you would rather not load anything from a CDN.</p>
 
   <section>
     <h2>Loading it</h2>
