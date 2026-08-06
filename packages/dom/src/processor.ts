@@ -5,7 +5,8 @@ import {
   MACHINE_MARK_PATTERN,
   segmentGraphemes,
   type MojikumiClass,
-  type MojikumiToken
+  type MojikumiToken,
+  type UnbreakableRun
 } from "@mojikumi/core";
 import type {
   NativeFeatureSupport,
@@ -106,8 +107,8 @@ function collectTextNodes(
 interface TextPlan {
   tokens: readonly MojikumiToken[];
   decorations: Map<number, TokenDecoration>;
-  /** Start offset of an unbreakable run, to the offset just past its end. */
-  runs: Map<number, number>;
+  /** Start offset of an unbreakable run, to the run itself. */
+  runs: Map<number, UnbreakableRun>;
 }
 
 function planFor(
@@ -190,10 +191,10 @@ function planFor(
     }
   }
 
-  const runs = new Map<number, number>();
+  const runs = new Map<number, UnbreakableRun>();
   if (wantsRuns) {
     for (const run of computeUnbreakableRuns(analysis.tokens)) {
-      runs.set(run.offset, run.offset + run.length);
+      runs.set(run.offset, run);
     }
   }
 
@@ -224,19 +225,31 @@ function createTokenSpan(
 }
 
 /**
- * Wraps a run whole. Breaking it into one span per character would let the
- * browser break between them, which is the opposite of what the run is for.
+ * Wraps a run whole, and marks the places inside it where a break would land
+ * on a boundary the address itself has. `<wbr>` rather than a character: it is
+ * an element, so it contributes nothing to `textContent` and nothing to what a
+ * reader copies. Breaking it into one span per character would instead let the
+ * browser break between any two of them, which is the opposite of the point.
  */
 function createRunSpan(
   document: Document,
   value: string,
+  run: UnbreakableRun,
   decoration: TokenDecoration | undefined
 ): HTMLSpanElement {
   const span = document.createElement("span");
   span.dataset.mjkGenerated = "";
   span.classList.add("mjk-long-run");
   if (decoration?.autospaceBefore) span.classList.add("mjk-autospace-before");
-  span.textContent = value;
+
+  let cursor = 0;
+  for (const offset of run.breaks) {
+    const at = offset - run.offset;
+    span.append(document.createTextNode(value.slice(cursor, at)));
+    span.append(document.createElement("wbr"));
+    cursor = at;
+  }
+  span.append(document.createTextNode(value.slice(cursor)));
   return span;
 }
 
@@ -260,9 +273,10 @@ function transformTextNode(
 
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index]!;
-    const runEnd = runs.get(token.offset);
+    const run = runs.get(token.offset);
 
-    if (runEnd !== undefined) {
+    if (run !== undefined) {
+      const runEnd = run.offset + run.length;
       flush();
       while (index + 1 < tokens.length && tokens[index + 1]!.offset < runEnd) {
         index += 1;
@@ -271,6 +285,7 @@ function transformTextNode(
         createRunSpan(
           node.ownerDocument,
           node.data.slice(token.offset, runEnd),
+          run,
           decorations.get(token.offset)
         )
       );

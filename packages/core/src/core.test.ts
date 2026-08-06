@@ -162,4 +162,52 @@ describe("computeUnbreakableRuns", () => {
   it("ignores a machine-written run that is short enough to fit", () => {
     expect(runsIn("設定はa/bです。")).toEqual([]);
   });
+
+  /*
+   * The break offsets are where the run may be divided. Written out as the
+   * pieces they produce, so a wrong offset reads as a wrong address rather
+   * than as a number.
+   */
+  const piecesIn = (text: string) =>
+    computeUnbreakableRuns(tokenize(text)).map((run) => {
+      const edges = [run.offset, ...run.breaks, run.offset + run.length];
+      return edges
+        .slice(0, -1)
+        .map((from, index) => text.slice(from, edges[index + 1]));
+    });
+
+  it("divides a URL where the address divides", () => {
+    expect(
+      piecesIn("詳しくはhttps://example.com/2026/typography.htmlを参照。")
+    ).toEqual([
+      ["https:", "/", "/", "example.com/", "2026/", "typography.html"]
+    ]);
+  });
+
+  it("keeps a domain name whole", () => {
+    const [pieces] = piecesIn("配信元はhttps://cdn.mojikumi.jp/v1/です。");
+    expect(pieces).toContain("cdn.mojikumi.jp/");
+  });
+
+  it("divides a query at its parameters", () => {
+    expect(piecesIn("例はhttps://example.com/s?q=1&r=2です。")).toEqual([
+      ["https:", "/", "/", "example.com/", "s?", "q=", "1&", "r=", "2"]
+    ]);
+  });
+
+  /*
+   * The two hex digits after a percent sign are one escape (RFC 3986 §2.1).
+   * Dividing them divides a character, not an address.
+   */
+  it("never divides a percent-encoded escape", () => {
+    const [pieces] = piecesIn("検索はhttps://example.com/%E3%81%82%E3%81%84");
+    expect(pieces).toContain("%E3%81%82%E3%81%84");
+  });
+
+  it("offers nothing where every mark sits at the end", () => {
+    const [run] = computeUnbreakableRuns(
+      tokenize("設定はNEXT_PUBLIC_MOJIKUMI_を読みます。")
+    );
+    expect(run?.breaks.at(-1)).toBeLessThan(run!.offset + run!.length);
+  });
 });
