@@ -70,9 +70,12 @@ export function rootMetadata(locale: Locale): Metadata {
 
 export function RootDocument({
   locale,
+  head,
   children
 }: {
   locale: Locale;
+  /** Extra head content, for pages that have no layout of their own. */
+  head?: ReactNode;
   children: ReactNode;
 }) {
   const dictionary = getDictionary(locale);
@@ -86,6 +89,7 @@ export function RootDocument({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {head}
         <StructuredData locale={locale} />
       </head>
       <body>

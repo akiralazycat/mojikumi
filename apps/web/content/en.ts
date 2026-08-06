@@ -880,6 +880,21 @@ Mojikumi.stop();`,
       }
     ]
   },
+  notFound: {
+    eyebrow: "Error / 404",
+    headlineLead: "No page carries",
+    headlineAccent: "this number",
+    lead: "The address may have changed, or the page may not be written yet. The table of contents below is the way back.",
+    nombreLabel: "Nombre",
+    runningHead: "Mojikumi",
+    linksLabel: "Contents",
+    links: [
+      { index: "01", page: "start", label: "Put it on your own site" },
+      { index: "02", page: "docs", label: "Read the documentation" },
+      { index: "03", page: "playground", label: "Try it in the Playground" },
+      { index: "04", page: "home", label: "Back to the home page" }
+    ]
+  },
   footer: {
     tagline: "Japanese on the web, quietly set right",
     note: "JLREQ × CSS Text",
