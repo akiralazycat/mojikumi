@@ -580,6 +580,35 @@ describe("unbreakable runs", () => {
     instance.destroy();
   });
 
+  /*
+   * `<wbr>` and not a character: the run has to be able to divide without the
+   * text changing, and an element contributes nothing to what is read out or
+   * copied. The check is the same one the whole library rests on — the string
+   * before and after is identical.
+   */
+  it("marks where the address divides, without changing the text", () => {
+    document.body.innerHTML =
+      '<article id="target"><p>詳しくはhttps://example.com/2026/typography.htmlを参照。</p></article>';
+    const target = document.querySelector("#target")!;
+    const original = target.textContent;
+    const instance = createMojikumi({
+      preset: "book",
+      precision: "auto",
+      observe: false
+    }).mount(target);
+
+    const run = target.querySelector<HTMLElement>(".mjk-long-run")!;
+    expect([...run.childNodes].filter((n) => n.nodeName === "WBR")).toHaveLength(
+      5
+    );
+    expect(run.innerHTML).toContain("example.com/<wbr>");
+    expect(target.textContent).toBe(original);
+
+    instance.destroy();
+    expect(target.textContent).toBe(original);
+    expect(target.querySelector("wbr")).toBeNull();
+  });
+
   it("keeps the autospace before a run it swallowed", () => {
     document.body.innerHTML =
       '<article id="target"><p>詳細はhttps://example.com/a/b/c/d/e/fです。</p></article>';
