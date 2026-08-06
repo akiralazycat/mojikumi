@@ -404,8 +404,12 @@ export const en: Dictionary = {
           head: ["Attribute", "Default", "What it does"],
           rows: [
             ["data-target", "auto", "Selector for the body text; auto looks through the containers it knows"],
-            ["data-style", "article", "article, book, or headline"],
+            ["data-style", "minimal", "minimal (restrained), article (justified), or book (a printed page)"],
             ["data-precision", "auto", "native, auto, or full"],
+            ["data-indent", "up to the preset", "false for no indent; a length such as 2em also works"],
+            ["data-justify", "up to the preset", "false to leave the right edge ragged"],
+            ["data-hanging", "up to the preset", "true to hang line-final stops outside the measure"],
+            ["data-heading-break", "up to the preset", "true to break headings at phrase boundaries"],
             ["data-exclude", "none", "Extra selectors to leave alone, comma separated"],
             ["data-css", "true", "Whether to load the bundled stylesheet"],
             ["data-auto", "true", "Set to false and nothing happens until Mojikumi.start() is called"]
@@ -418,7 +422,7 @@ export const en: Dictionary = {
         title: "Use the CSS on its own",
         navLabel: "CSS",
         language: "TSX",
-        body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Four presets ship with it, book, web, editorial and minimal, differing in how tightly they set.",
+        body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Three presets ship with it, minimal, article and book, differing in how far towards print composition they go.",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
