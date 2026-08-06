@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mojikumi CDN</title>
+<style>{{style}}</style>
+</head>
+<body>
+
+<header class="brand">
+  <span class="brand-mark" data-no-mojikumi>「</span>
+  <span class="brand-text">
+    <strong>Mojikumi CDN</strong>
+    <span class="brand-host">cdn.mojikumi.jp</span>
+  </span>
+  <a class="brand-language" href="/en/" hreflang="en" lang="en">English</a>
+</header>
+
+<main>
+  <p class="eyebrow">Version {{version}}</p>
+  <h1>Mojikumiを読み込むためのファイル</h1>
+  <!--
+    No bare URL in the running text: `article` justifies, and the preset breaks
+    a long Latin run rather than opening a river, so mojikumi.jp/start/ splits
+    across the middle of the domain. Correct behaviour, poor as a link.
+  -->
+  <p>このドメインでは、Webサイトへ組み込むためのファイルだけを配信しています。導入の手順は、mojikumi.jpの<a href="https://mojikumi.jp/start/">はじめる</a>にあります。同じファイルはnpmの<a href="https://www.npmjs.com/package/mojikumi">mojikumi</a>パッケージにも含まれているため、CDNを使わずに導入することもできます。</p>
+
+  <section>
+    <h2>読み込む</h2>
+    <pre data-no-mojikumi>&lt;script
+  src="https://cdn.mojikumi.jp/{{channel}}/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+&gt;&lt;/script&gt;</pre>
+    <p class="note">CSSはこのファイルに含まれているため、読み込むファイルは1つだけです。<code>data-target</code>には本文のセレクターを指定します。省略した場合は、よく使われる本文の要素を順に探します。</p>
+    <p class="note"><code>data-style</code>には<code>minimal</code>、<code>article</code>、<code>book</code>を指定できます。それぞれの体裁の違いは<a href="https://mojikumi.jp/start/">導入の手順</a>にあります。</p>
+  </section>
+
+  <section>
+    <h2>配信しているファイル</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">パス</th><th scope="col">内容</th><th scope="col">キャッシュ</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">/{{channel}}/mojikumi.min.js</th>
+            <td>CSSを含んだ、ブラウザ向けのファイル</td>
+            <td>10分</td>
+          </tr>
+          <tr>
+            <th scope="row">/{{channel}}/mojikumi.min.css</th>
+            <td>CSSだけを使う場合</td>
+            <td>10分</td>
+          </tr>
+          <tr>
+            <th scope="row">/{{version}}/…</th>
+            <td>同じ内容を、バージョンで固定したもの</td>
+            <td>1年（内容は変わりません）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><code>/{{channel}}/</code>の内容は、マイナー更新のたびに入れ替わります。タグを貼り直さなくても修正が届く代わりに、更新の影響をそのまま受けます。互換性のない変更は<code>/v2/</code>として別に公開し、<code>/{{channel}}/</code>はそのまま残します。</p>
+  </section>
+
+  <section>
+    <h2>バージョンを固定する</h2>
+    <p class="note">バージョンを指定したパスは書き換えないため、内容のハッシュを添えられます。ファイルが一致しない場合、ブラウザはそれを実行しません。</p>
+    <pre data-no-mojikumi>&lt;script
+  src="https://cdn.mojikumi.jp/{{version}}/mojikumi.min.js"
+  integrity="{{integrityJs}}"
+  crossorigin="anonymous"
+  data-target=".entry-content"
+&gt;&lt;/script&gt;</pre>
+    <p class="note">CSSだけを使う場合のハッシュは次のものです。<code>/{{channel}}/</code>は内容が入れ替わるため、この指定はできません。</p>
+    <pre data-no-mojikumi>{{integrityCss}}</pre>
+  </section>
+</main>
+
+<footer>
+  <span>MIT License</span>
+  <a href="https://github.com/akiralazycat/mojikumi">GitHub</a>
+  <a href="https://www.npmjs.com/package/mojikumi">npm</a>
+  <a href="https://mojikumi.jp/">mojikumi.jp</a>
+</footer>
+
+<!--
+  The bundle this origin serves, applied to this page. Same origin, so nothing
+  external is fetched, and opening the page is itself the check that the file
+  can be fetched, parsed and run. Without it the page still reads: the CSS
+  above is the whole of the styling, and the typography is the part that is
+  allowed to be missing.
+-->
+<script src="/{{channel}}/mojikumi.min.js" data-target="main" data-style="article"></script>
+
+</body>
+</html>

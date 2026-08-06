@@ -972,6 +972,21 @@ Mojikumi.stop();`,
       }
     ]
   },
+  notFound: {
+    eyebrow: "Error / 404",
+    headlineLead: "この番号のページは",
+    headlineAccent: "ありません",
+    lead: "URLが変わったか、まだ書かれていないページかもしれません。下の目次から探し直せます。",
+    nombreLabel: "Nombre",
+    runningHead: "Mojikumi",
+    linksLabel: "目次",
+    links: [
+      { index: "01", page: "start", label: "自分のサイトへ入れる" },
+      { index: "02", page: "docs", label: "ドキュメントを読む" },
+      { index: "03", page: "playground", label: "Playgroundで試す" },
+      { index: "04", page: "home", label: "ホームへ戻る" }
+    ]
+  },
   footer: {
     tagline: "Webの日本語を端正にする",
     note: "JLREQ × CSS Text",

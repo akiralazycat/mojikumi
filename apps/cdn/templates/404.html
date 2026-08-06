@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>404 — Mojikumi CDN</title>
+<style>{{style}}</style>
+</head>
+<body>
+
+<header class="brand">
+  <span class="brand-mark" data-no-mojikumi>「</span>
+  <span class="brand-text">
+    <strong>Mojikumi CDN</strong>
+    <span class="brand-host">cdn.mojikumi.jp</span>
+  </span>
+</header>
+
+<!--
+  Served for any path that missed, and there is no telling which language the
+  visitor reads. Both are here, cut to one line each: the list below carries
+  most of the meaning, and it is the same in either language.
+-->
+<main>
+  <p class="eyebrow">Error / 404</p>
+  <h1>そのパスは配信していません</h1>
+  <p>パスの綴りとバージョンを確かめてください。配信しているファイルは次の4つです。</p>
+  <p class="en" lang="en">Check the spelling of the path, and the version. These are the files that exist.</p>
+
+  <ul class="paths">
+    <li>/{{channel}}/mojikumi.min.js</li>
+    <li>/{{channel}}/mojikumi.min.css</li>
+    <li>/{{version}}/mojikumi.min.js</li>
+    <li>/{{version}}/mojikumi.min.css</li>
+  </ul>
+
+  <p class="note"><code>/latest/</code>や、拡張子を省いたパスはありません。ファイルの一覧とハッシュは<a href="/">配信元のトップ</a>にあります。</p>
+  <p class="note en" lang="en">There is no <code>/latest/</code>, and no extensionless path. The full list and its hashes are on the <a href="/en/">front page</a>.</p>
+</main>
+
+<footer>
+  <span>MIT License</span>
+  <a href="https://github.com/akiralazycat/mojikumi">GitHub</a>
+  <a href="https://www.npmjs.com/package/mojikumi">npm</a>
+  <a href="https://mojikumi.jp/">mojikumi.jp</a>
+</footer>
+
+<script src="/{{channel}}/mojikumi.min.js" data-target="main" data-style="article"></script>
+
+</body>
+</html>
