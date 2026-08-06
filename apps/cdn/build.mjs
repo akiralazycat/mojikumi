@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
@@ -5,11 +6,17 @@ import { dirname, resolve } from "node:path";
  * Lays out what cdn.mojikumi.jp serves. Two copies of the same build: a pinned
  * one that is never rewritten, and a `/v1/` one that gets fixes without anyone
  * editing the tag they pasted. Both exist so that choice stays with the site.
+ *
+ * The pages are HTML files in `templates/`, not strings in here. They are read,
+ * filled in, and written out; nothing is generated that could not have been
+ * written by hand. A file origin should not need a framework to describe
+ * itself, and this way the markup can be reviewed as markup.
  */
 
 const root = resolve(dirname(new URL(import.meta.url).pathname), "../..");
 const output = resolve(root, "apps/cdn/dist");
 const distribution = resolve(root, "packages/mojikumi/dist");
+const templates = resolve(root, "apps/cdn/templates");
 
 const { version } = JSON.parse(
   await readFile(resolve(root, "packages/mojikumi/package.json"), "utf8")
@@ -40,22 +47,48 @@ for (const directory of [channel, version]) {
   );
 }
 
+/*
+ * Hashed after the rewrite above, and only for the pinned copy: `/v1/` changes
+ * with every minor release, so an integrity value published for it would be a
+ * promise this project cannot keep.
+ */
+async function integrity(name) {
+  const bytes = await readFile(resolve(output, version, name));
+  return `sha384-${createHash("sha384").update(bytes).digest("base64")}`;
+}
+
+const fields = {
+  channel,
+  version,
+  integrityJs: await integrity("mojikumi.min.js"),
+  integrityCss: await integrity("mojikumi.min.css"),
+  style: await readFile(resolve(templates, "page.css"), "utf8")
+};
+
+async function page(template, destination) {
+  const source = await readFile(resolve(templates, template), "utf8");
+  const filled = source.replace(/\{\{(\w+)\}\}/g, (whole, key) => {
+    if (!(key in fields)) throw new Error(`${template}: no value for ${whole}`);
+    return fields[key];
+  });
+  const path = resolve(output, destination);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, filled);
+}
+
 await mkdir(output, { recursive: true });
-await writeFile(
-  resolve(output, "index.html"),
-  `<!doctype html>
-<html lang="ja">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Mojikumi CDN</title>
-<p>Mojikumiの配信元です。導入方法は<a href="https://mojikumi.jp/start/">mojikumi.jp/start/</a>にあります。</p>
-<p>Files for the Mojikumi CDN. See <a href="https://mojikumi.jp/start/">mojikumi.jp/start/</a> to get started.</p>
-<pre>/${channel}/mojikumi.min.js
-/${channel}/mojikumi.min.css
-/${version}/mojikumi.min.js
-/${version}/mojikumi.min.css</pre>
-`
-);
+
+/*
+ * One page per language rather than both languages down one page, which is how
+ * mojikumi.jp is laid out too. Each one can then be written as prose instead of
+ * as a translation running beside its original. The 404 keeps both, since a
+ * path that missed says nothing about who asked for it.
+ */
+await page("index.html", "index.html");
+await page("en.html", "en/index.html");
+await page("404.html", "404.html");
+await cp(resolve(templates, "robots.txt"), resolve(output, "robots.txt"));
 
 console.log(`cdn: /${channel}/ and /${version}/`);
+console.log(`cdn: ${fields.integrityJs}  mojikumi.min.js`);
+console.log(`cdn: ${fields.integrityCss}  mojikumi.min.css`);
