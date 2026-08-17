@@ -11,7 +11,11 @@ export default defineConfig({
     __MOJIKUMI_VERSION__: JSON.stringify("0.0.0-test")
   },
   test: {
-    include: ["packages/**/*.test.ts", "apps/web/**/*.test.ts"],
+    include: [
+      "packages/**/*.test.ts",
+      "apps/web/**/*.test.ts",
+      "apps/math/**/*.test.ts"
+    ],
     coverage: {
       reporter: ["text", "html"]
     }

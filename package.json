@@ -16,10 +16,12 @@
   "scripts": {
     "build": "npm run build:packages && npm run build:browser && npm run build --workspace @mojikumi/playground && npm run build --workspace @mojikumi/web",
     "build:web": "npm run build:packages && npm run build --workspace @mojikumi/web",
+    "build:math": "npm run build --workspace @mojikumi/math-web",
     "build:cdn": "npm run build:packages && npm run build:browser && node apps/cdn/build.mjs",
     "build:packages": "npm run clean && tsc -b packages/core packages/presets packages/dom packages/react packages/rehype packages/mojikumi && node scripts/build-css.mjs",
     "build:browser": "node scripts/build-browser.mjs",
     "dev": "npm run dev --workspace @mojikumi/web",
+    "dev:math": "npm run dev --workspace @mojikumi/math-web",
     "dev:playground": "npm run dev --workspace @mojikumi/playground",
     "test": "vitest run",
     "test:watch": "vitest",
