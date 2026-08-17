@@ -1,4 +1,5 @@
 import { MathWorkspace } from "../components/math-workspace";
+import { ThemeToggle } from "../components/theme-toggle";
 
 export default function HomePage() {
   return (
@@ -11,9 +12,12 @@ export default function HomePage() {
           <span>Mojikumi</span>
           <span className="brand-product">Math</span>
         </a>
-        <div className="header-meta">
-          <span className="status-dot" aria-hidden="true" />
-          <span>Prototype 0.1 · ログイン不要</span>
+        <div className="header-actions">
+          <div className="header-meta">
+            <span className="status-dot" aria-hidden="true" />
+            <span>Public beta · ログイン不要</span>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 

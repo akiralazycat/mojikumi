@@ -128,12 +128,14 @@ const keys: Record<KeyboardGroup, MathKey[]> = {
 const outputLabels: Record<OutputKind, string> = {
   ai: "Ask AI",
   plain: "Plain",
-  strict: "Strict",
+  strict: "Strict β",
   latex: "LaTeX",
   markdown: "Markdown",
   mathml: "MathML",
   embed: "Embed"
 };
+
+const outputKinds = Object.keys(outputLabels) as OutputKind[];
 
 const aiActionLabels: Record<AiAction, string> = {
   explain: "説明する",
@@ -163,6 +165,9 @@ export function MathWorkspace() {
   const fieldRef = useRef<MathfieldElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const suppressNextClickRef = useRef(false);
+  const variantTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const firstVariantRef = useRef<HTMLButtonElement | null>(null);
+  const completionRef = useRef(true);
   const [latex, setLatex] = useState(initialLatex);
   const [outputKind, setOutputKind] = useState<OutputKind>("ai");
   const [aiAction, setAiAction] = useState<AiAction>("explain");
@@ -170,27 +175,24 @@ export function MathWorkspace() {
   const [variantKey, setVariantKey] = useState<MathKey | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [announcement, setAnnouncement] = useState("");
   const [ready, setReady] = useState(false);
   const [saveState, setSaveState] = useState<"loading" | "saving" | "saved" | "unavailable">("loading");
 
   useEffect(() => {
     let active = true;
-    import("mathlive").then(() => {
+    import("mathlive").then((mathlive) => {
       if (!active) return;
-      const field = fieldRef.current;
-      if (field) {
-        let restored = null;
-        try {
-          restored = loadDraft(window.localStorage);
-        } catch {
-          setSaveState("unavailable");
-        }
-        const nextLatex = restored?.latex || initialLatex;
-        field.value = nextLatex;
-        field.smartFence = true;
-        field.mathVirtualKeyboardPolicy = "manual";
-        setLatex(nextLatex);
+      mathlive.MathfieldElement.fontsDirectory = "/fonts";
+      mathlive.MathfieldElement.soundsDirectory = null;
+      let restored = null;
+      try {
+        restored = loadDraft(window.localStorage);
+      } catch {
+        setSaveState("unavailable");
       }
+      setLatex(restored?.latex || initialLatex);
+      if (restored) setAnnouncement("この端末の下書きを読み込みました。");
       setReady(true);
       setSaveState((current) => current === "unavailable" ? current : "saved");
     });
@@ -201,13 +203,27 @@ export function MathWorkspace() {
 
   useEffect(() => {
     if (!ready) return;
+    const field = fieldRef.current;
+    if (!field) return;
+    field.value = latex;
+    field.smartFence = true;
+    field.mathVirtualKeyboardPolicy = "manual";
+    field.shadowRoot
+      ?.querySelector<HTMLElement>(".ML__keyboard-sink")
+      ?.setAttribute("aria-label", "数式を入力");
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
     setSaveState("saving");
     const timer = window.setTimeout(() => {
       try {
         saveDraft(window.localStorage, latex);
         setSaveState("saved");
+        setAnnouncement("この端末に下書きを保存しました。");
       } catch {
         setSaveState("unavailable");
+        setAnnouncement("端末内保存を利用できません。");
       }
     }, 450);
     return () => window.clearTimeout(timer);
@@ -231,12 +247,27 @@ export function MathWorkspace() {
     [aiAction, expression, outputKind]
   );
 
+  useEffect(() => {
+    if (!ready || completionRef.current === expression.isComplete) return;
+    completionRef.current = expression.isComplete;
+    setAnnouncement(
+      expression.isComplete
+        ? "すべての入力欄が埋まりました。"
+        : "未入力の欄があります。コピー前に数式を確認してください。"
+    );
+  }, [expression.isComplete, ready]);
+
+  useEffect(() => {
+    if (variantKey) firstVariantRef.current?.focus();
+  }, [variantKey]);
+
   function insert(value: string) {
     const field = fieldRef.current;
     if (!field) return;
     field.focus();
     field.insert(value, { selectionMode: "placeholder" });
     setLatex(field.value);
+    navigator.vibrate?.(8);
   }
 
   function cancelLongPress() {
@@ -246,12 +277,23 @@ export function MathWorkspace() {
     }
   }
 
-  function startLongPress(key: MathKey) {
+  function openVariants(key: MathKey, trigger: HTMLButtonElement) {
+    if (!key.variants?.length) return;
+    variantTriggerRef.current = trigger;
+    setVariantKey(key);
+  }
+
+  function closeVariants(returnFocus = true) {
+    setVariantKey(null);
+    if (returnFocus) window.setTimeout(() => variantTriggerRef.current?.focus());
+  }
+
+  function startLongPress(key: MathKey, trigger: HTMLButtonElement) {
     cancelLongPress();
     if (!key.variants?.length) return;
     longPressTimerRef.current = window.setTimeout(() => {
       suppressNextClickRef.current = true;
-      setVariantKey(key);
+      openVariants(key, trigger);
       longPressTimerRef.current = null;
     }, 420);
   }
@@ -266,7 +308,7 @@ export function MathWorkspace() {
 
   function chooseVariant(value: string) {
     insert(value);
-    setVariantKey(null);
+    closeVariants();
   }
 
   function runCommand(command: "undo" | "redo" | "moveToPreviousPlaceholder" | "moveToNextPlaceholder") {
@@ -291,6 +333,7 @@ export function MathWorkspace() {
     }
     updateLatexSource("");
     setEditorMode("visual");
+    setAnnouncement("新しい数式を開始しました。");
     window.setTimeout(() => fieldRef.current?.focus());
   }
 
@@ -298,18 +341,23 @@ export function MathWorkspace() {
     try {
       await navigator.clipboard.writeText(output);
       setCopyState("copied");
+      setAnnouncement(`${outputLabels[outputKind]}をコピーしました。`);
     } catch {
       setCopyState("failed");
+      setAnnouncement("コピーできませんでした。ブラウザの権限を確認してください。");
     }
     window.setTimeout(() => setCopyState("idle"), 1800);
   }
 
   return (
-    <section className="workspace" aria-label="数式入力プロトタイプ">
+    <section className="workspace" aria-label="Mojikumi Math 数式入力">
+      <div className="visually-hidden" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
       <div className="workspace-topbar">
         <div>
           <span className="workspace-kicker">Untitled equation</span>
-          <span className="save-state" aria-live="polite">
+          <span className="save-state">
             {saveState === "loading"
               ? "下書きを確認中"
               : saveState === "saving"
@@ -321,7 +369,12 @@ export function MathWorkspace() {
         </div>
         <div className="primary-actions">
           <button className="new-button" type="button" onClick={newExpression}>新規</button>
-          <button className="copy-primary" type="button" onClick={copyOutput}>
+          <button
+            className="copy-primary"
+            type="button"
+            aria-label={`${outputLabels[outputKind]}をコピー`}
+            onClick={copyOutput}
+          >
             {copyState === "copied"
               ? "コピーしました"
               : copyState === "failed"
@@ -346,19 +399,21 @@ export function MathWorkspace() {
             <button type="button" aria-pressed={editorMode === "latex"} onClick={() => setEditorMode("latex")}>LaTeX</button>
           </div>
         </div>
-        <math-field
-          ref={(node) => {
-            fieldRef.current = node as MathfieldElement | null;
-          }}
-          className={`math-canvas${editorMode === "visual" ? "" : " math-canvas-hidden"}`}
-          aria-label="数式を入力"
-          math-virtual-keyboard-policy="manual"
-          onInput={(event) => {
-            setLatex((event.currentTarget as MathfieldElement).value);
-          }}
-        >
-          {initialLatex}
-        </math-field>
+        {ready && (
+          <math-field
+            ref={(node) => {
+              fieldRef.current = node as MathfieldElement | null;
+            }}
+            className={`math-canvas${editorMode === "visual" ? "" : " math-canvas-hidden"}`}
+            aria-label="数式を入力"
+            math-virtual-keyboard-policy="manual"
+            onInput={(event) => {
+              setLatex((event.currentTarget as MathfieldElement).value);
+            }}
+          >
+            {latex}
+          </math-field>
+        )}
         {editorMode === "latex" && (
           <textarea
             className="latex-source"
@@ -373,36 +428,64 @@ export function MathWorkspace() {
 
       <div className="output-panel">
         <div className="output-tabs" role="tablist" aria-label="出力形式">
-          {(Object.keys(outputLabels) as OutputKind[]).map((kind) => (
+          {outputKinds.map((kind) => (
             <button
               key={kind}
+              id={`output-tab-${kind}`}
               type="button"
               role="tab"
               aria-selected={outputKind === kind}
+              aria-controls="output-panel"
+              tabIndex={outputKind === kind ? 0 : -1}
               onClick={() => setOutputKind(kind)}
+              onKeyDown={(event) => {
+                const currentIndex = outputKinds.indexOf(kind);
+                let nextIndex = currentIndex;
+                if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % outputKinds.length;
+                else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
+                else if (event.key === "Home") nextIndex = 0;
+                else if (event.key === "End") nextIndex = outputKinds.length - 1;
+                else return;
+                event.preventDefault();
+                const nextKind = outputKinds[nextIndex];
+                if (!nextKind) return;
+                setOutputKind(nextKind);
+                window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
+              }}
             >
               {outputLabels[kind]}
             </button>
           ))}
         </div>
-        {outputKind === "ai" && (
-          <div className="ai-actions" role="group" aria-label="AIへの依頼">
-            {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
-              <button
-                key={action}
-                type="button"
-                aria-pressed={aiAction === action}
-                onClick={() => setAiAction(action)}
-              >
-                {aiActionLabels[action]}
-              </button>
-            ))}
-          </div>
-        )}
-        {!expression.isComplete && (
-          <p className="output-warning" role="status">未入力の欄があります。コピー前に数式を確認してください。</p>
-        )}
-        <pre className="output-value" aria-live="polite"><code>{output}</code></pre>
+        <div
+          id="output-panel"
+          role="tabpanel"
+          aria-labelledby={`output-tab-${outputKind}`}
+          aria-describedby={!expression.isComplete ? "output-warning" : undefined}
+          tabIndex={0}
+        >
+          {outputKind === "ai" && (
+            <div className="ai-actions" role="group" aria-label="AIへの依頼">
+              {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
+                <button
+                  key={action}
+                  type="button"
+                  aria-pressed={aiAction === action}
+                  onClick={() => setAiAction(action)}
+                >
+                  {aiActionLabels[action]}
+                </button>
+              ))}
+            </div>
+          )}
+          {outputKind === "strict" && (
+            <p className="strict-note">ASCIIMathを基礎にした暫定仕様です。正式なStrict文法はβ期間中に策定します。</p>
+          )}
+          {!expression.isComplete && (
+            <p className="output-warning" id="output-warning">未入力の欄があります。コピー前に数式を確認してください。</p>
+          )}
+          <pre className="output-value"><code>{output}</code></pre>
+        </div>
       </div>
 
       <div className="keyboard" aria-label="数式キーボード">
@@ -414,7 +497,7 @@ export function MathWorkspace() {
               aria-pressed={keyboardGroup === group}
               onClick={() => {
                 setKeyboardGroup(group);
-                setVariantKey(null);
+                closeVariants(false);
               }}
             >
               {keyboardLabels[group]}
@@ -423,14 +506,28 @@ export function MathWorkspace() {
         </div>
         <p className="keyboard-hint">点付きキーは長押し、または「…」からバリエーションを選べます。</p>
         {variantKey?.variants && (
-          <div className="variant-tray" role="group" aria-label={`${variantKey.label}のバリエーション`}>
+          <div
+            className="variant-tray"
+            role="group"
+            aria-label={`${variantKey.label}のバリエーション`}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return;
+              event.preventDefault();
+              closeVariants();
+            }}
+          >
             <span>{variantKey.label}</span>
-            {variantKey.variants.map((variant) => (
-              <button key={variant.label} type="button" onClick={() => chooseVariant(variant.value)}>
+            {variantKey.variants.map((variant, index) => (
+              <button
+                key={variant.label}
+                ref={index === 0 ? firstVariantRef : undefined}
+                type="button"
+                onClick={() => chooseVariant(variant.value)}
+              >
                 {variant.label}
               </button>
             ))}
-            <button className="variant-close" type="button" onClick={() => setVariantKey(null)} aria-label="閉じる">×</button>
+            <button className="variant-close" type="button" onClick={() => closeVariants()} aria-label="閉じる">×</button>
           </div>
         )}
         <div className="key-grid">
@@ -439,14 +536,14 @@ export function MathWorkspace() {
               <button
                 className="math-key-main"
                 type="button"
-                onPointerDown={() => startLongPress(key)}
+                onPointerDown={(event) => startLongPress(key, event.currentTarget)}
                 onPointerUp={cancelLongPress}
                 onPointerCancel={cancelLongPress}
                 onPointerLeave={cancelLongPress}
                 onContextMenu={(event) => {
                   if (!key.variants?.length) return;
                   event.preventDefault();
-                  setVariantKey(key);
+                  openVariants(key, event.currentTarget);
                 }}
                 onClick={() => activateKey(key)}
               >
@@ -458,7 +555,10 @@ export function MathWorkspace() {
                   type="button"
                   aria-label={`${key.label}のバリエーションを表示`}
                   aria-expanded={variantKey === key}
-                  onClick={() => setVariantKey(variantKey === key ? null : key)}
+                  onClick={(event) => {
+                    if (variantKey === key) closeVariants();
+                    else openVariants(key, event.currentTarget);
+                  }}
                 >
                   …
                 </button>

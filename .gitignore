@@ -3,8 +3,13 @@ dist/
 out/
 .next/
 coverage/
+playwright-report/
+test-results/
 .DS_Store
 *.tsbuildinfo
 /packages/*/README.md
 /packages/*/LICENSE
 /examples/*/package-lock.json
+.vercel/
+.env.local
+.env.*.local
