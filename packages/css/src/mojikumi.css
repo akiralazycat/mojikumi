@@ -227,10 +227,16 @@
 /*
  * A URL or an identifier is the one thing in a Japanese paragraph that cannot
  * be broken, and in a justified line the browser pays for that by stretching
- * the line in front of it. Letting it break anywhere costs nothing here: this
- * only ever reaches a run Mojikumi wrapped because it was long and machine
- * written, never a word someone wrote.
+ * the line in front of it. The run carries `<wbr>` at the boundaries the
+ * address itself has, so the line fills to the last of them that fits and the
+ * break lands where the reader would have put it.
+ *
+ * This is the rest: a segment between two of those boundaries that still will
+ * not fit on a line of its own. `anywhere` rather than `break-word` so the run
+ * also stops setting the minimum width of a narrow column. It only ever
+ * reaches a run Mojikumi wrapped because it was long and machine written,
+ * never a word someone wrote.
  */
 .mjk-fallback .mjk-long-run {
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
