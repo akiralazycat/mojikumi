@@ -12,8 +12,6 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   await page.goto("/");
   const field = await waitForMathfield(page);
 
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "新規" }).click();
   await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toBe("");
 
   await page.getByRole("button", { name: "x²" }).click();
@@ -40,6 +38,52 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   await page.getByRole("tab", { name: "LaTeX" }).click();
   await page.getByRole("button", { name: "LaTeXをコピー" }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(String.raw`x^2+5x+6=0`);
+});
+
+test("初回は空欄から開始し、開始候補と入力順序を提示する", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+
+  await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toBe("");
+  await expect(page.getByRole("button", { name: "Ask AIをコピー" })).toBeDisabled();
+  await expect(page.getByText("数式を入力すると変換結果が表示されます")).toBeVisible();
+  await expect(page.getByRole("button", { name: "分数から始める" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "二次式から始める" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "定積分から始める" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.math.draft.v1"))).not.toContain(String.raw`\int_0^\infty`);
+
+  const workspaceOrder = await page.locator(".workspace").evaluate((workspace) =>
+    Array.from(workspace.children)
+      .map((child) => child.className)
+      .filter((className) => ["workspace-topbar", "canvas-wrap", "keyboard", "output-panel"].includes(className))
+  );
+  expect(workspaceOrder).toEqual(["workspace-topbar", "canvas-wrap", "keyboard", "output-panel"]);
+});
+
+test("開始候補はプレースホルダー付き構造を挿入し、新規作成で戻せる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  const value = () => field.evaluate((node: HTMLElement & { value: string }) => node.value);
+
+  await page.getByRole("button", { name: "分数から始める" }).click();
+  await expect.poll(value).toContain(String.raw`\frac`);
+  await expect.poll(value).toContain(String.raw`\placeholder`);
+  await expect(field).toBeFocused();
+  await expect(page.getByRole("button", { name: "分数から始める" })).toBeHidden();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "新規" }).click();
+  await expect.poll(value).toBe("");
+
+  await page.getByRole("button", { name: "二次式から始める" }).click();
+  await expect.poll(value).toContain("x^2");
+  await expect.poll(value).toContain(String.raw`\placeholder`);
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "新規" }).click();
+  await page.getByRole("button", { name: "定積分から始める" }).click();
+  await expect.poll(value).toContain(String.raw`\int`);
+  await expect.poll(value).toContain(String.raw`\placeholder`);
 });
 
 test("出力タブは矢印キー、Home、Endで移動できる", async ({ page }) => {
@@ -118,19 +162,38 @@ test("下書きとテーマを端末内に復元する", async ({ page }) => {
 test("320px以上で主要UIが横にはみ出さない", async ({ page }) => {
   await page.goto("/");
   await waitForMathfield(page);
-  const dimensions = await page.evaluate(() => ({
-    viewport: window.innerWidth,
-    document: document.documentElement.scrollWidth,
-    workspace: document.querySelector<HTMLElement>(".workspace")?.getBoundingClientRect().width ?? 0,
-    mathContentOverflow: (() => {
+  const dimensions = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLElement>(".canvas-wrap")?.getBoundingClientRect();
+    const keyboard = document.querySelector<HTMLElement>(".keyboard")?.getBoundingClientRect();
+    const output = document.querySelector<HTMLElement>(".output-panel")?.getBoundingClientRect();
+    return {
+      viewport: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      document: document.documentElement.scrollWidth,
+      workspace: document.querySelector<HTMLElement>(".workspace")?.getBoundingClientRect().width ?? 0,
+      canvasTop: canvas?.top ?? Infinity,
+      canvasBottom: canvas?.bottom ?? Infinity,
+      keyboardTop: keyboard?.top ?? Infinity,
+      keyboardBottom: keyboard?.bottom ?? Infinity,
+      outputTop: output?.top ?? Infinity,
+      undoVisible: Boolean(document.querySelector<HTMLElement>('[aria-label="元に戻す"]')?.offsetParent),
+      mathContentOverflow: (() => {
       const field = document.querySelector("math-field");
       const content = field?.shadowRoot?.querySelector<HTMLElement>(".ML__content");
       return content ? content.scrollWidth - content.clientWidth : 0;
-    })()
-  }));
+      })()
+    };
+  });
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
   expect(dimensions.workspace).toBeLessThanOrEqual(dimensions.viewport);
   expect(dimensions.mathContentOverflow).toBeLessThanOrEqual(1);
+  expect(dimensions.canvasBottom).toBeLessThanOrEqual(dimensions.keyboardTop + 1);
+  expect(dimensions.keyboardBottom).toBeLessThanOrEqual(dimensions.outputTop + 1);
+  if (dimensions.viewport <= 520) {
+    expect(dimensions.canvasTop).toBeLessThan(dimensions.viewportHeight);
+    expect(dimensions.keyboardTop).toBeLessThan(dimensions.viewportHeight);
+    expect(dimensions.undoVisible).toBe(true);
+  }
 });
 
 test("主要画面に重大なアクセシビリティ違反がない", async ({ page }) => {
@@ -143,4 +206,11 @@ test("主要画面に重大なアクセシビリティ違反がない", async ({
     .disableRules(["nested-interactive"])
     .analyze();
   expect(results.violations).toEqual([]);
+
+  await page.getByRole("button", { name: "分数から始める" }).click();
+  const filledResults = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa"])
+    .disableRules(["nested-interactive"])
+    .analyze();
+  expect(filledResults.violations).toEqual([]);
 });

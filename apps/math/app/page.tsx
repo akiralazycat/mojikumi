@@ -24,12 +24,10 @@ export default function HomePage() {
       <main id="top">
         <section className="intro" aria-labelledby="intro-title">
           <p className="eyebrow">Mathematical input, reconsidered</p>
-          <h1 id="intro-title">
-            数式を、<em>思ったまま</em>入力する。
-          </h1>
+          <h1 id="intro-title">数式を<em>自然に</em><span className="intro-action">組み上げる</span></h1>
           <p>
-            見たまま組み立てて、AI、LaTeX、Markdown、MathMLへ。
-            Mojikumi Mathは、数式を書くことと使うことのあいだをつなぐ入力レイヤーです。
+            <span>見たまま組み立てて、AI、LaTeX、Markdown、MathMLへ。</span>{" "}
+            <span className="intro-detail">Mojikumi Mathは、数式を書くことと使うことのあいだをつなぐ入力レイヤーです。</span>
           </p>
         </section>
 

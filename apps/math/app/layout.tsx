@@ -18,7 +18,7 @@ try {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://math.mojikumi.jp"),
-  title: "Mojikumi Math — 数式を、思ったまま入力する。",
+  title: "Mojikumi Math — 数式を自然に組み上げる",
   description:
     "スマホでも直感的に数式を組み立て、AI・LaTeX・Markdown・MathML・Webへ持ち出せる数式入力インターフェース。",
   manifest: "/manifest.webmanifest",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: "Mojikumi Math",
-    title: "Mojikumi Math — 数式を、思ったまま入力する。",
+    title: "Mojikumi Math — 数式を自然に組み上げる",
     description: "数式を書くことと、使うことのあいだをつなぐ入力レイヤー。",
     type: "website",
     images: [
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mojikumi Math — 数式を、思ったまま入力する。",
+    title: "Mojikumi Math — 数式を自然に組み上げる",
     description: "数式を書くことと、使うことのあいだをつなぐ入力レイヤー。",
     images: ["/og.png"]
   }

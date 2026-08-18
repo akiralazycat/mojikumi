@@ -36,7 +36,31 @@ type MathKey = {
   variants?: Array<{ label: string; value: string }>;
 };
 
-const initialLatex = String.raw`\int_0^\infty e^{-x^2}\,dx=\frac{\sqrt{\pi}}{2}`;
+type QuickStarter = {
+  label: string;
+  preview: string;
+  value: string;
+};
+
+const initialLatex = "";
+
+const quickStarters: QuickStarter[] = [
+  {
+    label: "分数",
+    preview: "□ / □",
+    value: String.raw`\frac{\placeholder{}}{\placeholder{}}`
+  },
+  {
+    label: "二次式",
+    preview: "□x² + □x + □ = 0",
+    value: String.raw`\placeholder{}x^2+\placeholder{}x+\placeholder{}=0`
+  },
+  {
+    label: "定積分",
+    preview: "∫₍□₎⁽□⁾ □ d□",
+    value: String.raw`\int_{\placeholder{}}^{\placeholder{}}\placeholder{}\,d\placeholder{}`
+  }
+];
 
 const keys: Record<KeyboardGroup, MathKey[]> = {
   basic: [
@@ -191,7 +215,7 @@ export function MathWorkspace() {
       } catch {
         setSaveState("unavailable");
       }
-      setLatex(restored?.latex || initialLatex);
+      setLatex(restored?.latex ?? initialLatex);
       if (restored) setAnnouncement("この端末の下書きを読み込みました。");
       setReady(true);
       setSaveState((current) => current === "unavailable" ? current : "saved");
@@ -208,9 +232,17 @@ export function MathWorkspace() {
     field.value = latex;
     field.smartFence = true;
     field.mathVirtualKeyboardPolicy = "manual";
-    field.shadowRoot
-      ?.querySelector<HTMLElement>(".ML__keyboard-sink")
-      ?.setAttribute("aria-label", "数式を入力");
+    const keyboardSink = field.shadowRoot?.querySelector<HTMLElement>(".ML__keyboard-sink");
+    if (!keyboardSink) return;
+    const labelKeyboardSink = () => {
+      if (keyboardSink.getAttribute("aria-label") !== "数式を入力") {
+        keyboardSink.setAttribute("aria-label", "数式を入力");
+      }
+    };
+    labelKeyboardSink();
+    const observer = new MutationObserver(labelKeyboardSink);
+    observer.observe(keyboardSink, { attributes: true, attributeFilter: ["aria-label"] });
+    return () => observer.disconnect();
   }, [ready]);
 
   useEffect(() => {
@@ -246,16 +278,22 @@ export function MathWorkspace() {
     () => serializeExpression(expression, outputKind, { aiAction }),
     [aiAction, expression, outputKind]
   );
+  const hasExpression = latex.trim().length > 0;
 
   useEffect(() => {
-    if (!ready || completionRef.current === expression.isComplete) return;
+    if (!ready) return;
+    if (!hasExpression) {
+      completionRef.current = true;
+      return;
+    }
+    if (completionRef.current === expression.isComplete) return;
     completionRef.current = expression.isComplete;
     setAnnouncement(
       expression.isComplete
         ? "すべての入力欄が埋まりました。"
         : "未入力の欄があります。コピー前に数式を確認してください。"
     );
-  }, [expression.isComplete, ready]);
+  }, [expression.isComplete, hasExpression, ready]);
 
   useEffect(() => {
     if (variantKey) firstVariantRef.current?.focus();
@@ -268,6 +306,11 @@ export function MathWorkspace() {
     field.insert(value, { selectionMode: "placeholder" });
     setLatex(field.value);
     navigator.vibrate?.(8);
+  }
+
+  function startFrom(starter: QuickStarter) {
+    setEditorMode("visual");
+    window.setTimeout(() => insert(starter.value));
   }
 
   function cancelLongPress() {
@@ -325,7 +368,7 @@ export function MathWorkspace() {
   }
 
   function newExpression() {
-    if (latex && !window.confirm("現在の数式を消して、新しい数式を始めますか？")) return;
+    if (hasExpression && !window.confirm("現在の数式を消して、新しい数式を始めますか？")) return;
     try {
       removeDraft(window.localStorage);
     } catch {
@@ -338,6 +381,7 @@ export function MathWorkspace() {
   }
 
   async function copyOutput() {
+    if (!hasExpression) return;
     try {
       await navigator.clipboard.writeText(output);
       setCopyState("copied");
@@ -373,6 +417,7 @@ export function MathWorkspace() {
             className="copy-primary"
             type="button"
             aria-label={`${outputLabels[outputKind]}をコピー`}
+            disabled={!hasExpression}
             onClick={copyOutput}
           >
             {copyState === "copied"
@@ -423,69 +468,25 @@ export function MathWorkspace() {
             onChange={(event) => updateLatexSource(event.currentTarget.value)}
           />
         )}
-        <p className="canvas-hint">数式をタップして編集 · キーを選んで構造を追加</p>
-      </div>
-
-      <div className="output-panel">
-        <div className="output-tabs" role="tablist" aria-label="出力形式">
-          {outputKinds.map((kind) => (
-            <button
-              key={kind}
-              id={`output-tab-${kind}`}
-              type="button"
-              role="tab"
-              aria-selected={outputKind === kind}
-              aria-controls="output-panel"
-              tabIndex={outputKind === kind ? 0 : -1}
-              onClick={() => setOutputKind(kind)}
-              onKeyDown={(event) => {
-                const currentIndex = outputKinds.indexOf(kind);
-                let nextIndex = currentIndex;
-                if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % outputKinds.length;
-                else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
-                else if (event.key === "Home") nextIndex = 0;
-                else if (event.key === "End") nextIndex = outputKinds.length - 1;
-                else return;
-                event.preventDefault();
-                const nextKind = outputKinds[nextIndex];
-                if (!nextKind) return;
-                setOutputKind(nextKind);
-                window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
-              }}
-            >
-              {outputLabels[kind]}
-            </button>
-          ))}
-        </div>
-        <div
-          id="output-panel"
-          role="tabpanel"
-          aria-labelledby={`output-tab-${outputKind}`}
-          aria-describedby={!expression.isComplete ? "output-warning" : undefined}
-          tabIndex={0}
-        >
-          {outputKind === "ai" && (
-            <div className="ai-actions" role="group" aria-label="AIへの依頼">
-              {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
+        {ready && !hasExpression && (
+          <div className="quick-start" role="group" aria-label="入力の開始候補">
+            <p>構造から始める</p>
+            <div className="quick-start-options">
+              {quickStarters.map((starter) => (
                 <button
-                  key={action}
+                  key={starter.label}
                   type="button"
-                  aria-pressed={aiAction === action}
-                  onClick={() => setAiAction(action)}
+                  aria-label={`${starter.label}から始める`}
+                  onClick={() => startFrom(starter)}
                 >
-                  {aiActionLabels[action]}
+                  <span>{starter.label}</span>
+                  <span aria-hidden="true">{starter.preview}</span>
                 </button>
               ))}
             </div>
-          )}
-          {outputKind === "strict" && (
-            <p className="strict-note">ASCIIMathを基礎にした暫定仕様です。正式なStrict文法はβ期間中に策定します。</p>
-          )}
-          {!expression.isComplete && (
-            <p className="output-warning" id="output-warning">未入力の欄があります。コピー前に数式を確認してください。</p>
-          )}
-          <pre className="output-value"><code>{output}</code></pre>
-        </div>
+          </div>
+        )}
+        <p className="canvas-hint">数式をタップして編集 · キーを選んで構造を追加</p>
       </div>
 
       <div className="keyboard" aria-label="数式キーボード">
@@ -565,6 +566,74 @@ export function MathWorkspace() {
               ) : null}
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="output-panel">
+        <div className="output-tabs" role="tablist" aria-label="出力形式">
+          {outputKinds.map((kind) => (
+            <button
+              key={kind}
+              id={`output-tab-${kind}`}
+              type="button"
+              role="tab"
+              aria-selected={outputKind === kind}
+              aria-controls="output-panel"
+              tabIndex={outputKind === kind ? 0 : -1}
+              onClick={() => setOutputKind(kind)}
+              onKeyDown={(event) => {
+                const currentIndex = outputKinds.indexOf(kind);
+                let nextIndex = currentIndex;
+                if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % outputKinds.length;
+                else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
+                else if (event.key === "Home") nextIndex = 0;
+                else if (event.key === "End") nextIndex = outputKinds.length - 1;
+                else return;
+                event.preventDefault();
+                const nextKind = outputKinds[nextIndex];
+                if (!nextKind) return;
+                setOutputKind(nextKind);
+                window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
+              }}
+            >
+              {outputLabels[kind]}
+            </button>
+          ))}
+        </div>
+        <div
+          id="output-panel"
+          role="tabpanel"
+          aria-labelledby={`output-tab-${outputKind}`}
+          aria-describedby={hasExpression && !expression.isComplete ? "output-warning" : undefined}
+          tabIndex={0}
+        >
+          {!hasExpression ? (
+            <p className="output-empty">数式を入力すると変換結果が表示されます</p>
+          ) : (
+            <>
+              {outputKind === "ai" && (
+                <div className="ai-actions" role="group" aria-label="AIへの依頼">
+                  {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      aria-pressed={aiAction === action}
+                      onClick={() => setAiAction(action)}
+                    >
+                      {aiActionLabels[action]}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {outputKind === "strict" && (
+                <p className="strict-note">ASCIIMathを基礎にした暫定仕様です。正式なStrict文法はβ期間中に策定します。</p>
+              )}
+              {!expression.isComplete && (
+                <p className="output-warning" id="output-warning">未入力の欄があります。コピー前に数式を確認してください。</p>
+              )}
+              <pre className="output-value"><code>{output}</code></pre>
+            </>
+          )}
         </div>
       </div>
     </section>
