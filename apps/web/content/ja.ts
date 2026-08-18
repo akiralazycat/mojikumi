@@ -404,8 +404,12 @@ export const ja: Dictionary = {
           head: ["属性", "既定値", "内容"],
           rows: [
             ["data-target", "auto", "本文のセレクター。autoは既知の本文要素を順に探します"],
-            ["data-style", "article", "article（記事向け）、book（書籍風）、headline（見出し重視）"],
+            ["data-style", "minimal", "minimal（控えめ）、article（両端揃え）、book（書籍の体裁）"],
             ["data-precision", "auto", "native、auto、fullのいずれか"],
+            ["data-indent", "プリセット任せ", "falseで字下げなし。2emのように量も指定できます"],
+            ["data-justify", "プリセット任せ", "falseで両端揃えをやめます"],
+            ["data-hanging", "プリセット任せ", "trueで行末の句読点を版面の外へ出します"],
+            ["data-heading-break", "プリセット任せ", "trueで見出しを文節で折ります"],
             ["data-exclude", "なし", "追加で除外するセレクター。カンマ区切り"],
             ["data-css", "true", "同梱CSSを読み込むかどうか"],
             ["data-auto", "true", "falseにするとMojikumi.start()を呼ぶまで何もしません"]
@@ -418,7 +422,7 @@ export const ja: Dictionary = {
         title: "CSSだけで使う",
         navLabel: "CSS",
         language: "TSX",
-        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
+        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはminimal、article、bookの3つで、印刷の体裁にどこまで寄せるかが違います。",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">

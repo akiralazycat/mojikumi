@@ -10,7 +10,7 @@ Mojikumiは独自の組版エンジンではありません。`text-spacing-trim
 
 ## 現在の実装範囲
 
-v0.1の土台として次を実装しています。
+次を実装しています。
 
 - CSS-onlyの`minimal`、`article`、`book`プリセット
 - 書記素クラスタを壊さない文字分割と約物クラス分類
@@ -87,7 +87,7 @@ npm run build
 
 ```ts
 mojikumi(".article", { preset: "book", indent: false });
-mojikumi(".article", { preset: "web", indent: "2em", justify: true });
+mojikumi(".article", { preset: "minimal", indent: "2em", justify: true });
 ```
 
 `justify: false`にすると行末調整も止まります。両端揃えでなければ効かない
@@ -189,12 +189,13 @@ SSRでは通常のHTMLとクラスだけを出し、必要なDOM補完はマウ�
 import rehypeMojikumi from "@mojikumi/rehype";
 
 export default {
-  rehypePlugins: [[rehypeMojikumi, { preset: "editorial" }]]
+  rehypePlugins: [[rehypeMojikumi, { preset: "book" }]]
 };
 ```
 
-既定では`article`と`main`へ`lang="ja"`とプリセットクラスを付与します。レスポンシブ
-な行頭・行末はビルド時に確定しないため、rehype側では測定しません。
+プリセットを書かなければ`minimal`です。付与先は既定で`<article>`と`<main>`の要素で、
+そこへ`lang="ja"`とプリセットクラスを足します。レスポンシブな行頭・行末はビルド時に
+確定しないため、rehype側では測定しません。
 
 ## パッケージ
 
