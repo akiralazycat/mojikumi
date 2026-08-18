@@ -1,0 +1,249 @@
+/*
+ * The whole of the CDN's styling, inlined into every page it serves. No web
+ * font, no stylesheet request, nothing from mojikumi.jp: a file origin that
+ * borrowed its look from the site would stop being independent of it. What is
+ * left is colour, a few rules, and letterspaced labels — which is most of what
+ * the site's look was anyway.
+ */
+:root {
+  color-scheme: light dark;
+  --bg: #f5f0ea;
+  --ink: #251c1d;
+  --muted: #716466;
+  --primary: #702735;
+  --gold: #9a7442;
+  --line: rgba(78, 44, 49, 0.14);
+  --surface: #fdfaf6;
+  --code-bg: #24191c;
+  --code-ink: #f4e9e6;
+  --font-display: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, serif;
+  --font-ui: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #120d10;
+    --ink: #f4ebe8;
+    --muted: #b9a8a7;
+    --primary: #bd897d;
+    --gold: #c4a16b;
+    --line: rgba(242, 200, 207, 0.12);
+    --surface: #251920;
+    --code-bg: #0d090b;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.9;
+  margin: 0 auto;
+  max-width: 760px;
+  padding: clamp(38px, 8vw, 76px) clamp(20px, 5vw, 32px) 64px;
+}
+
+.brand {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  padding-bottom: 26px;
+}
+
+/*
+ * The two lines are set to the height of the mark beside them. Left to their
+ * natural leading they stand about 7px proud of it at each end, and since the
+ * eye goes to the title, that reads as the title sitting too high.
+ */
+.brand-text {
+  display: grid;
+  gap: 2px;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--primary);
+  border-radius: 13px;
+  color: #fff8f5;
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 25px;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.brand strong {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.brand-host {
+  color: var(--muted);
+  font-family: var(--font-code);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* The other language, kept to the size of a label rather than a control. */
+.brand-language {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-left: auto;
+  text-decoration: none;
+}
+
+.brand-language:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  margin: 44px 0 12px;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4.4vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.45;
+  margin: 0 0 22px;
+  /* Break the Japanese heading at a phrase boundary where the browser can. */
+  word-break: auto-phrase;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+section {
+  border-top: 1px solid var(--line);
+  margin-top: 44px;
+  padding-top: 30px;
+}
+
+p {
+  margin: 14px 0 0;
+}
+
+/* The English line under each Japanese one, kept plainly secondary. */
+.en {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+a {
+  color: var(--primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+pre {
+  background: var(--code-bg);
+  border-radius: 14px;
+  color: var(--code-ink);
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.75;
+  margin: 20px 0 0;
+  overflow-x: auto;
+  padding: 20px 22px;
+}
+
+code {
+  font-family: var(--font-code);
+  font-size: 0.92em;
+  /* Paths and hashes have nowhere to break; let them break anywhere. */
+  overflow-wrap: anywhere;
+}
+
+.table-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 11px 18px 11px 0;
+  vertical-align: top;
+}
+
+thead th {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+tbody th {
+  font-family: var(--font-code);
+  font-weight: 400;
+}
+
+td {
+  color: var(--muted);
+  white-space: normal;
+}
+
+.paths {
+  font-family: var(--font-code);
+  font-size: 13.5px;
+  line-height: 2.1;
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.paths li::before {
+  color: var(--gold);
+  content: "→";
+  margin-right: 12px;
+}
+
+footer {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  gap: 8px 20px;
+  margin-top: 52px;
+  padding-top: 24px;
+}

@@ -122,6 +122,14 @@ export const ja: Dictionary = {
       pending:
         "各サービスの手順は、標準的なテーマの構成をもとに書いています。テーマを変更している場合は、本文を囲むクラス名が異なることがあります。「範囲を変える」の手順で自分のサイトの名前を確かめてください。WixやSTUDIOのように、カスタムコードから本文へ届くかどうかを確認できていないサービスは、まだ載せていません。"
     },
+    style: {
+      label: "体裁を選ぶ",
+      notes: {
+        minimal: "標準CSSで届く範囲だけを整えます。既存のデザインを動かしません。",
+        article: "両端揃えにして行末まで揃えます。日本語の本文はこれが自然です。",
+        book: "articleに段落の字下げとぶら下げを加えた、書籍の体裁です。"
+      }
+    },
     steps: {
       requirements: "必要なもの",
       time: "所要時間",
@@ -396,8 +404,12 @@ export const ja: Dictionary = {
           head: ["属性", "既定値", "内容"],
           rows: [
             ["data-target", "auto", "本文のセレクター。autoは既知の本文要素を順に探します"],
-            ["data-style", "article", "article（記事向け）、book（書籍風）、headline（見出し重視）"],
+            ["data-style", "minimal", "minimal（控えめ）、article（両端揃え）、book（書籍の体裁）"],
             ["data-precision", "auto", "native、auto、fullのいずれか"],
+            ["data-indent", "プリセット任せ", "falseで字下げなし。2emのように量も指定できます"],
+            ["data-justify", "プリセット任せ", "falseで両端揃えをやめます"],
+            ["data-hanging", "プリセット任せ", "trueで行末の句読点を版面の外へ出します"],
+            ["data-heading-break", "プリセット任せ", "trueで見出しを文節で折ります"],
             ["data-exclude", "なし", "追加で除外するセレクター。カンマ区切り"],
             ["data-css", "true", "同梱CSSを読み込むかどうか"],
             ["data-auto", "true", "falseにするとMojikumi.start()を呼ぶまで何もしません"]
@@ -410,7 +422,7 @@ export const ja: Dictionary = {
         title: "CSSだけで使う",
         navLabel: "CSS",
         language: "TSX",
-        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはbook、web、editorial、minimalの4種類で、それぞれ詰めの強さが異なります。",
+        body: "CSSプリセットを読み込み、本文の要素にクラスを付けます。標準CSSに対応したブラウザなら、これだけで約物まわりの空白が詰まります。ビルド設定の変更もJavaScriptの追加も不要です。プリセットはminimal、article、bookの3つで、印刷の体裁にどこまで寄せるかが違います。",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -523,7 +535,7 @@ onBeforeUnmount(() => instance?.destroy());
 
 export default {
   rehypePlugins: [
-    [rehypeMojikumi, { preset: "editorial" }]
+    [rehypeMojikumi, { preset: "article" }]
   ]
 };`
       },
@@ -532,19 +544,32 @@ export default {
         index: "09",
         title: "プリセットを選ぶ",
         navLabel: "プリセット",
-        body: "プリセットは、どの調整を行うかの組み合わせです。迷う場合はwebを選んでください。書籍に近い体裁が必要ならbook、見出しの文節改行を優先するならeditorial、約物の重なりだけを詰めたいならminimalが適します。nativeはブラウザの実装だけを使い、JavaScriptによる補完を行いません。",
+        body: "プリセットは、印刷の体裁にどこまで寄せるかの3段階です。minimalは標準CSSで届く範囲の妥協で、行末を揃えません。articleは両端揃えにして行末まで揃える、Mojikumiが本来やろうとしていることです。bookはそれに段落の字下げとぶら下げを足した書籍の体裁です。既定はminimalで、迷う場合はarticleを選んでください。行末を揃えるには両端揃えが要り、両端揃えにはブラウザがtext-spacing-trim: trim-bothを実装するまでDOM補完が要ります。何も指定しなかったページをその負担に署名させない、というのが既定を控えめにしておく理由です。旧名のweb、editorial、nativeもそのまま書けます。",
         table: {
-          head: ["調整", "web", "book", "editorial", "minimal", "native"],
+          head: ["調整", "minimal", "article", "book"],
           rows: [
-            ["連続する約物", "○", "○", "○", "○", "○"],
-            ["行頭の調整", "○", "○", "○", "—", "○"],
-            ["行末の調整", "条件付き", "○", "○", "—", "○"],
-            ["和欧文間", "○", "○", "—", "—", "○"],
-            ["段落の字下げ", "—", "1em", "—", "—", "—"],
-            ["見出しの文節改行", "—", "—", "○", "—", "—"],
-            ["JSによる補完", "○", "○", "○", "○", "—"]
+            ["連続する約物", "○", "○", "○"],
+            ["行頭の調整", "○", "○", "○"],
+            ["和欧文間", "○", "○", "○"],
+            ["両端揃え", "—", "○", "○"],
+            ["行末の調整", "条件付き", "○", "○"],
+            ["段落の字下げ", "—", "—", "1em"],
+            ["ぶら下げ", "—", "—", "○"]
           ]
         }
+      },
+      {
+        id: "modifiers",
+        index: "09",
+        title: "字下げと両端揃えを選ぶ",
+        navLabel: "修飾子",
+        body: "段落の字下げと両端揃えは、日本語組版の正誤ではなく、そのページをどう設計するかの判断です。プリセットに固定せず、indentとjustifyで上書きできます。書き落とせばプリセットの判断がそのまま使われるので、bookの体裁のまま字下げだけをやめる、といった指定ができます。justifyをfalseにすると行末の調整も止まります。両端揃えでなければ効かない調整だからです。",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="book"
+  data-indent="false"
+></script>`
       },
       {
         id: "precision",
@@ -676,6 +701,14 @@ Mojikumi.stop();`,
       sizeUnit: "px",
       width: "行幅",
       widthUnit: "em",
+      justify: "両端揃えにする",
+      indent: "段落の先頭を字下げする",
+      presetNotes: {
+        minimal: "標準CSSで届く範囲だけを整えます。行末は揃えません。",
+        article: "両端揃えにして行末まで揃えます。日本語の本文はこれが自然です。",
+        book: "articleに段落の字下げとぶら下げを加えた、書籍の体裁です。"
+      },
+      snippetNote: "この設定をそのまま貼り付けられます。",
       debug: "約物クラスと調整位置を表示"
     },
     status: {
@@ -941,6 +974,21 @@ Mojikumi.stop();`,
           "不具合のご報告、本規約に関するご質問、字組みが正しく表示されない事例のご共有は、GitHubリポジトリのIssuesまでお寄せください。再現可能な文章とブラウザの情報を添えていただけますと、確認がスムーズに進みます。"
         ]
       }
+    ]
+  },
+  notFound: {
+    eyebrow: "Error / 404",
+    headlineLead: "この番号のページは",
+    headlineAccent: "ありません",
+    lead: "URLが変わったか、まだ書かれていないページかもしれません。下の目次から探し直せます。",
+    nombreLabel: "Nombre",
+    runningHead: "Mojikumi",
+    linksLabel: "目次",
+    links: [
+      { index: "01", page: "start", label: "自分のサイトへ入れる" },
+      { index: "02", page: "docs", label: "ドキュメントを読む" },
+      { index: "03", page: "playground", label: "Playgroundで試す" },
+      { index: "04", page: "home", label: "ホームへ戻る" }
     ]
   },
   footer: {

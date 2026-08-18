@@ -21,15 +21,24 @@ function afterMutations(): Promise<void> {
 }
 
 describe("script tag options", () => {
-  it("reads the reader-facing names, not the preset names", () => {
-    expect(resolveStartOptions({ style: "article" }).preset).toBe("web");
-    expect(resolveStartOptions({ style: "headline" }).preset).toBe("editorial");
+  it("names the presets the same way the docs do", () => {
+    expect(resolveStartOptions({ style: "minimal" }).preset).toBe("minimal");
+    expect(resolveStartOptions({ style: "article" }).preset).toBe("article");
     expect(resolveStartOptions({ style: "book" }).preset).toBe("book");
   });
 
-  it("still accepts a preset name from someone who read the docs", () => {
-    expect(resolveStartOptions({ style: "minimal" }).preset).toBe("minimal");
-    expect(resolveStartOptions({ style: "NATIVE" }).preset).toBe("native");
+  /*
+   * The first release's names. A page that pasted one of them keeps working,
+   * and `headline` keeps its heading treatment as the modifier it now is.
+   */
+  it("still accepts the retired names", () => {
+    expect(resolveStartOptions({ style: "web" }).preset).toBe("minimal");
+    expect(resolveStartOptions({ style: "editorial" }).preset).toBe("minimal");
+    expect(resolveStartOptions({ style: "NATIVE" }).preset).toBe("minimal");
+
+    const headline = resolveStartOptions({ style: "headline" });
+    expect(headline.preset).toBe("minimal");
+    expect(headline.headingBreak).toBe(true);
   });
 
   /* A typo in a pasted snippet should read the page, not refuse to. */
@@ -38,8 +47,25 @@ describe("script tag options", () => {
       style: "fancy",
       precision: "maximum"
     });
-    expect(resolved.preset).toBe("web");
+    expect(resolved.preset).toBe("minimal");
     expect(resolved.precision).toBe("auto");
+  });
+
+  /*
+   * A modifier has three answers. Absent has to mean "whatever the preset
+   * says", which is not the same as false: leaving the attribute off a book
+   * keeps its indent, writing "false" drops it.
+   */
+  it("tells an absent modifier apart from one turned off", () => {
+    expect(resolveStartOptions({}).indent).toBeUndefined();
+    expect(resolveStartOptions({}).justify).toBeUndefined();
+    expect(resolveStartOptions({ indent: "false" }).indent).toBe(false);
+    expect(resolveStartOptions({ indent: "none" }).indent).toBe(false);
+    expect(resolveStartOptions({ indent: "true" }).indent).toBe(true);
+    expect(resolveStartOptions({ indent: "2em" }).indent).toBe("2em");
+    expect(resolveStartOptions({ indent: "  " }).indent).toBeUndefined();
+    expect(resolveStartOptions({ justify: "off" }).justify).toBe(false);
+    expect(resolveStartOptions({ justify: "yes" }).justify).toBe(true);
   });
 
   it("treats auto and an empty target as the same request", () => {

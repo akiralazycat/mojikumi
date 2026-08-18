@@ -61,6 +61,17 @@ export type Guide = {
   trouble: string[];
 };
 
+/*
+ * Where the 404 sends people next. `page` names the same destinations
+ * `lib/site.ts` keys its paths by, so a wrong key fails to compile rather than
+ * linking somewhere that does not exist.
+ */
+export type NotFoundLink = {
+  index: string;
+  page: "start" | "docs" | "playground" | "home";
+  label: string;
+};
+
 export type Dictionary = {
   locale: Locale;
   localeName: string;
@@ -162,6 +173,11 @@ export type Dictionary = {
       pending: string;
     };
     /* The seven headings every guide answers, written once. */
+    /** The one decision a reader makes before pasting. */
+    style: {
+      label: string;
+      notes: { minimal: string; article: string; book: string };
+    };
     steps: {
       requirements: string;
       time: string;
@@ -233,6 +249,11 @@ export type Dictionary = {
       sizeUnit: string;
       width: string;
       widthUnit: string;
+      justify: string;
+      indent: string;
+      /** One line each, so the choice can be made without reading the table. */
+      presetNotes: { minimal: string; article: string; book: string };
+      snippetNote: string;
       debug: string;
     };
     status: {
@@ -302,6 +323,22 @@ export type Dictionary = {
   };
   privacy: LegalPage;
   terms: LegalPage;
+  /*
+   * Not one of the pages in `pagePaths`. The static export writes a single
+   * 404.html that every unmatched URL is served, so it has no address of its
+   * own to put in the sitemap.
+   */
+  notFound: {
+    eyebrow: string;
+    headlineLead: string;
+    headlineAccent: string;
+    lead: string;
+    /** The page number printed in the margin of a book; 404 stands in for it. */
+    nombreLabel: string;
+    runningHead: string;
+    linksLabel: string;
+    links: NotFoundLink[];
+  };
   footer: {
     tagline: string;
     note: string;

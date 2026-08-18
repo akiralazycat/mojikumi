@@ -122,6 +122,14 @@ export const en: Dictionary = {
       pending:
         "Each set of instructions is written against the standard theme for that service. On a theme you have changed, the class around your body text may differ; the step on changing scope shows how to find the name your own site uses. Services where we cannot yet confirm that injected code reaches the body text, such as Wix and STUDIO, are not listed."
     },
+    style: {
+      label: "Choose a style",
+      notes: {
+        minimal: "Only what standard CSS can reach, leaving your design where it is.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      }
+    },
     steps: {
       requirements: "What you need",
       time: "Time",
@@ -396,8 +404,12 @@ export const en: Dictionary = {
           head: ["Attribute", "Default", "What it does"],
           rows: [
             ["data-target", "auto", "Selector for the body text; auto looks through the containers it knows"],
-            ["data-style", "article", "article, book, or headline"],
+            ["data-style", "minimal", "minimal (restrained), article (justified), or book (a printed page)"],
             ["data-precision", "auto", "native, auto, or full"],
+            ["data-indent", "up to the preset", "false for no indent; a length such as 2em also works"],
+            ["data-justify", "up to the preset", "false to leave the right edge ragged"],
+            ["data-hanging", "up to the preset", "true to hang line-final stops outside the measure"],
+            ["data-heading-break", "up to the preset", "true to break headings at phrase boundaries"],
             ["data-exclude", "none", "Extra selectors to leave alone, comma separated"],
             ["data-css", "true", "Whether to load the bundled stylesheet"],
             ["data-auto", "true", "Set to false and nothing happens until Mojikumi.start() is called"]
@@ -410,7 +422,7 @@ export const en: Dictionary = {
         title: "Use the CSS on its own",
         navLabel: "CSS",
         language: "TSX",
-        body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Four presets ship with it, book, web, editorial and minimal, differing in how tightly they set.",
+        body: "Import the CSS preset, put a class on your body copy, and you are done. Browsers that understand the standard properties start closing up punctuation right away. No build step, no JavaScript. Three presets ship with it, minimal, article and book, differing in how far towards print composition they go.",
         code: `import "mojikumi/css";
 
 <article lang="ja" className="mjk mjk-book">
@@ -523,7 +535,7 @@ onBeforeUnmount(() => instance?.destroy());
 
 export default {
   rehypePlugins: [
-    [rehypeMojikumi, { preset: "editorial" }]
+    [rehypeMojikumi, { preset: "article" }]
   ]
 };`
       },
@@ -532,19 +544,32 @@ export default {
         index: "09",
         title: "Choosing a preset",
         navLabel: "Presets",
-        body: "A preset is a set of adjustments taken together. Choose web if you are unsure. Take book where the page should read like a printed one, editorial where headings should break on phrase boundaries, and minimal to close up runs of punctuation and nothing else. Native uses only what the browser provides and never runs the fallback.",
+        body: "The presets are three steps towards print composition. Minimal is the compromise that standard CSS can reach on its own, and it leaves line ends alone. Article justifies the text and trims the line ends, which is what Mojikumi is for. Book adds the paragraph indent and the hanging punctuation of a printed page. Minimal is the default and article is the one to choose if you are unsure. Trimming a line end needs justification, and justification needs the DOM fallback until browsers ship text-spacing-trim: trim-both, so a page that says nothing is not signed up for that. The retired names web, editorial and native still resolve.",
         table: {
-          head: ["Adjustment", "web", "book", "editorial", "minimal", "native"],
+          head: ["Adjustment", "minimal", "article", "book"],
           rows: [
-            ["Runs of punctuation", "○", "○", "○", "○", "○"],
-            ["Line starts", "○", "○", "○", "—", "○"],
-            ["Line ends", "Conditional", "○", "○", "—", "○"],
-            ["Japanese with Latin", "○", "○", "—", "—", "○"],
-            ["Paragraph indent", "—", "1em", "—", "—", "—"],
-            ["Heading phrase breaks", "—", "—", "○", "—", "—"],
-            ["JavaScript fallback", "○", "○", "○", "○", "—"]
+            ["Runs of punctuation", "○", "○", "○"],
+            ["Line starts", "○", "○", "○"],
+            ["Japanese with Latin", "○", "○", "○"],
+            ["Justified", "—", "○", "○"],
+            ["Line ends", "Conditional", "○", "○"],
+            ["Paragraph indent", "—", "—", "1em"],
+            ["Hanging punctuation", "—", "—", "○"]
           ]
         }
+      },
+      {
+        id: "modifiers",
+        index: "09",
+        title: "Choosing the indent and the justification",
+        navLabel: "Modifiers",
+        body: "Whether paragraphs are indented and whether the text is set flush to both edges are decisions about the page rather than about Japanese typography, so they are not fixed by the preset. Leave indent and justify out and the preset decides; set either and it wins, which is how you keep the composition of book while dropping its indent. Setting justify to false also stops line ends being trimmed, since that trim only shows in a justified line.",
+        language: "HTML",
+        code: `<script
+  src="https://cdn.mojikumi.jp/v1/mojikumi.min.js"
+  data-style="book"
+  data-indent="false"
+></script>`
       },
       {
         id: "precision",
@@ -677,6 +702,14 @@ Mojikumi.stop();`,
       sizeUnit: "px",
       width: "Measure",
       widthUnit: "em",
+      justify: "Set flush to both edges",
+      indent: "Indent the first line of a paragraph",
+      presetNotes: {
+        minimal: "Only what standard CSS can reach. Line ends are left alone.",
+        article: "Justified, with the line ends trimmed. Japanese body text reads this way.",
+        book: "Article, plus the paragraph indent and hanging punctuation of a printed page."
+      },
+      snippetNote: "Paste this to get exactly what you see.",
       debug: "Show punctuation classes and adjustments"
     },
     status: {
@@ -942,6 +975,21 @@ Mojikumi.stop();`,
           "Bug reports, questions about these terms and examples of typesetting that looks wrong are all welcome in the Issues page of the GitHub repository. A reproducible sentence and your browser details are a great help."
         ]
       }
+    ]
+  },
+  notFound: {
+    eyebrow: "Error / 404",
+    headlineLead: "No page carries",
+    headlineAccent: "this number",
+    lead: "The address may have changed, or the page may not be written yet. The table of contents below is the way back.",
+    nombreLabel: "Nombre",
+    runningHead: "Mojikumi",
+    linksLabel: "Contents",
+    links: [
+      { index: "01", page: "start", label: "Put it on your own site" },
+      { index: "02", page: "docs", label: "Read the documentation" },
+      { index: "03", page: "playground", label: "Try it in the Playground" },
+      { index: "04", page: "home", label: "Back to the home page" }
     ]
   },
   footer: {

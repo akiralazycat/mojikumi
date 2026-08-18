@@ -49,7 +49,7 @@ export default function rehypeMojikumi(
   options: RehypeMojikumiOptions = {}
 ) {
   const resolved: Required<RehypeMojikumiOptions> = {
-    preset: options.preset ?? "web",
+    preset: options.preset ?? "minimal",
     selector: options.selector ?? DEFAULT_TARGETS,
     lang: options.lang ?? "ja"
   };

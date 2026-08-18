@@ -10,9 +10,9 @@ Mojikumiは独自の組版エンジンではありません。`text-spacing-trim
 
 ## 現在の実装範囲
 
-v0.1の土台として次を実装しています。
+次を実装しています。
 
-- CSS-onlyの`web`、`book`、`editorial`、`minimal`、`native`プリセット
+- CSS-onlyの`minimal`、`article`、`book`プリセット
 - 書記素クラスタを壊さない文字分割と約物クラス分類
 - 重複する約物アキの保守的なペアルール
 - 和文とLatin文字・数字の境界検出
@@ -57,14 +57,45 @@ npm run build
 | 属性 | 既定値 | 内容 |
 | --- | --- | --- |
 | `data-target` | `auto` | 本文のセレクター。`auto`は既知の本文要素を順に探す |
-| `data-style` | `article` | `article`（記事向け）、`book`（書籍風）、`headline`（見出し重視） |
+| `data-style` | `minimal` | `minimal`（控えめ）、`article`（両端揃え）、`book`（書籍の体裁） |
 | `data-precision` | `auto` | `native` / `auto` / `full` |
+| `data-indent` | プリセット任せ | `false`で字下げなし。`2em`のように量も指定できる |
+| `data-justify` | プリセット任せ | `false`で両端揃えをやめる |
+| `data-hanging` | プリセット任せ | `true`で約物を版面の外へぶら下げる |
+| `data-heading-break` | プリセット任せ | `true`で見出しを文節で折る |
 | `data-exclude` | なし | 追加で除外するセレクター。カンマ区切り |
 | `data-css` | `true` | 同梱CSSを読み込むか |
 | `data-auto` | `true` | `false`にすると`Mojikumi.start()`を呼ぶまで何もしない |
 
-`data-style`にはプリセット名（`web`、`book`、`editorial`、`minimal`、`native`）も
-そのまま書けます。読み込み後に追加された記事も自動で対象になります。
+プリセットは印刷の体裁にどこまで寄せるかの3段階です。`minimal`は標準CSSで
+届く範囲の妥協、`article`が本来やろうとしていること、`book`はそれに書籍の
+体裁を足したもの。旧名（`web`、`editorial`、`native`、`headline`）もそのまま
+書けます。読み込み後に追加された記事も自動で対象になります。
+
+`article`と`book`が両端揃えです。行末の句読点の二分アキを削る調整は、字面が版面の
+右端まで届いてはじめて見えるため、行末を揃えないプリセットでは行いません
+（詳細は[SPEC.md](./SPEC.md)）。
+
+段落字下げと両端揃えは、日本語組版の正誤ではなくページ設計の判断なので、
+プリセットとは別の修飾子として上書きできます。書き落とせばプリセットの
+判断がそのまま使われます。
+
+```html
+<!-- 書籍の体裁のまま、字下げだけやめる -->
+<script src="…/mojikumi.min.js" data-style="book" data-indent="false"></script>
+```
+
+```ts
+mojikumi(".article", { preset: "book", indent: false });
+mojikumi(".article", { preset: "minimal", indent: "2em", justify: true });
+```
+
+`justify: false`にすると行末調整も止まります。両端揃えでなければ効かない
+調整だからです。字下げの量はCSSからも変えられます。
+
+```css
+.article { --mjk-paragraph-indent: 2em; }
+```
 
 ```js
 Mojikumi.start({ target: ".article", style: "book" });
@@ -95,7 +126,7 @@ import "mojikumi/css";
 ```
 
 ```html
-<article lang="ja" class="mjk mjk-book">
+<article lang="ja" class="mjk mjk-article">
   <p>『「引用」』とNext.jsを含む日本語。</p>
 </article>
 ```
@@ -158,12 +189,13 @@ SSRでは通常のHTMLとクラスだけを出し、必要なDOM補完はマウ�
 import rehypeMojikumi from "@mojikumi/rehype";
 
 export default {
-  rehypePlugins: [[rehypeMojikumi, { preset: "editorial" }]]
+  rehypePlugins: [[rehypeMojikumi, { preset: "book" }]]
 };
 ```
 
-既定では`article`と`main`へ`lang="ja"`とプリセットクラスを付与します。レスポンシブ
-な行頭・行末はビルド時に確定しないため、rehype側では測定しません。
+プリセットを書かなければ`minimal`です。付与先は既定で`<article>`と`<main>`の要素で、
+そこへ`lang="ja"`とプリセットクラスを足します。レスポンシブな行頭・行末はビルド時に
+確定しないため、rehype側では測定しません。
 
 ## パッケージ
 

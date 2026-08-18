@@ -78,6 +78,15 @@
   /* The air an article leaves around itself, and the footer's own run-up. */
   --article-band: 72px;
   --footer-gap: 40px;
+  /*
+   * The rhythm between cards standing one above the other. A card carries its
+   * own padding — 30/34px on a phone, up to 86px on a wide screen — and the
+   * space between two of them has to read as wider than the space inside one,
+   * or the stack closes into a single slab with rules drawn across it. Sitting
+   * side by side they need far less, because the eye already has a vertical
+   * edge to divide them; that gutter stays at the 14px each grid declares.
+   */
+  --card-stack-gap: clamp(24px, 2.4vw, 40px);
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   background: var(--bg);
@@ -191,6 +200,14 @@
 html {
   background: var(--bg);
   scroll-behavior: smooth;
+  /*
+   * iOS Safari sizes text by cluster heuristics unless told not to, and the
+   * Mojikumi sample card — its paragraphs split into token spans — can be
+   * judged a different cluster from the three plain cards beside it, showing
+   * the same slider value at a different size.
+   */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -281,8 +298,10 @@ input[type="range"] {
  * line would move the indentation, and labels, headings and controls are short
  * enough that justifying them only opens gaps.
  *
- * The four Playground cards share one rule on purpose: they are only
- * comparable while every one of them is set the same way.
+ * The Playground cards are not in here. Their alignment follows the preset
+ * being demonstrated — the three comparison cards inline it, the Mojikumi card
+ * lets the preset decide — because a rule here would win over both and the
+ * preset picker would change nothing anyone could see.
  */
 .hero-copy,
 .section-heading > p:not(.eyebrow),
@@ -297,7 +316,6 @@ input[type="range"] {
 .benchmark-results p,
 .method-note p,
 .benchmark-grid dd,
-.sample-text p,
 .comparison-credit {
   text-align: justify;
 }
@@ -348,28 +366,41 @@ main {
 }
 
 /*
- * Sections settle in as they come up the viewport, on a scroll timeline rather
- * than a clock: an element that is already on screen when the page loads sits
- * past the end of its range and so is simply at rest, which is what keeps the
- * first paint of a server-rendered page complete and readable. Browsers
- * without scroll-driven animations get the resting state and nothing else.
+ * Sections settle in as they come up the viewport. The resting state is the
+ * visible one and nothing here is scoped to a class the server does not send,
+ * so a page that never runs the script — or a reader who asked for less motion
+ * — gets the finished layout on the first paint.
+ *
+ * This used to ride a `view()` scroll timeline, which reads much better but
+ * has no way to correct itself: the timeline samples the progress of a section
+ * against the layout of the moment, and when the layout moves afterwards —
+ * a webfont swapping in, the Mojikumi runtime rewriting a paragraph — nothing
+ * resamples it unless the reader happens to scroll again. A section could sit
+ * at whatever fraction of the fade it had reached and stay there, which is
+ * exactly the half-faded CTA that kept showing up. So the reveal is a latch
+ * now: useSectionReveal hides a section only while the observer reports it off
+ * screen, and releases it the first time it intersects and stops watching it.
+ * Progress only ever moves toward visible, so a later layout shift has nothing
+ * left to corrupt.
  */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .section-block,
-    .closing-panel,
-    .docs-content section,
-    .start-choice,
-    .next-step,
-    .benchmark-status,
-    .benchmark-results,
-    .benchmark-grid article,
-    .method-note,
-    .legal-content section + section {
-      animation: settle-in linear both;
-      animation-range: entry 0% entry 22%;
-      animation-timeline: view();
-    }
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+
+  /*
+   * A one-shot animation with no fill, rather than a transition on a resting
+   * state. It means `shown` declares nothing that outlives the fade: the
+   * section is back to its own opacity and its own transform the moment the
+   * animation ends, so a card that leans on a transform of its own — the hover
+   * lift on .start-choice — keeps it, and the transition it declares for that
+   * lift is not competing with one from here. Having no fill also means the
+   * fade cannot outlast itself: once the 620ms are up the section is held at
+   * nothing at all, rather than pinned to a value this rule chose for it.
+   */
+  [data-reveal="shown"] {
+    animation: settle-in 620ms var(--ease-out);
   }
 }
 
@@ -1098,7 +1129,15 @@ main {
   text-spacing-trim: space-all;
 }
 
+/*
+ * The card in the right-hand column is a list of five rows and is as tall as
+ * those rows: left to stretch, it grows to match whatever the prose beside it
+ * happens to measure, and since that column gets narrower — and so taller —
+ * as the screen widens, the card ends up holding open a hundred pixels of
+ * nothing under its last row on a wide display.
+ */
 .section-split {
+  align-items: start;
   display: grid;
   gap: clamp(50px, 9vw, 150px);
   grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1.12fr);
@@ -1239,6 +1278,159 @@ main {
 
 .page-intro-compact {
   padding-bottom: 48px;
+}
+
+/*
+ * The 404. Both locales are in the one 404.html the static export writes, and
+ * the head script sets data-not-found-locale from the path before the body is
+ * parsed, so the copy that is not wanted is never painted.
+ *
+ * The nombre is the largest thing on the page and the headline sits a step
+ * under every other h1 on the site: the number is the image, the sentence is
+ * its caption, and a 404 should not outrank the pages people were looking for.
+ */
+.not-found {
+  align-items: start;
+  column-gap: clamp(40px, 5.4vw, 86px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.46fr);
+  row-gap: clamp(42px, 5vw, 64px);
+}
+
+.not-found[lang="en"],
+:root[data-not-found-locale="en"] .not-found[lang="ja"] {
+  display: none;
+}
+
+:root[data-not-found-locale="en"] .not-found[lang="en"] {
+  display: grid;
+}
+
+.not-found-intro {
+  grid-column: 1;
+  max-width: 620px;
+}
+
+.not-found-intro h1 {
+  font-family: var(--font-display);
+  font-size: var(--display-3);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.35;
+  margin: 0;
+  word-break: auto-phrase;
+}
+
+.not-found-intro h1 em {
+  color: var(--primary);
+  font-style: normal;
+}
+
+.not-found-lead {
+  color: var(--muted);
+  font-size: var(--text-lead);
+  line-height: 2.05;
+  margin: 26px 0 0;
+}
+
+/* A page number set in the margin, for a page that never carried one. */
+.not-found-nombre {
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  background: linear-gradient(145deg, var(--glass-strong), var(--glass-faint));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--surface-shadow);
+  display: grid;
+  gap: 20px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-items: center;
+  overflow: hidden;
+  padding: clamp(28px, 3.6vw, 44px);
+  position: relative;
+}
+
+.not-found-nombre::after {
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  content: "";
+  height: 180px;
+  position: absolute;
+  right: -88px;
+  top: -96px;
+  width: 180px;
+}
+
+.not-found-nombre small {
+  color: var(--gold);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.not-found-nombre strong {
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: var(--display-2);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+/* The running head: the title a book repeats along the top of every page. */
+.not-found-running-head {
+  border-top: 1px solid var(--line);
+  color: var(--muted-soft);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  padding-top: 15px;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+/* Four ways back, counted like the sections of a table of contents. */
+.not-found-contents {
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-column: 1;
+  max-width: 620px;
+}
+
+.not-found-contents a {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  display: grid;
+  font-size: var(--text-lg);
+  gap: 20px;
+  grid-template-columns: auto 1fr auto;
+  padding: 19px 2px;
+  text-decoration: none;
+  transition: color 400ms var(--ease-out);
+}
+
+.not-found-contents a svg {
+  color: var(--muted-soft);
+  transition:
+    transform 400ms var(--ease-out),
+    color 400ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .not-found-contents a:hover {
+    color: var(--primary);
+    transition-duration: 240ms;
+  }
+
+  .not-found-contents a:hover svg {
+    color: var(--primary);
+    transform: translateX(5px);
+    transition-duration: 240ms;
+  }
 }
 
 .docs-layout {
@@ -1596,7 +1788,13 @@ main {
   opacity: 1;
 }
 
-.docs-content pre {
+/*
+ * Scoped to the card, not to `.docs-content`: the Playground sidebar holds a
+ * snippet too, and a `pre` that misses this rule keeps its content-sized
+ * minimum width — one long CDN URL then pushes the whole column off a phone
+ * screen. `overflow-x: auto` is what lets the line scroll instead.
+ */
+.code-block pre {
   font-family: var(--font-code);
   font-size: var(--text-sm);
   line-height: 1.9;
@@ -1606,31 +1804,31 @@ main {
   tab-size: 2;
 }
 
-.docs-content pre .tok-keyword {
+.code-block .tok-keyword {
   color: var(--code-keyword);
 }
 
-.docs-content pre .tok-string {
+.code-block .tok-string {
   color: var(--code-string);
 }
 
-.docs-content pre .tok-tag {
+.code-block .tok-tag {
   color: var(--code-tag);
 }
 
-.docs-content pre .tok-attr {
+.code-block .tok-attr {
   color: var(--code-attr);
 }
 
-.docs-content pre .tok-number {
+.code-block .tok-number {
   color: var(--code-number);
 }
 
-.docs-content pre .tok-punctuation {
+.code-block .tok-punctuation {
   color: var(--code-punct);
 }
 
-.docs-content pre .tok-comment {
+.code-block .tok-comment {
   color: var(--code-comment);
   font-style: italic;
 }
@@ -1675,6 +1873,9 @@ main {
 
 .playground-controls {
   align-self: start;
+  /* A grid item's automatic minimum would let the snippet's longest line set
+     the column's width; the card must shrink and let the `pre` scroll. */
+  min-width: 0;
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   background: var(--glass-strong);
@@ -1761,7 +1962,8 @@ main {
 .header-menu-trigger:focus-visible,
 .header-panel-nav a:focus-visible,
 .pill-toggle > button:focus-visible,
-.pill-toggle > a:focus-visible {
+.pill-toggle > a:focus-visible,
+.not-found-contents a:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
@@ -2177,8 +2379,21 @@ main {
   display: grid;
   gap: clamp(32px, 7vw, 100px);
   grid-template-columns: minmax(260px, 0.8fr) 1.2fr;
-  margin-top: 34px;
   padding: clamp(30px, 5vw, 54px);
+}
+
+/*
+ * Benchmarks is the one page whose every section is a card. Elsewhere a card
+ * is separated from what follows by a band of transparent padding — the
+ * section it sits in pads by 72px or more — but here the cards are the
+ * sections, so their borders meet with nothing in between and the page reads
+ * as one long panel divided by hairlines. Each one holds the next off itself.
+ */
+.benchmark-status,
+.benchmark-results,
+.benchmark-grid,
+.method-note {
+  margin-top: var(--card-stack-gap);
 }
 
 .benchmark-status div {
@@ -2227,7 +2442,6 @@ main {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr 1fr;
-  padding: 34px 0 16px;
 }
 
 .benchmark-grid article {
@@ -2379,6 +2593,23 @@ main {
   .benchmark-grid,
   .start-choices {
     grid-template-columns: 1fr;
+    row-gap: var(--card-stack-gap);
+  }
+
+  /* The nombre stops being a margin and becomes a plate under the copy. */
+  .not-found {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .not-found-intro,
+  .not-found-nombre,
+  .not-found-contents {
+    grid-column: 1;
+  }
+
+  .not-found-nombre {
+    grid-row: auto;
+    width: min(100%, 320px);
   }
 
   .principle-grid article {
@@ -2572,4 +2803,129 @@ main {
     -webkit-backdrop-filter: none;
     background: var(--bg);
   }
+}
+
+/*
+ * The modifiers, and the tag that reproduces what they add up to. Trying a
+ * setting and pasting it should be the same gesture.
+ */
+.preset-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 14px 0 0;
+}
+
+.modifier-controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modifier-controls .debug-control {
+  margin-top: 0;
+}
+
+.playground-snippet {
+  margin-top: 20px;
+}
+
+.playground-snippet > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 8px;
+}
+
+.playground-snippet .code-block {
+  margin: 0;
+}
+
+/*
+ * The style choice is a small card under the snippet it rewrites. All three
+ * descriptions stay visible, so the options are compared by reading down the
+ * list, not by clicking through them.
+ */
+.style-picker {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  margin: 14px 0 0;
+  min-width: 0;
+  padding: 14px 18px 6px;
+}
+
+.style-picker legend {
+  color: var(--muted);
+  /* Floated out of the fieldset's border box, where a legend otherwise sits. */
+  float: left;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  padding: 0;
+  width: 100%;
+}
+
+.style-option {
+  align-items: start;
+  clear: both;
+  column-gap: 11px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  padding: 9px 0;
+}
+
+.style-option + .style-option {
+  border-top: 1px solid var(--line);
+}
+
+.style-option input {
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+}
+
+.style-option-mark {
+  background: transparent;
+  background-clip: content-box;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  height: 16px;
+  margin-top: 3px;
+  padding: 3px;
+  width: 16px;
+}
+
+.style-option input:checked ~ .style-option-mark {
+  background-color: var(--primary-solid);
+  border-color: var(--primary-solid);
+}
+
+.style-option input:focus-visible ~ .style-option-mark {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.style-option-body {
+  display: grid;
+  gap: 2px;
+}
+
+.style-option-body strong {
+  font-family: var(--font-code);
+  font-size: var(--text-xs);
+}
+
+.style-option input:checked ~ .style-option-body strong {
+  color: var(--primary);
+}
+
+.style-option-body > span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
 }

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mojikumi CDN</title>
+<style>{{style}}</style>
+</head>
+<body>
+
+<header class="brand">
+  <span class="brand-mark" data-no-mojikumi>「</span>
+  <span class="brand-text">
+    <strong>Mojikumi CDN</strong>
+    <span class="brand-host">cdn.mojikumi.jp</span>
+  </span>
+  <a class="brand-language" href="/" hreflang="ja" lang="ja">日本語</a>
+</header>
+
+<main>
+  <p class="eyebrow">Version {{version}}</p>
+  <h1>The files you load Mojikumi from</h1>
+  <!--
+    No bare URL in the running text: `article` justifies, and the preset breaks
+    a long Latin run rather than opening a river, so mojikumi.jp/en/start/
+    splits across the middle of the domain. Correct behaviour, poor as a link.
+  -->
+  <p>This domain serves nothing but the files you put on a page. <a href="https://mojikumi.jp/en/start/">The guide to using them</a> is on mojikumi.jp. The same files ship inside the <a href="https://www.npmjs.com/package/mojikumi">mojikumi</a> package on npm, if you would rather not load anything from a CDN.</p>
+
+  <section>
+    <h2>Loading it</h2>
+    <pre data-no-mojikumi>&lt;script
+  src="https://cdn.mojikumi.jp/{{channel}}/mojikumi.min.js"
+  data-target=".entry-content"
+  data-style="article"
+&gt;&lt;/script&gt;</pre>
+    <p class="note">The stylesheet is inside this file, so it is the only one to load. Give <code>data-target</code> the selector for your body text; leave it out and the usual containers are tried in turn.</p>
+    <p class="note"><code>data-style</code> takes <code>minimal</code>, <code>article</code> or <code>book</code>. What each one sets is described in <a href="https://mojikumi.jp/en/start/">the guide</a>.</p>
+  </section>
+
+  <section>
+    <h2>What is served</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Path</th><th scope="col">Contents</th><th scope="col">Cache</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">/{{channel}}/mojikumi.min.js</th>
+            <td>The browser build, stylesheet included</td>
+            <td>10 minutes</td>
+          </tr>
+          <tr>
+            <th scope="row">/{{channel}}/mojikumi.min.css</th>
+            <td>The stylesheet on its own</td>
+            <td>10 minutes</td>
+          </tr>
+          <tr>
+            <th scope="row">/{{version}}/…</th>
+            <td>The same build, pinned to a version</td>
+            <td>1 year, never rewritten</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">What <code>/{{channel}}/</code> holds is replaced on every minor release. Fixes reach your site without you touching the tag, and so does everything else in that release. Incompatible changes go out as <code>/v2/</code>, leaving <code>/{{channel}}/</code> where it is.</p>
+  </section>
+
+  <section>
+    <h2>Pinning a version</h2>
+    <p class="note">A path with a version in it is never rewritten, so it can carry a hash of its contents. If the file does not match, the browser will not run it.</p>
+    <pre data-no-mojikumi>&lt;script
+  src="https://cdn.mojikumi.jp/{{version}}/mojikumi.min.js"
+  integrity="{{integrityJs}}"
+  crossorigin="anonymous"
+  data-target=".entry-content"
+&gt;&lt;/script&gt;</pre>
+    <p class="note">For the stylesheet on its own, the hash is below. There is none for <code>/{{channel}}/</code>, whose contents are replaced.</p>
+    <pre data-no-mojikumi>{{integrityCss}}</pre>
+  </section>
+</main>
+
+<footer>
+  <span>MIT License</span>
+  <a href="https://github.com/akiralazycat/mojikumi">GitHub</a>
+  <a href="https://www.npmjs.com/package/mojikumi">npm</a>
+  <a href="https://mojikumi.jp/en/">mojikumi.jp</a>
+</footer>
+
+<script src="/{{channel}}/mojikumi.min.js" data-target="main" data-style="article"></script>
+
+</body>
+</html>
