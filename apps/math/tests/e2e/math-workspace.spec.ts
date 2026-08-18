@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { typesettingFixtures } from "../../lib/typesetting-fixtures";
 
 async function waitForMathfield(page: Page) {
   const field = page.locator("math-field");
@@ -14,15 +15,18 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
 
   await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toBe("");
 
-  await page.getByRole("button", { name: "x²" }).click();
-  await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toContain("x");
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill("a");
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+  await page.getByRole("button", { name: "累乗を挿入" }).click();
+  await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toContain("a^");
   await page.getByRole("button", { name: "次の入力欄へ" }).click();
 
   await page.getByRole("button", { name: "LaTeX", exact: true }).click();
   const source = page.getByRole("textbox", { name: "LaTeXソース" });
   await source.fill(String.raw`x^2+5x+6=0`);
 
-  const outputs = ["Ask AI", "Plain", "Strict β", "LaTeX", "Markdown", "MathML", "Embed"];
+  const outputs = ["テキスト", "Strict β", "LaTeX", "Markdown", "MathML", "Embed"];
   for (const name of outputs) {
     await page.getByRole("tab", { name }).click();
     await expect(page.getByRole("tabpanel")).toBeVisible();
@@ -31,7 +35,8 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   await page.getByRole("tab", { name: "Strict β" }).click();
   await expect(page.getByText("ASCIIMathを基礎にした暫定仕様です。")).toBeVisible();
 
-  await page.getByRole("tab", { name: "Ask AI" }).click();
+  await page.getByRole("tab", { name: "テキスト" }).click();
+  await page.getByRole("checkbox", { name: "依頼文を付ける" }).check();
   await page.getByRole("button", { name: "解く" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("途中の手順");
 
@@ -45,7 +50,7 @@ test("初回は空欄から開始し、開始候補と入力順序を提示す�
   const field = await waitForMathfield(page);
 
   await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toBe("");
-  await expect(page.getByRole("button", { name: "Ask AIをコピー" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "テキストをコピー" })).toBeDisabled();
   await expect(page.getByText("数式を入力すると変換結果が表示されます")).toBeVisible();
   await expect(page.getByRole("button", { name: "分数から始める" })).toBeVisible();
   await expect(page.getByRole("button", { name: "二次式から始める" })).toBeVisible();
@@ -90,14 +95,71 @@ test("出力タブは矢印キー、Home、Endで移動できる", async ({ page
   await page.goto("/");
   await waitForMathfield(page);
 
-  const aiTab = page.getByRole("tab", { name: "Ask AI" });
-  await aiTab.focus();
-  await aiTab.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Plain" })).toBeFocused();
-  await page.getByRole("tab", { name: "Plain" }).press("End");
+  const textTab = page.getByRole("tab", { name: "テキスト" });
+  await textTab.focus();
+  await textTab.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Strict β" })).toBeFocused();
+  await page.getByRole("tab", { name: "Strict β" }).press("End");
   await expect(page.getByRole("tab", { name: "Embed" })).toBeFocused();
   await page.getByRole("tab", { name: "Embed" }).press("Home");
-  await expect(aiTab).toBeFocused();
+  await expect(textTab).toBeFocused();
+});
+
+test("構造キーは入力後も使え、任意の文字へ累乗を追加できる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  const value = () => field.evaluate((node: HTMLElement & { value: string }) => node.value);
+
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill("a");
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+  await page.getByRole("button", { name: "累乗を挿入" }).click();
+  await expect.poll(value).toContain("a^");
+  await expect(page.getByRole("button", { name: "分数を挿入" })).toBeVisible();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "新規" }).click();
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill("a+b");
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+  await field.evaluate((node: HTMLElement & { select: () => void }) => node.select());
+  await page.getByRole("button", { name: "分数を挿入" }).click();
+  await expect.poll(value).toContain(String.raw`\frac{a+b}`);
+});
+
+test("ΣとΠは右側の被演算子まで一つの構造として挿入する", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "Σ", exact: true }).click();
+  const value = await field.evaluate((node: HTMLElement & { value: string }) => node.value);
+  expect(value).toContain(String.raw`\sum`);
+  expect(value.match(/\\placeholder/g)).toHaveLength(3);
+});
+
+test("複合数式fixtureは数式キャンバス内で崩れずに表示される", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  const source = page.getByRole("textbox", { name: "LaTeXソース" });
+
+  for (const fixture of typesettingFixtures) {
+    await source.fill(fixture.latex);
+    await page.getByRole("button", { name: "Visual", exact: true }).click();
+    await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value.length)).toBeGreaterThan(0);
+    const geometry = await field.evaluate((node) => {
+      const host = node.getBoundingClientRect();
+      const content = node.shadowRoot?.querySelector<HTMLElement>(".ML__content");
+      const bounds = content?.getBoundingClientRect();
+      return {
+        horizontalOverflow: content ? content.scrollWidth - content.clientWidth : Infinity,
+        containedVertically: Boolean(bounds && bounds.top >= host.top - 1 && bounds.bottom <= host.bottom + 1)
+      };
+    });
+    expect(geometry.horizontalOverflow, fixture.name).toBeLessThanOrEqual(1);
+    expect(geometry.containedVertically, fixture.name).toBe(true);
+    await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  }
 });
 
 test("記号バリエーションはフォーカスを管理しEscapeで閉じる", async ({ page }) => {
@@ -146,16 +208,17 @@ test("下書きとテーマを端末内に復元する", async ({ page }) => {
   await page.goto("/");
   await waitForMathfield(page);
   await page.getByRole("button", { name: "LaTeX", exact: true }).click();
-  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`a^2+b^2=c^2`);
-  await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.math.draft.v1"))).toContain("a^2+b^2=c^2");
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`\frac{a}{b}`);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.math.draft.v1"))).toContain(String.raw`\frac{a}{b}`);
   await expect(page.locator('[aria-live="polite"]')).toContainText("下書きを保存しました");
 
   await page.getByRole("button", { name: "ダークテーマ" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await waitForMathfield(page);
+  await expect(page.getByRole("tabpanel")).not.toContainText(String.raw`\frac`);
   await page.getByRole("button", { name: "LaTeX", exact: true }).click();
-  await expect(page.getByRole("textbox", { name: "LaTeXソース" })).toHaveValue(String.raw`a^2+b^2=c^2`);
+  await expect(page.getByRole("textbox", { name: "LaTeXソース" })).toHaveValue(String.raw`\frac{a}{b}`);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 

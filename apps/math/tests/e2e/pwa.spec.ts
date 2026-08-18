@@ -33,7 +33,7 @@ test("初回訪問後にオフラインで編集画面を再表示でき、数�
   await context.setOffline(true);
   try {
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: /数式を/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "数式を自然に組み上げる" })).toBeVisible();
     await page.getByRole("button", { name: "LaTeX", exact: true }).click();
     await expect(page.getByRole("textbox", { name: "LaTeXソース" })).toHaveValue(sentinel);
   } finally {
