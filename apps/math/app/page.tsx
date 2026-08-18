@@ -1,4 +1,5 @@
 import { MathWorkspace } from "../components/math-workspace";
+import { ThemeToggle } from "../components/theme-toggle";
 
 export default function HomePage() {
   return (
@@ -11,21 +12,22 @@ export default function HomePage() {
           <span>Mojikumi</span>
           <span className="brand-product">Math</span>
         </a>
-        <div className="header-meta">
-          <span className="status-dot" aria-hidden="true" />
-          <span>Prototype 0.1 · ログイン不要</span>
+        <div className="header-actions">
+          <div className="header-meta">
+            <span className="status-dot" aria-hidden="true" />
+            <span>Public beta · ログイン不要</span>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 
       <main id="top">
         <section className="intro" aria-labelledby="intro-title">
           <p className="eyebrow">Mathematical input, reconsidered</p>
-          <h1 id="intro-title">
-            数式を、<em>思ったまま</em>入力する。
-          </h1>
+          <h1 id="intro-title">数式を<em>自然に</em><span className="intro-action">組み上げる</span></h1>
           <p>
-            見たまま組み立てて、AI、LaTeX、Markdown、MathMLへ。
-            Mojikumi Mathは、数式を書くことと使うことのあいだをつなぐ入力レイヤーです。
+            <span>見たまま組み立てて、AI、LaTeX、Markdown、MathMLへ。</span>{" "}
+            <span className="intro-detail">Mojikumi Mathは、数式を書くことと使うことのあいだをつなぐ入力レイヤーです。</span>
           </p>
         </section>
 

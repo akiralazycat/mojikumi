@@ -24,6 +24,7 @@
     "dev:math": "npm run dev --workspace @mojikumi/math-web",
     "dev:playground": "npm run dev --workspace @mojikumi/playground",
     "test": "vitest run",
+    "test:math:e2e": "npm run test:e2e --workspace @mojikumi/math-web",
     "test:watch": "vitest",
     "typecheck": "tsc -b packages/core packages/presets packages/dom packages/react packages/rehype packages/mojikumi --pretty false",
     "clean": "node scripts/clean.mjs",

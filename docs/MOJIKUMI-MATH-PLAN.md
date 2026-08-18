@@ -1,6 +1,6 @@
 # Mojikumi Math — product and implementation plan
 
-Status: Milestone 1 core in progress / August 2026
+Status: Public MVP implementation complete; release validation in progress / August 2026
 Target: `https://math.mojikumi.jp`
 
 ## 1. Product definition
@@ -110,14 +110,18 @@ MojikumiExpression adapter
 └── Web Component embed
 ```
 
-The prototype uses MathLive's existing output adapters directly. Before a public
-release, introduce the following internal seam:
+The current implementation keeps MathLive behind this app-local internal seam:
 
 ```ts
 type MojikumiExpression = {
   version: 1;
-  source: unknown;       // private engine payload
-  latexFallback: string;
+  engine: "mathlive";
+  isComplete: boolean;
+  latex: string;
+  plainText: string;
+  strictText: string;
+  spokenText: string;
+  mathMl: string;
 };
 ```
 
@@ -151,7 +155,7 @@ blue. Keyboard density should stay below the visual expression, not compete with
 ### Current implementation
 
 - Versioned, app-local `MojikumiExpression` adapter; engine payload stays private
-- Readable, Strict, AI prompt, LaTeX, Markdown, MathML, and Embed serializers
+- Readable, Strict β, AI prompt, LaTeX, Markdown, MathML, and Embed serializers
 - Incomplete-placeholder detection and safe HTML/MathML fallback escaping
 - Visual and LaTeX source editing, Undo/Redo, placeholder movement
 - Namespaced, versioned, device-local draft recovery with malformed-data guards
@@ -159,17 +163,22 @@ blue. Keyboard density should stay below the visual expression, not compete with
 - Long-press/disclosure variants for roots, relations, integrals, sums, and arrows
 - Pure fixture coverage for conversion and draft persistence, including 30
   representative formulas across five categories
+- Light/dark appearance saved under `mojikumi.math.theme`
+- Installable PWA shell with network-first HTML, cache-first static assets,
+  offline editing/conversion, and versioned cache cleanup
+- Accessible output tabs, managed variant-tray focus, and a single status live region
+- Playwright/axe coverage at 320 px, 390 px, and desktop widths
 
 ### Milestone 0 — interaction skeleton (now)
 
 - Independent app, product page, live MathLive canvas
-- Four compact keyboard groups and all six target-output tabs
+- Four compact keyboard groups and all seven target-output tabs
 - Responsive blue visual system consistent with Mojikumi
 - Static export and app-specific build command
 
 Exit: recognisable on phone and desktop; an expression can be changed and copied.
 
-### Milestone 1 — usable MVP (2–4 weeks)
+### Milestone 1 — usable MVP (implemented; release validation remains)
 
 - Placeholder navigation, long-press variants, keyboard haptics where available
 - Undo/redo controls, LaTeX source mode, clear/new expression

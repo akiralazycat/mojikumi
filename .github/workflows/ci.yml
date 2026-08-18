@@ -32,3 +32,20 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run package:check
+
+  math:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck --workspace @mojikumi/math-web
+      - run: npx vitest run apps/math
+      - run: npm run test:math:e2e
