@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadDraft, removeDraft, saveDraft } from "../lib/draft";
 import {
   createExpression,
@@ -19,12 +19,16 @@ type OutputFormat =
 type MathfieldElement = HTMLElement & {
   value: string;
   smartFence: boolean;
+  selectionIsCollapsed: boolean;
   mathVirtualKeyboardPolicy: "auto" | "manual" | "sandboxed";
   getValue: (format?: OutputFormat) => string;
   executeCommand: (command: string | [string, ...unknown[]]) => boolean;
   insert: (
     value: string,
-    options?: { selectionMode?: "placeholder" | "after" | "before" | "item" }
+    options?: {
+      insertionMode?: "replaceSelection" | "replaceAll" | "insertBefore" | "insertAfter";
+      selectionMode?: "placeholder" | "after" | "before" | "item";
+    }
   ) => boolean;
 };
 
@@ -40,6 +44,14 @@ type QuickStarter = {
   label: string;
   preview: string;
   value: string;
+};
+
+type StructureKey = {
+  label: string;
+  preview: string;
+  emptyValue: string;
+  selectedValue: string;
+  appendValue?: string;
 };
 
 const initialLatex = "";
@@ -62,6 +74,41 @@ const quickStarters: QuickStarter[] = [
   }
 ];
 
+const structureKeys: StructureKey[] = [
+  {
+    label: "分数",
+    preview: "□⁄□",
+    emptyValue: String.raw`\frac{\placeholder{}}{\placeholder{}}`,
+    selectedValue: String.raw`\frac{#0}{\placeholder{}}`
+  },
+  {
+    label: "二乗",
+    preview: "□²",
+    emptyValue: String.raw`\placeholder{}^2`,
+    selectedValue: String.raw`{#0}^2`,
+    appendValue: String.raw`^2`
+  },
+  {
+    label: "累乗",
+    preview: "□ⁿ",
+    emptyValue: String.raw`\placeholder{}^{\placeholder{}}`,
+    selectedValue: String.raw`{#0}^{\placeholder{}}`,
+    appendValue: String.raw`^{\placeholder{}}`
+  },
+  {
+    label: "根号",
+    preview: "√□",
+    emptyValue: String.raw`\sqrt{\placeholder{}}`,
+    selectedValue: String.raw`\sqrt{#0}`
+  },
+  {
+    label: "括弧",
+    preview: "(□)",
+    emptyValue: String.raw`\left(\placeholder{}\right)`,
+    selectedValue: String.raw`\left(#0\right)`
+  }
+];
+
 const keys: Record<KeyboardGroup, MathKey[]> = {
   basic: [
     { label: "+", value: "+" },
@@ -79,18 +126,6 @@ const keys: Record<KeyboardGroup, MathKey[]> = {
         { label: "≥", value: String.raw`\ge` }
       ]
     },
-    { label: "( )", value: String.raw`\left(\right)` },
-    { label: "x²", value: String.raw`x^{\placeholder{}}` },
-    { label: "xⁿ", value: String.raw`x^{\placeholder{}}` },
-    {
-      label: "√",
-      value: String.raw`\sqrt{\placeholder{}}`,
-      variants: [
-        { label: "³√", value: String.raw`\sqrt[3]{\placeholder{}}` },
-        { label: "ⁿ√", value: String.raw`\sqrt[\placeholder{}]{\placeholder{}}` }
-      ]
-    },
-    { label: "a⁄b", value: String.raw`\frac{\placeholder{}}{\placeholder{}}` },
     { label: "π", value: String.raw`\pi` },
     { label: "∞", value: String.raw`\infty` }
   ],
@@ -118,12 +153,12 @@ const keys: Record<KeyboardGroup, MathKey[]> = {
     { label: "lim", value: String.raw`\lim_{\placeholder{}\to\placeholder{}}` },
     {
       label: "Σ",
-      value: String.raw`\sum_{\placeholder{}}^{\placeholder{}}`,
+      value: String.raw`\sum_{\placeholder{}}^{\placeholder{}}\,\placeholder{}`,
       variants: [
-        { label: "Π", value: String.raw`\prod_{\placeholder{}}^{\placeholder{}}` }
+        { label: "Π", value: String.raw`\prod_{\placeholder{}}^{\placeholder{}}\,\placeholder{}` }
       ]
     },
-    { label: "Π", value: String.raw`\prod_{\placeholder{}}^{\placeholder{}}` },
+    { label: "Π", value: String.raw`\prod_{\placeholder{}}^{\placeholder{}}\,\placeholder{}` },
     {
       label: "→",
       value: String.raw`\to`,
@@ -150,8 +185,8 @@ const keys: Record<KeyboardGroup, MathKey[]> = {
 };
 
 const outputLabels: Record<OutputKind, string> = {
-  ai: "Ask AI",
-  plain: "Plain",
+  ai: "AI用テキスト",
+  plain: "テキスト",
   strict: "Strict β",
   latex: "LaTeX",
   markdown: "Markdown",
@@ -159,7 +194,8 @@ const outputLabels: Record<OutputKind, string> = {
   embed: "Embed"
 };
 
-const outputKinds = Object.keys(outputLabels) as OutputKind[];
+const outputKinds = ["plain", "strict", "latex", "markdown", "mathml", "embed"] as const;
+type VisibleOutputKind = (typeof outputKinds)[number];
 
 const aiActionLabels: Record<AiAction, string> = {
   explain: "説明する",
@@ -193,8 +229,9 @@ export function MathWorkspace() {
   const firstVariantRef = useRef<HTMLButtonElement | null>(null);
   const completionRef = useRef(true);
   const [latex, setLatex] = useState(initialLatex);
-  const [outputKind, setOutputKind] = useState<OutputKind>("ai");
+  const [outputKind, setOutputKind] = useState<VisibleOutputKind>("plain");
   const [aiAction, setAiAction] = useState<AiAction>("explain");
+  const [aiPromptEnabled, setAiPromptEnabled] = useState(false);
   const [keyboardGroup, setKeyboardGroup] = useState<KeyboardGroup>("basic");
   const [variantKey, setVariantKey] = useState<MathKey | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
@@ -263,22 +300,24 @@ export function MathWorkspace() {
 
   useEffect(() => () => cancelLongPress(), []);
 
-  const expression = useMemo(() => {
-    const field = fieldRef.current;
-    return createExpression({
-      latex,
-      plainText: readValue(field, "plain-text", latex),
-      strictText: readValue(field, "ascii-math", latex),
-      spokenText: readValue(field, "spoken-text", latex),
-      mathMl: readValue(field, "math-ml", "")
-    });
-  }, [latex, ready]);
+  // MathLive upgrades the custom element after the first client render. Read
+  // its converters on every render so a restored draft does not remain on the
+  // LaTeX fallback after the field becomes available.
+  const field = fieldRef.current;
+  const expression = createExpression({
+    latex,
+    plainText: readValue(field, "plain-text", latex),
+    strictText: readValue(field, "ascii-math", latex),
+    spokenText: readValue(field, "spoken-text", latex),
+    mathMl: readValue(field, "math-ml", "")
+  });
 
-  const output = useMemo(
-    () => serializeExpression(expression, outputKind, { aiAction }),
-    [aiAction, expression, outputKind]
-  );
+  const serializedKind = outputKind === "plain" && aiPromptEnabled ? "ai" : outputKind;
+  const output = serializeExpression(expression, serializedKind, { aiAction });
   const hasExpression = latex.trim().length > 0;
+  const copyLabel = outputKind === "plain" && aiPromptEnabled
+    ? "AI用テキスト"
+    : outputLabels[outputKind];
 
   useEffect(() => {
     if (!ready) return;
@@ -304,6 +343,24 @@ export function MathWorkspace() {
     if (!field) return;
     field.focus();
     field.insert(value, { selectionMode: "placeholder" });
+    setLatex(field.value);
+    navigator.vibrate?.(8);
+  }
+
+  function insertStructure(key: StructureKey) {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.focus();
+    const hasSelection = !field.selectionIsCollapsed;
+    const value = hasSelection
+      ? key.selectedValue
+      : latex.trim() && key.appendValue
+        ? key.appendValue
+        : key.emptyValue;
+    field.insert(value, {
+      insertionMode: "replaceSelection",
+      selectionMode: "placeholder"
+    });
     setLatex(field.value);
     navigator.vibrate?.(8);
   }
@@ -385,7 +442,7 @@ export function MathWorkspace() {
     try {
       await navigator.clipboard.writeText(output);
       setCopyState("copied");
-      setAnnouncement(`${outputLabels[outputKind]}をコピーしました。`);
+      setAnnouncement(`${copyLabel}をコピーしました。`);
     } catch {
       setCopyState("failed");
       setAnnouncement("コピーできませんでした。ブラウザの権限を確認してください。");
@@ -416,7 +473,7 @@ export function MathWorkspace() {
           <button
             className="copy-primary"
             type="button"
-            aria-label={`${outputLabels[outputKind]}をコピー`}
+            aria-label={`${copyLabel}をコピー`}
             disabled={!hasExpression}
             onClick={copyOutput}
           >
@@ -424,7 +481,7 @@ export function MathWorkspace() {
               ? "コピーしました"
               : copyState === "failed"
                 ? "コピーできませんでした"
-                : `${outputLabels[outputKind]}をコピー`}
+                : `${copyLabel}をコピー`}
             <span aria-hidden="true">↗</span>
           </button>
         </div>
@@ -490,6 +547,22 @@ export function MathWorkspace() {
       </div>
 
       <div className="keyboard" aria-label="数式キーボード">
+        <div className="structure-bar" role="group" aria-label="数式の構造">
+          <span className="structure-label">構造</span>
+          <div className="structure-keys">
+            {structureKeys.map((key) => (
+              <button
+                key={key.label}
+                type="button"
+                aria-label={`${key.label}を挿入`}
+                onClick={() => insertStructure(key)}
+              >
+                <span aria-hidden="true">{key.preview}</span>
+                <span>{key.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="keyboard-tabs">
           {(["basic", "algebra", "calculus", "greek"] as KeyboardGroup[]).map((group) => (
             <button
@@ -611,18 +684,36 @@ export function MathWorkspace() {
             <p className="output-empty">数式を入力すると変換結果が表示されます</p>
           ) : (
             <>
-              {outputKind === "ai" && (
-                <div className="ai-actions" role="group" aria-label="AIへの依頼">
-                  {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
-                    <button
-                      key={action}
-                      type="button"
-                      aria-pressed={aiAction === action}
-                      onClick={() => setAiAction(action)}
-                    >
-                      {aiActionLabels[action]}
-                    </button>
-                  ))}
+              {outputKind === "plain" && (
+                <div className="ai-helper">
+                  <div className="ai-helper-heading">
+                    <div>
+                      <strong>AIに聞くとき</strong>
+                      <span>テキストへ目的に合った依頼文を付けられます</span>
+                    </div>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={aiPromptEnabled}
+                        onChange={(event) => setAiPromptEnabled(event.currentTarget.checked)}
+                      />
+                      依頼文を付ける
+                    </label>
+                  </div>
+                  {aiPromptEnabled && (
+                    <div className="ai-actions" role="group" aria-label="AIへの依頼">
+                      {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
+                        <button
+                          key={action}
+                          type="button"
+                          aria-pressed={aiAction === action}
+                          onClick={() => setAiAction(action)}
+                        >
+                          {aiActionLabels[action]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {outputKind === "strict" && (
