@@ -1,3 +1,5 @@
+import { toUnicodeReadable } from "./unicode-readable";
+
 export const expressionVersion = 1 as const;
 
 export type MojikumiExpression = {
@@ -19,6 +21,7 @@ export type ExpressionSnapshot = Omit<
 export type OutputKind =
   | "ai"
   | "plain"
+  | "readable"
   | "strict"
   | "latex"
   | "markdown"
@@ -100,6 +103,8 @@ export function serializeExpression(
       return createAiPrompt(expression, options.aiAction);
     case "plain":
       return expression.plainText;
+    case "readable":
+      return toUnicodeReadable(expression.strictText);
     case "strict":
       return expression.strictText;
     case "latex":

@@ -26,7 +26,7 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   const source = page.getByRole("textbox", { name: "LaTeXソース" });
   await source.fill(String.raw`x^2+5x+6=0`);
 
-  const outputs = ["テキスト", "Strict β", "LaTeX", "Markdown", "MathML", "Embed"];
+  const outputs = ["テキスト", "Readable", "Strict β", "LaTeX", "Markdown", "MathML", "Embed"];
   for (const name of outputs) {
     await page.getByRole("tab", { name }).click();
     await expect(page.getByRole("tabpanel")).toBeVisible();
@@ -34,6 +34,13 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
 
   await page.getByRole("tab", { name: "Strict β" }).click();
   await expect(page.getByText("ASCIIMathを基礎にした暫定仕様です。")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Readable" }).click();
+  await expect(page.getByText("Strict βから安全な記号置換だけで生成する")).toBeVisible();
+  await expect(page.getByRole("tabpanel")).toContainText("x²");
+  await expect(page.getByRole("tabpanel")).not.toContainText("x^2");
+  await page.getByRole("button", { name: "Readableをコピー" }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("x²");
 
   await page.getByRole("tab", { name: "テキスト" }).click();
   await page.getByRole("checkbox", { name: "依頼文を付ける" }).check();
@@ -98,6 +105,8 @@ test("出力タブは矢印キー、Home、Endで移動できる", async ({ page
   const textTab = page.getByRole("tab", { name: "テキスト" });
   await textTab.focus();
   await textTab.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Readable" })).toBeFocused();
+  await page.getByRole("tab", { name: "Readable" }).press("ArrowRight");
   await expect(page.getByRole("tab", { name: "Strict β" })).toBeFocused();
   await page.getByRole("tab", { name: "Strict β" }).press("End");
   await expect(page.getByRole("tab", { name: "Embed" })).toBeFocused();
@@ -127,6 +136,69 @@ test("構造キーは入力後も使え、任意の文字へ累乗を追加で�
   await expect.poll(value).toContain(String.raw`\frac{a+b}`);
 });
 
+test("分数の要素選択から分数全体へ広げ、内側へ戻せる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+
+  await page.getByRole("button", { name: "分数から始める" }).click();
+  const navigator = page.getByRole("group", { name: "数式内の要素を選択" });
+  await expect(navigator).toBeVisible();
+
+  await navigator.getByRole("button", { name: "要素を選択" }).click();
+  await expect(page.locator('[aria-live="polite"]')).toContainText("現在の要素を選択しました");
+  await navigator.getByRole("button", { name: "外側へ" }).click();
+  await expect(page.locator(".selection-status")).toContainText("分数全体");
+  await expect(page.locator(".selection-status")).toContainText("外側 +1");
+  await expect(navigator.getByRole("button", { name: "内側へ" })).toBeEnabled();
+
+  await navigator.getByRole("button", { name: "内側へ" }).click();
+  await expect(page.locator(".selection-status")).toContainText("現在の要素");
+  await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toContain(String.raw`\frac`);
+});
+
+test("入れ子分数は最も内側から一段ずつ外側へ選択できる", async ({ page }) => {
+  await page.goto("/");
+  await waitForMathfield(page);
+
+  await page.getByRole("button", { name: "分数から始める" }).click();
+  await page.getByRole("button", { name: "次の入力欄へ" }).click();
+  await page.getByRole("button", { name: "分数を挿入" }).click();
+
+  const navigator = page.getByRole("group", { name: "数式内の要素を選択" });
+  await navigator.getByRole("button", { name: "要素を選択" }).click();
+  await navigator.getByRole("button", { name: "外側へ" }).click();
+  await expect(page.locator(".selection-status")).toContainText("分数全体");
+  await expect(page.locator(".selection-status")).toContainText("外側 +1");
+
+  await navigator.getByRole("button", { name: "外側へ" }).click();
+  await expect(page.locator(".selection-status")).toContainText("外側 +2");
+  await navigator.getByRole("button", { name: "内側へ" }).click();
+  await expect(page.locator(".selection-status")).toContainText("外側 +1");
+});
+
+test("MathLiveの記号色をMojikumiの選択トークンで統一する", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "分数から始める" }).click();
+
+  const tokens = await field.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      contains: style.getPropertyValue("--contains-highlight-color").trim(),
+      ink: style.getPropertyValue("--ink").trim(),
+      placeholder: style.getPropertyValue("--placeholder-color").trim(),
+      primary: style.getPropertyValue("--primary").trim(),
+      selection: style.getPropertyValue("--selection-color").trim(),
+      smartFence: style.getPropertyValue("--smart-fence-color").trim()
+    };
+  });
+  expect(tokens.contains).toBe(tokens.ink);
+  expect(tokens.selection).toBe(tokens.ink);
+  expect(tokens.smartFence).toBe(tokens.ink);
+  expect(tokens.placeholder).toContain(tokens.ink);
+  expect(tokens.placeholder).toContain(tokens.primary);
+});
+
 test("ΣとΠは右側の被演算子まで一つの構造として挿入する", async ({ page }) => {
   await page.goto("/");
   const field = await waitForMathfield(page);
@@ -135,6 +207,80 @@ test("ΣとΠは右側の被演算子まで一つの構造として挿入する"
   const value = await field.evaluate((node: HTMLElement & { value: string }) => node.value);
   expect(value).toContain(String.raw`\sum`);
   expect(value.match(/\\placeholder/g)).toHaveLength(3);
+});
+
+test("積分を下限・上限・式・変数の名前で選択できる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`\int_{0}^{1}x^2\,dx`);
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+
+  const selectedLatex = () => field.evaluate((node: HTMLElement & {
+    selection: unknown;
+    getValue: (selection: unknown, format: string) => string;
+  }) => node.getValue(node.selection, "latex"));
+  const cases = [
+    ["積分の下限を選択", "0"],
+    ["積分の上限を選択", "1"],
+    ["積分の式を選択", "x^2"],
+    ["積分の変数を選択", "x"]
+  ] as const;
+  const selectedRanges = new Map<string, [number, number]>();
+  for (const [name, expected] of cases) {
+    await page.getByRole("button", { name }).click();
+    await expect.poll(selectedLatex).toBe(expected);
+    selectedRanges.set(name, await field.evaluate((node: HTMLElement & {
+      selection: { ranges: Array<[number, number]> };
+    }) => node.selection.ranges[0] ?? [0, 0]));
+    await expect(page.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
+  }
+  expect(selectedRanges.get("積分の変数を選択")?.[0])
+    .toBeGreaterThan(selectedRanges.get("積分の式を選択")?.[1] ?? 0);
+  await expect(page.locator(".selection-status")).toContainText("積分・変数");
+});
+
+test("空の積分も名前付き要素を順番に埋められる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "∫", exact: true }).click();
+
+  const fillSelected = async (name: string, value: string) => {
+    await page.getByRole("button", { name }).click();
+    await field.evaluate((node: HTMLElement & { insert: (value: string) => void }, content) => {
+      node.insert(content);
+    }, value);
+  };
+  await fillSelected("積分の下限を選択", "0");
+  await fillSelected("積分の上限を選択", "1");
+  await fillSelected("積分の式を選択", "x^2");
+  await fillSelected("積分の変数を選択", "x");
+  await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value))
+    .toContain(String.raw`\int_0^1x^2\,dx`);
+});
+
+test("シグマを下側条件・上限・総和式の名前で選択できる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`\sum_{i=1}^{n}\,i^2`);
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+
+  const selectedLatex = () => field.evaluate((node: HTMLElement & {
+    selection: unknown;
+    getValue: (selection: unknown, format: string) => string;
+  }) => node.getValue(node.selection, "latex"));
+  const cases = [
+    ["シグマの下側条件を選択", "i=1"],
+    ["シグマの上限を選択", "n"],
+    ["シグマの総和式を選択", "i^2"]
+  ] as const;
+  for (const [name, expected] of cases) {
+    await page.getByRole("button", { name }).click();
+    await expect.poll(selectedLatex).toBe(expected);
+  }
+  await expect(page.locator(".selection-status")).toContainText("シグマ・総和式");
 });
 
 test("複合数式fixtureは数式キャンバス内で崩れずに表示される", async ({ page }) => {

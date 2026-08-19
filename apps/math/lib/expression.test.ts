@@ -43,6 +43,7 @@ describe("MojikumiExpression", () => {
 
   it.each([
     ["plain", "sqrt(π) / 2"],
+    ["readable", "√(π)/2"],
     ["strict", "sqrt(pi)/2"],
     ["latex", String.raw`\frac{\sqrt{\pi}}{2}`],
     ["markdown", `$$\n${String.raw`\frac{\sqrt{\pi}}{2}`}\n$$`],
@@ -84,6 +85,18 @@ describe("MojikumiExpression", () => {
     );
   });
 
+  it("derives Readable only from the Strict β source", () => {
+    const conflictingSources = createExpression({
+      latex: "z^9",
+      plainText: "z to the ninth",
+      strictText: "x^2",
+      spokenText: "z to the ninth",
+      mathMl: ""
+    });
+
+    expect(serializeExpression(conflictingSources, "readable")).toBe("x²");
+  });
+
   it("covers 30 representative formulas at the public adapter boundary", () => {
     expect(expressionFixtures).toHaveLength(30);
 
@@ -96,6 +109,7 @@ describe("MojikumiExpression", () => {
       expect(serializeExpression(adapted, "strict"), fixture.name).toBe(
         fixture.snapshot.strictText
       );
+      expect(serializeExpression(adapted, "readable"), fixture.name).toBeTruthy();
       expect(serializeExpression(adapted, "markdown"), fixture.name).toBe(
         `$$\n${fixture.snapshot.latex}\n$$`
       );

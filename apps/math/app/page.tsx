@@ -48,7 +48,7 @@ export default function HomePage() {
               <span className="use-case-number">01</span>
               <h3>読めるテキストとして</h3>
               <p>ブログ、メモ、チャットなど、数式記法を前提にしない場所へ読みやすいテキストとして貼り付けられます。</p>
-              <p className="use-case-detail">AIへ渡す場合は、説明・解法・証明など目的に合った依頼文をその場で付けられます。</p>
+              <p className="use-case-detail">Readableでは安全な範囲だけUnicode記号へ置き換えます。AIへ渡す場合は目的に合った依頼文も付けられます。</p>
             </article>
             <article>
               <span className="use-case-number">02</span>
