@@ -1,6 +1,6 @@
 # Mojikumi Math Unicode Readable 仕様
 
-Status: Draft 1 / Public beta
+Status: Version 1 / Public beta
 
 ## 目的
 
@@ -33,7 +33,7 @@ Unicode Readableは、ブログ、メモ、チャットなどへ貼り付けた�
 | `sqrt(...)` | `√(...)` | 引数の括弧を維持 |
 | `sum_...`、`prod_...`、`int_...` | `∑_...`、`∏_...`、`∫_...` | 演算子形式の場合だけ |
 | `pi`、`infinity`、`oo` | `π`、`∞` | 独立したStrict βトークンの場合 |
-| 既知のギリシャ文字名 | 対応するUnicode文字 | 独立したStrict βトークンの場合 |
+| `alpha`、`beta`、`gamma`、`delta`、`theta`、`lambda`、`mu`、`sigma`、`phi`、`omega` | 対応するUnicode文字 | 独立したStrict βトークンの場合。`x_alpha`のように添字マーカーへ続く場合も含む |
 | ASCII `-` | 数学用の`−` | 矢印などの長い演算子を置換した後 |
 
 ## 行わない変換

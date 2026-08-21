@@ -32,4 +32,20 @@ describe("parseSemanticStructure", () => {
       .toBe(String.raw`\frac{1}{x}`);
     expect(normalizeSlotLatex(String.raw`{\frac{1}{x}}`)).toBe(String.raw`\frac{1}{x}`);
   });
+
+  it.each([
+    [String.raw`\int^{1}_{0}f(t)\,\mathrm{d}t`, "f(t)", "t"],
+    [String.raw`\int_{a}^{b}g(\theta)\operatorname{d}\theta`, "g(\\theta)", String.raw`\theta`],
+    [String.raw`\int h(x)dx_1`, "h(x)", "x_1"]
+  ])("recognizes common differential typography in %s", (latex, expression, variable) => {
+    const slots = parseSemanticStructure(latex)?.slots;
+    expect(slots?.find((slot) => slot.id === "body")?.latex).toBe(expression);
+    expect(slots?.find((slot) => slot.id === "variable")?.latex).toBe(variable);
+  });
+
+  it("does not absorb a trailing expression into the differential variable", () => {
+    const slots = parseSemanticStructure(String.raw`\int_0^1 x\,dx+1`)?.slots;
+    expect(slots?.find((slot) => slot.id === "variable")?.latex).toBe("");
+    expect(slots?.find((slot) => slot.id === "body")?.latex).toBe(String.raw`x\,dx+1`);
+  });
 });

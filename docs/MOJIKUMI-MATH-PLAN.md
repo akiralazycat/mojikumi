@@ -163,7 +163,7 @@ blue. Keyboard density should stay below the visual expression, not compete with
 - AI action presets without becoming an AI answer service
 - Long-press/disclosure variants for roots, relations, integrals, sums, and arrows
 - Pure fixture coverage for conversion and draft persistence, including 30
-  representative formulas across five categories and 15 ambiguity fixtures for
+  representative formulas across five categories and 17 ambiguity fixtures for
   Unicode Readable
 - Light/dark appearance saved under `mojikumi.math.theme`
 - Installable PWA shell with network-first HTML, cache-first static assets,

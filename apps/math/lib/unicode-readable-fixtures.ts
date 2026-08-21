@@ -91,6 +91,18 @@ export const unicodeReadableFixtures: UnicodeReadableFixture[] = [
     protects: "複合指数は保持し、既知の定数だけを置換"
   },
   {
+    name: "named symbol in a subscript",
+    strict: "x_alpha+theta_2",
+    expected: "x_α+θ₂",
+    protects: "添字マーカーを識別子の一部と誤認せず、記号名だけを置換"
+  },
+  {
+    name: "infinity in a subscript",
+    strict: "lim_(x->oo) f(x)",
+    expected: "lim_(x→∞) f(x)",
+    protects: "添字内でも無限大と矢印の作用範囲を維持"
+  },
+  {
     name: "ambiguous semantic function",
     strict: "sum(k,1,n,k)=n*(n+1)/2",
     expected: "sum(k,1,n,k)=n×(n+1)/2",

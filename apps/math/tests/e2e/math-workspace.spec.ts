@@ -260,6 +260,51 @@ test("空の積分も名前付き要素を順番に埋められる", async ({ pa
     .toContain(String.raw`\int_0^1x^2\,dx`);
 });
 
+test("入れ子の積分では現在位置に最も近い積分の変数を選ぶ", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" })
+    .fill(String.raw`\int_0^1\left(\int_0^x t\,dt\right)\,dx`);
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+
+  await field.evaluate((node: HTMLElement & {
+    getValue: (selection: unknown, format: string) => string;
+    lastOffset: number;
+    position: number;
+  }) => {
+    const starts: number[] = [];
+    let previousOffsetStartsIntegral = false;
+    for (let start = 0; start < node.lastOffset; start += 1) {
+      let startsIntegral = false;
+      for (let end = start + 1; end <= Math.min(node.lastOffset, start + 32); end += 1) {
+        const latex = node.getValue({ ranges: [[start, end]], direction: "forward" }, "latex");
+        if (!/^\{?\\int/u.test(latex)) continue;
+        startsIntegral = true;
+        break;
+      }
+      if (startsIntegral && !previousOffsetStartsIntegral) starts.push(start);
+      previousOffsetStartsIntegral = startsIntegral;
+    }
+    const innerStart = starts.at(-1);
+    if (innerStart === undefined || starts.length < 2) throw new Error("inner integral atom was not found");
+    node.position = innerStart + 1;
+  });
+
+  const selectedLatex = () => field.evaluate((node: HTMLElement & {
+    selection: unknown;
+    getValue: (selection: unknown, format: string) => string;
+  }) => node.getValue(node.selection, "latex"));
+  await page.getByRole("button", { name: "積分の変数を選択" }).click();
+  await expect.poll(selectedLatex).toBe("t");
+
+  await field.evaluate((node: HTMLElement & { lastOffset: number; position: number }) => {
+    node.position = node.lastOffset;
+  });
+  await page.getByRole("button", { name: "積分の変数を選択" }).click();
+  await expect.poll(selectedLatex).toBe("x");
+});
+
 test("シグマを下側条件・上限・総和式の名前で選択できる", async ({ page }) => {
   await page.goto("/");
   const field = await waitForMathfield(page);

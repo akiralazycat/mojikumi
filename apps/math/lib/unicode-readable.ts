@@ -42,6 +42,13 @@ function mapDigits(value: string, table: Record<string, string>) {
   return Array.from(value, (digit) => table[digit] ?? digit).join("");
 }
 
+function replaceNamedToken(value: string, name: string, symbol: string) {
+  return value.replace(
+    new RegExp(`(^|[^A-Za-z0-9])${name}(?![A-Za-z0-9])`, "g"),
+    (_, prefix: string) => `${prefix}${symbol}`
+  );
+}
+
 /**
  * Derive a display-oriented Unicode form from Strict β.
  *
@@ -64,12 +71,13 @@ export function toUnicodeReadable(strictText: string) {
     .replace(/\bsum(?=\s*_)/g, "∑")
     .replace(/\bprod(?=\s*_)/g, "∏")
     .replace(/\bint(?=\s*_)/g, "∫")
-    .replace(/\b(?:infinity|oo)\b/g, "∞")
     .replace(/\^([0-9]+)/g, (_, digits: string) => mapDigits(digits, superscriptDigits))
     .replace(/_([0-9]+)/g, (_, digits: string) => mapDigits(digits, subscriptDigits));
 
+  readable = replaceNamedToken(readable, "infinity", "∞");
+  readable = replaceNamedToken(readable, "oo", "∞");
   for (const [name, symbol] of Object.entries(namedSymbols)) {
-    readable = readable.replace(new RegExp(`\\b${name}\\b`, "g"), symbol);
+    readable = replaceNamedToken(readable, name, symbol);
   }
 
   return readable

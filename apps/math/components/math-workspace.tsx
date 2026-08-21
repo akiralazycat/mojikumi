@@ -57,6 +57,16 @@ type SelectionSummary = {
 
 type SemanticTarget = `${SemanticStructureKind}:${SemanticSlot["id"]}`;
 
+type SemanticStructureCandidate = {
+  selection: MathSelection;
+  structure: SemanticStructure;
+  start: number;
+  end: number;
+  span: number;
+  filledSlots: number;
+  contentLength: number;
+};
+
 type KeyboardGroup = "basic" | "algebra" | "calculus" | "greek";
 type EditorMode = "visual" | "latex";
 type MathKey = {
@@ -264,6 +274,10 @@ function readValue(field: MathfieldElement | null, format: OutputFormat, fallbac
 export function MathWorkspace() {
   const fieldRef = useRef<MathfieldElement | null>(null);
   const selectionHistoryRef = useRef<MathSelection[]>([]);
+  const semanticStructureCacheRef = useRef(new Map<SemanticStructureKind, {
+    latex: string;
+    candidates: SemanticStructureCandidate[];
+  }>());
   const protectedAnnouncementUntilRef = useRef(0);
   const longPressTimerRef = useRef<number | null>(null);
   const suppressNextClickRef = useRef(false);
@@ -608,30 +622,94 @@ export function MathWorkspace() {
     announceSelection(`${summary.label}へ戻りました。`);
   }
 
-  function findSemanticStructure(field: MathfieldElement, kind: SemanticStructureKind, slotId: SemanticSlot["id"]) {
-    const [selectionStart, selectionEnd] = field.selection.ranges[0] ?? [field.position, field.position];
-    const currentStart = Math.min(selectionStart, selectionEnd);
-    const currentEnd = Math.max(selectionStart, selectionEnd);
-    let best: { selection: MathSelection; structure: SemanticStructure; score: number } | null = null;
+  function getSemanticStructureCandidates(field: MathfieldElement, kind: SemanticStructureKind) {
+    const cached = semanticStructureCacheRef.current.get(kind);
+    if (cached?.latex === field.value) return cached.candidates;
+    const structureStarts: number[] = [];
+    let previousOffsetStartsStructure = false;
+    for (let start = 0; start < field.lastOffset; start += 1) {
+      let startsStructure = false;
+      const lookaheadEnd = Math.min(field.lastOffset, start + 32);
+      for (let end = start + 1; end <= lookaheadEnd; end += 1) {
+        const preview = field.getValue({ ranges: [[start, end]], direction: "forward" }, "latex");
+        if (parseSemanticStructure(preview)?.kind !== kind) continue;
+        startsStructure = true;
+        break;
+      }
+      if (startsStructure && !previousOffsetStartsStructure) structureStarts.push(start);
+      previousOffsetStartsStructure = startsStructure;
+    }
+    const candidateStarts = structureStarts.length > 0
+      ? structureStarts
+      : Array.from({ length: field.lastOffset }, (_, index) => index);
+    const candidates: SemanticStructureCandidate[] = [];
     let checks = 0;
-    for (let span = 1; span <= field.lastOffset && checks < 6000; span += 1) {
-      for (let start = 0; start + span <= field.lastOffset && checks < 6000; start += 1) {
+    for (const start of candidateStarts) {
+      for (let end = start + 1; end <= field.lastOffset && checks < 12_000; end += 1) {
         checks += 1;
-        const selection: MathSelection = { ranges: [[start, start + span]], direction: "forward" };
+        const selection: MathSelection = { ranges: [[start, end]], direction: "forward" };
         const structure = parseSemanticStructure(field.getValue(selection, "latex"));
-        if (structure?.kind !== kind || !structure.slots.some((slot) => slot.id === slotId && slot.latex)) continue;
-        const containsCurrent = start <= currentStart && start + span >= currentEnd;
-        const distance = containsCurrent
-          ? 0
-          : Math.min(Math.abs(start - currentEnd), Math.abs(start + span - currentStart));
+        if (structure?.kind !== kind) continue;
         const filledSlots = structure.slots.filter((slot) => normalizeSlotLatex(slot.latex)).length;
         const contentLength = structure.slots.reduce(
           (total, slot) => total + normalizeSlotLatex(slot.latex).length,
           0
         );
-        const score = (containsCurrent ? 1_000_000 : 0) - distance * 10_000 + filledSlots * 1_000 + contentLength;
-        if (!best || score > best.score) best = { selection, structure, score };
+        candidates.push({
+          selection,
+          structure,
+          start,
+          end,
+          span: end - start,
+          filledSlots,
+          contentLength
+        });
       }
+    }
+    semanticStructureCacheRef.current.set(kind, { latex: field.value, candidates });
+    return candidates;
+  }
+
+  function findSemanticStructure(field: MathfieldElement, kind: SemanticStructureKind, slotId: SemanticSlot["id"]) {
+    const [selectionStart, selectionEnd] = field.selection.ranges[0] ?? [field.position, field.position];
+    const currentStart = Math.min(selectionStart, selectionEnd);
+    const currentEnd = Math.max(selectionStart, selectionEnd);
+    type RankedCandidate = SemanticStructureCandidate & {
+      containsCurrent: boolean;
+      distance: number;
+      boundaryAffinity: number;
+      startDistance: number;
+    };
+    const isBetterCandidate = (candidate: RankedCandidate, best: RankedCandidate | null) => {
+      if (!best) return true;
+      if (candidate.containsCurrent !== best.containsCurrent) return candidate.containsCurrent;
+      if (candidate.distance !== best.distance) return candidate.distance < best.distance;
+      if (candidate.boundaryAffinity !== best.boundaryAffinity) {
+        return candidate.boundaryAffinity > best.boundaryAffinity;
+      }
+      if (candidate.startDistance !== best.startDistance) return candidate.startDistance < best.startDistance;
+      if (candidate.filledSlots !== best.filledSlots) return candidate.filledSlots > best.filledSlots;
+      if (candidate.contentLength !== best.contentLength) return candidate.contentLength > best.contentLength;
+      return candidate.span < best.span;
+    };
+    let best: RankedCandidate | null = null;
+    for (const base of getSemanticStructureCandidates(field, kind)) {
+      if (!base.structure.slots.some(
+        (slot) => slot.id === slotId && normalizeSlotLatex(slot.latex)
+      )) continue;
+      const { start, end } = base;
+      const containsCurrent = start <= currentStart && end >= currentEnd;
+      const distance = containsCurrent
+        ? 0
+        : Math.min(Math.abs(start - currentEnd), Math.abs(end - currentStart));
+      const candidate = {
+        ...base,
+        containsCurrent,
+        distance,
+        boundaryAffinity: currentStart === currentEnd && end === currentStart ? 1 : 0,
+        startDistance: start <= currentStart ? currentStart - start : start - currentEnd
+      };
+      if (isBetterCandidate(candidate, best)) best = candidate;
     }
     return best ? { selection: best.selection, structure: best.structure } : null;
   }
@@ -652,22 +730,17 @@ export function MathWorkspace() {
       .filter((candidate) => normalizeSlotLatex(candidate.latex) === target)
       .sort((left, right) => traversalOrder.indexOf(left.id) - traversalOrder.indexOf(right.id));
     const duplicateIndex = Math.max(0, sameValueSlots.findIndex((candidate) => candidate.id === slot.id));
-    const matches: MathSelection[] = [];
+    let distinct: MathSelection[] = [];
     let checks = 0;
     for (let span = 1; span <= structureEnd - structureStart && checks < 4000; span += 1) {
+      const matches: MathSelection[] = [];
       for (let start = structureStart; start + span <= structureEnd && checks < 4000; start += 1) {
         checks += 1;
         const selection: MathSelection = { ranges: [[start, start + span]], direction: "forward" };
         if (normalizeSlotLatex(field.getValue(selection, "latex")) === target) matches.push(selection);
       }
-    }
-    const distinct = matches
-      .sort((left, right) => {
-        const [leftStart, leftEnd] = left.ranges[0] ?? [0, 0];
-        const [rightStart, rightEnd] = right.ranges[0] ?? [0, 0];
-        return (leftEnd - leftStart) - (rightEnd - rightStart);
-      })
-      .reduce<MathSelection[]>((result, candidate) => {
+      if (matches.length === 0) continue;
+      distinct = matches.reduce<MathSelection[]>((result, candidate) => {
         const [start, end] = candidate.ranges[0] ?? [0, 0];
         const overlaps = result.some((existing) => {
           const [existingStart, existingEnd] = existing.ranges[0] ?? [0, 0];
@@ -675,8 +748,10 @@ export function MathWorkspace() {
         });
         if (!overlaps) result.push(candidate);
         return result;
-      }, [])
-      .sort((left, right) => (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0));
+      }, []);
+      if (slot.id === "variable" || distinct.length > duplicateIndex) break;
+    }
+    distinct.sort((left, right) => (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0));
     if (slot.id === "variable") return distinct.at(-1) ?? null;
     return distinct[duplicateIndex] ?? distinct[0] ?? null;
   }
@@ -822,10 +897,15 @@ export function MathWorkspace() {
               <button type="button" onClick={selectOuterStructure}>外側へ</button>
             </div>
             {(hasIntegral || hasSum) && (
-              <div className="semantic-navigator" aria-label="数式構造の要素">
+              <div className="semantic-navigator" role="group" aria-label="数式構造の要素">
                 {([hasIntegral && "integral", hasSum && "sum"].filter(Boolean) as SemanticStructureKind[]).map((kind) => (
-                  <div className="semantic-navigator-row" key={kind}>
-                    <span>{kind === "integral" ? "積分" : "Σ / Π"}</span>
+                  <div
+                    className="semantic-navigator-row"
+                    key={kind}
+                    role="group"
+                    aria-label={kind === "integral" ? "積分の要素" : "シグマ・総乗の要素"}
+                  >
+                    <span aria-hidden="true">{kind === "integral" ? "積分" : "Σ / Π"}</span>
                     <div>
                       {semanticSlotControls[kind].map((slot) => (
                         <button

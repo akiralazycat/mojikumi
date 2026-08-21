@@ -6,7 +6,7 @@ Use the protected Vercel Preview before promoting a deployment to the existing
 ## Automated gate
 
 - [x] Math typecheck and production static export
-- [x] 139 repository unit tests
+- [x] Repository unit suite, including Unicode ambiguity and semantic-structure fixtures
 - [x] Playwright flows at desktop, 390 px, and 320 px
 - [x] axe WCAG 2 A/AA scan (MathLive composite-editor false positive documented in the test)
 - [x] PWA registration, first-visit precache, offline reload, and local draft recovery

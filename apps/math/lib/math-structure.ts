@@ -80,14 +80,9 @@ function stripLeadingSpacing(source: string) {
 
 function parseIntegralBody(source: string) {
   const body = stripLeadingSpacing(source);
-  const marker = body.lastIndexOf(String.raw`\,d`);
-  if (marker >= 0) {
-    return {
-      expression: body.slice(0, marker).trim(),
-      variable: stripLeadingSpacing(body.slice(marker + 3))
-    };
-  }
-  const differential = body.match(/^(.*)\s+d\s*(.+)$/u);
+  const differential = body.match(
+    /^(.*?)(?:\\[,!;:]\s*)?(?:d|\\mathrm\s*\{\s*d\s*\}|\\operatorname\s*\{\s*d\s*\})\s*((?:\\placeholder(?:\[[^\]]*\])?\{[^{}]*\}|\\[a-zA-Z]+|[a-zA-Z])(?:_\{[^{}]*\}|_[a-zA-Z0-9]+)?)\s*$/u
+  );
   if (differential) {
     return { expression: differential[1]?.trim() ?? "", variable: differential[2]?.trim() ?? "" };
   }
