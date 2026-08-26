@@ -8,6 +8,13 @@ import {
   type AiAction,
   type OutputKind
 } from "../lib/expression";
+import {
+  normalizeSlotLatex,
+  parseSemanticStructure,
+  type SemanticSlot,
+  type SemanticStructure,
+  type SemanticStructureKind
+} from "../lib/math-structure";
 
 type OutputFormat =
   | "latex"
@@ -20,8 +27,14 @@ type MathfieldElement = HTMLElement & {
   value: string;
   smartFence: boolean;
   selectionIsCollapsed: boolean;
+  selection: Readonly<MathSelection>;
+  position: number;
+  lastOffset: number;
   mathVirtualKeyboardPolicy: "auto" | "manual" | "sandboxed";
-  getValue: (format?: OutputFormat) => string;
+  getValue: {
+    (format?: OutputFormat): string;
+    (selection: MathSelection, format?: OutputFormat): string;
+  };
   executeCommand: (command: string | [string, ...unknown[]]) => boolean;
   insert: (
     value: string,
@@ -30,6 +43,28 @@ type MathfieldElement = HTMLElement & {
       selectionMode?: "placeholder" | "after" | "before" | "item";
     }
   ) => boolean;
+};
+
+type MathSelection = {
+  ranges: Array<[number, number]>;
+  direction?: "forward" | "backward" | "none";
+};
+
+type SelectionSummary = {
+  kind: "caret" | "element" | "structure";
+  label: string;
+};
+
+type SemanticTarget = `${SemanticStructureKind}:${SemanticSlot["id"]}`;
+
+type SemanticStructureCandidate = {
+  selection: MathSelection;
+  structure: SemanticStructure;
+  start: number;
+  end: number;
+  span: number;
+  filledSlots: number;
+  contentLength: number;
 };
 
 type KeyboardGroup = "basic" | "algebra" | "calculus" | "greek";
@@ -187,6 +222,7 @@ const keys: Record<KeyboardGroup, MathKey[]> = {
 const outputLabels: Record<OutputKind, string> = {
   ai: "AI用テキスト",
   plain: "テキスト",
+  readable: "Readable",
   strict: "Strict β",
   latex: "LaTeX",
   markdown: "Markdown",
@@ -194,7 +230,7 @@ const outputLabels: Record<OutputKind, string> = {
   embed: "Embed"
 };
 
-const outputKinds = ["plain", "strict", "latex", "markdown", "mathml", "embed"] as const;
+const outputKinds = ["plain", "readable", "strict", "latex", "markdown", "mathml", "embed"] as const;
 type VisibleOutputKind = (typeof outputKinds)[number];
 
 const aiActionLabels: Record<AiAction, string> = {
@@ -213,6 +249,20 @@ const keyboardLabels: Record<KeyboardGroup, string> = {
   greek: "Greek"
 };
 
+const semanticSlotControls: Record<SemanticStructureKind, Array<{ id: SemanticSlot["id"]; label: string }>> = {
+  integral: [
+    { id: "lower", label: "下限" },
+    { id: "upper", label: "上限" },
+    { id: "body", label: "式" },
+    { id: "variable", label: "変数" }
+  ],
+  sum: [
+    { id: "lower", label: "下側条件" },
+    { id: "upper", label: "上限" },
+    { id: "body", label: "総和式" }
+  ]
+};
+
 function readValue(field: MathfieldElement | null, format: OutputFormat, fallback: string) {
   try {
     return field?.getValue(format) || fallback;
@@ -223,6 +273,12 @@ function readValue(field: MathfieldElement | null, format: OutputFormat, fallbac
 
 export function MathWorkspace() {
   const fieldRef = useRef<MathfieldElement | null>(null);
+  const selectionHistoryRef = useRef<MathSelection[]>([]);
+  const semanticStructureCacheRef = useRef(new Map<SemanticStructureKind, {
+    latex: string;
+    candidates: SemanticStructureCandidate[];
+  }>());
+  const protectedAnnouncementUntilRef = useRef(0);
   const longPressTimerRef = useRef<number | null>(null);
   const suppressNextClickRef = useRef(false);
   const variantTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -239,6 +295,12 @@ export function MathWorkspace() {
   const [announcement, setAnnouncement] = useState("");
   const [ready, setReady] = useState(false);
   const [saveState, setSaveState] = useState<"loading" | "saving" | "saved" | "unavailable">("loading");
+  const [selectionSummary, setSelectionSummary] = useState<SelectionSummary>({
+    kind: "caret",
+    label: "カーソル"
+  });
+  const [selectionDepth, setSelectionDepth] = useState(0);
+  const [semanticTarget, setSemanticTarget] = useState<SemanticTarget | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -279,7 +341,12 @@ export function MathWorkspace() {
     labelKeyboardSink();
     const observer = new MutationObserver(labelKeyboardSink);
     observer.observe(keyboardSink, { attributes: true, attributeFilter: ["aria-label"] });
-    return () => observer.disconnect();
+    const handleSelectionChange = () => syncSelectionSummary(field);
+    field.addEventListener("selection-change", handleSelectionChange);
+    return () => {
+      observer.disconnect();
+      field.removeEventListener("selection-change", handleSelectionChange);
+    };
   }, [ready]);
 
   useEffect(() => {
@@ -289,7 +356,9 @@ export function MathWorkspace() {
       try {
         saveDraft(window.localStorage, latex);
         setSaveState("saved");
-        setAnnouncement("この端末に下書きを保存しました。");
+        if (Date.now() >= protectedAnnouncementUntilRef.current) {
+          setAnnouncement("この端末に下書きを保存しました。");
+        }
       } catch {
         setSaveState("unavailable");
         setAnnouncement("端末内保存を利用できません。");
@@ -315,6 +384,8 @@ export function MathWorkspace() {
   const serializedKind = outputKind === "plain" && aiPromptEnabled ? "ai" : outputKind;
   const output = serializeExpression(expression, serializedKind, { aiAction });
   const hasExpression = latex.trim().length > 0;
+  const hasIntegral = /\\(?:iiint|iint|oint|int)(?=[^a-zA-Z]|$)/u.test(latex);
+  const hasSum = /\\(?:sum|prod)(?=[^a-zA-Z]|$)/u.test(latex);
   const copyLabel = outputKind === "plain" && aiPromptEnabled
     ? "AI用テキスト"
     : outputLabels[outputKind];
@@ -343,6 +414,7 @@ export function MathWorkspace() {
     if (!field) return;
     field.focus();
     field.insert(value, { selectionMode: "placeholder" });
+    clearSelectionHistory();
     setLatex(field.value);
     navigator.vibrate?.(8);
   }
@@ -361,6 +433,7 @@ export function MathWorkspace() {
       insertionMode: "replaceSelection",
       selectionMode: "placeholder"
     });
+    clearSelectionHistory();
     setLatex(field.value);
     navigator.vibrate?.(8);
   }
@@ -416,7 +489,294 @@ export function MathWorkspace() {
     if (!field) return;
     field.focus();
     field.executeCommand(command);
+    clearSelectionHistory();
     setLatex(field.value);
+  }
+
+  function copySelection(selection: Readonly<MathSelection>): MathSelection {
+    const copied: MathSelection = {
+      ranges: selection.ranges.map(([start, end]) => [start, end])
+    };
+    if (selection.direction) copied.direction = selection.direction;
+    return copied;
+  }
+
+  function clearSelectionHistory() {
+    selectionHistoryRef.current = [];
+    setSelectionDepth(0);
+    setSemanticTarget(null);
+  }
+
+  function announceSelection(message: string) {
+    protectedAnnouncementUntilRef.current = Date.now() + 1000;
+    setAnnouncement(message);
+  }
+
+  function describeSelectedLatex(selectedLatex: string): SelectionSummary {
+    const normalized = selectedLatex.trim().replace(/^\{\s*/, "").trim();
+    if (/^\\(?:d?frac|tfrac)\b/.test(normalized)) {
+      return { kind: "structure", label: "分数全体" };
+    }
+    if (/^\\(?:i{1,3}nt|oint)(?=[^a-zA-Z]|$)/.test(normalized)) {
+      return { kind: "structure", label: "積分全体" };
+    }
+    if (/^\\(?:sum|prod)(?=[^a-zA-Z]|$)/.test(normalized)) {
+      return { kind: "structure", label: "総和・総乗全体" };
+    }
+    if (/^\\sqrt\b/.test(normalized)) return { kind: "structure", label: "根号全体" };
+    if (/^\\left\b/.test(normalized)) return { kind: "structure", label: "括弧全体" };
+    return { kind: "element", label: "現在の要素" };
+  }
+
+  function describeSelection(field: MathfieldElement): SelectionSummary {
+    if (field.selectionIsCollapsed) return { kind: "caret", label: "カーソル" };
+    return describeSelectedLatex(field.getValue(copySelection(field.selection), "latex"));
+  }
+
+  function syncSelectionSummary(field = fieldRef.current) {
+    if (!field) return;
+    setSelectionSummary(describeSelection(field));
+  }
+
+  function moveWithinStructure(command: "moveUp" | "moveDown", label: string) {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.focus();
+    const moved = field.executeCommand(command);
+    clearSelectionHistory();
+    syncSelectionSummary(field);
+    announceSelection(moved ? `${label}へ移動しました。` : `${label}はありません。`);
+  }
+
+  function selectCurrentElement() {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.focus();
+    if (!field.selectionIsCollapsed) field.position = field.selection.ranges[0]?.[1] ?? field.position;
+    field.executeCommand("moveToGroupStart");
+    const start = field.position;
+    field.executeCommand("moveToGroupEnd");
+    const end = field.position;
+    if (start === end) {
+      field.executeCommand("selectGroup");
+    } else {
+      field.selection = { ranges: [[start, end]], direction: "forward" };
+    }
+    clearSelectionHistory();
+    const summary = describeSelection(field);
+    setSelectionSummary(summary);
+    announceSelection(`${summary.label}を選択しました。`);
+  }
+
+  function selectOuterStructure() {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.focus();
+    const previous = copySelection(field.selection);
+    const [selectionStart, selectionEnd] = previous.ranges[0] ?? [field.position, field.position];
+    const start = Math.min(selectionStart, selectionEnd);
+    const end = Math.max(selectionStart, selectionEnd);
+    const currentSummary = describeSelection(field);
+    const minimumSpan = Math.max(1, end - start) + (currentSummary.kind === "structure" ? 1 : 0);
+    let candidate: MathSelection | null = null;
+    let candidateSummary: SelectionSummary | null = null;
+    let checks = 0;
+    for (let span = minimumSpan; span <= field.lastOffset && checks < 6000; span += 1) {
+      const firstStart = Math.max(0, end - span);
+      const lastStart = Math.min(start, field.lastOffset - span);
+      for (let candidateStart = lastStart; candidateStart >= firstStart; candidateStart -= 1) {
+        checks += 1;
+        const inspected: MathSelection = {
+          ranges: [[candidateStart, candidateStart + span]],
+          direction: "forward"
+        };
+        const inspectedSummary = describeSelectedLatex(field.getValue(inspected, "latex"));
+        if (inspectedSummary.kind !== "structure") continue;
+        candidate = inspected;
+        candidateSummary = inspectedSummary;
+        break;
+      }
+      if (candidate) break;
+    }
+    if (!candidate || candidateSummary?.kind !== "structure") {
+      field.selection = previous;
+      announceSelection("これ以上外側の構造はありません。");
+      return;
+    }
+    selectionHistoryRef.current.push(previous);
+    setSelectionDepth(selectionHistoryRef.current.length);
+    field.selection = candidate;
+    setSelectionSummary(candidateSummary);
+    announceSelection(`${candidateSummary.label}へ選択を広げました。`);
+  }
+
+  function selectInnerStructure() {
+    const field = fieldRef.current;
+    const previous = selectionHistoryRef.current.pop();
+    if (!field || !previous) return;
+    field.focus();
+    field.selection = previous;
+    setSelectionDepth(selectionHistoryRef.current.length);
+    const summary = describeSelection(field);
+    setSelectionSummary(summary);
+    announceSelection(`${summary.label}へ戻りました。`);
+  }
+
+  function getSemanticStructureCandidates(field: MathfieldElement, kind: SemanticStructureKind) {
+    const cached = semanticStructureCacheRef.current.get(kind);
+    if (cached?.latex === field.value) return cached.candidates;
+    const structureStarts: number[] = [];
+    let previousOffsetStartsStructure = false;
+    for (let start = 0; start < field.lastOffset; start += 1) {
+      let startsStructure = false;
+      const lookaheadEnd = Math.min(field.lastOffset, start + 32);
+      for (let end = start + 1; end <= lookaheadEnd; end += 1) {
+        const preview = field.getValue({ ranges: [[start, end]], direction: "forward" }, "latex");
+        if (parseSemanticStructure(preview)?.kind !== kind) continue;
+        startsStructure = true;
+        break;
+      }
+      if (startsStructure && !previousOffsetStartsStructure) structureStarts.push(start);
+      previousOffsetStartsStructure = startsStructure;
+    }
+    const candidateStarts = structureStarts.length > 0
+      ? structureStarts
+      : Array.from({ length: field.lastOffset }, (_, index) => index);
+    const candidates: SemanticStructureCandidate[] = [];
+    let checks = 0;
+    for (const start of candidateStarts) {
+      for (let end = start + 1; end <= field.lastOffset && checks < 12_000; end += 1) {
+        checks += 1;
+        const selection: MathSelection = { ranges: [[start, end]], direction: "forward" };
+        const structure = parseSemanticStructure(field.getValue(selection, "latex"));
+        if (structure?.kind !== kind) continue;
+        const filledSlots = structure.slots.filter((slot) => normalizeSlotLatex(slot.latex)).length;
+        const contentLength = structure.slots.reduce(
+          (total, slot) => total + normalizeSlotLatex(slot.latex).length,
+          0
+        );
+        candidates.push({
+          selection,
+          structure,
+          start,
+          end,
+          span: end - start,
+          filledSlots,
+          contentLength
+        });
+      }
+    }
+    semanticStructureCacheRef.current.set(kind, { latex: field.value, candidates });
+    return candidates;
+  }
+
+  function findSemanticStructure(field: MathfieldElement, kind: SemanticStructureKind, slotId: SemanticSlot["id"]) {
+    const [selectionStart, selectionEnd] = field.selection.ranges[0] ?? [field.position, field.position];
+    const currentStart = Math.min(selectionStart, selectionEnd);
+    const currentEnd = Math.max(selectionStart, selectionEnd);
+    type RankedCandidate = SemanticStructureCandidate & {
+      containsCurrent: boolean;
+      distance: number;
+      boundaryAffinity: number;
+      startDistance: number;
+    };
+    const isBetterCandidate = (candidate: RankedCandidate, best: RankedCandidate | null) => {
+      if (!best) return true;
+      if (candidate.containsCurrent !== best.containsCurrent) return candidate.containsCurrent;
+      if (candidate.distance !== best.distance) return candidate.distance < best.distance;
+      if (candidate.boundaryAffinity !== best.boundaryAffinity) {
+        return candidate.boundaryAffinity > best.boundaryAffinity;
+      }
+      if (candidate.startDistance !== best.startDistance) return candidate.startDistance < best.startDistance;
+      if (candidate.filledSlots !== best.filledSlots) return candidate.filledSlots > best.filledSlots;
+      if (candidate.contentLength !== best.contentLength) return candidate.contentLength > best.contentLength;
+      return candidate.span < best.span;
+    };
+    let best: RankedCandidate | null = null;
+    for (const base of getSemanticStructureCandidates(field, kind)) {
+      if (!base.structure.slots.some(
+        (slot) => slot.id === slotId && normalizeSlotLatex(slot.latex)
+      )) continue;
+      const { start, end } = base;
+      const containsCurrent = start <= currentStart && end >= currentEnd;
+      const distance = containsCurrent
+        ? 0
+        : Math.min(Math.abs(start - currentEnd), Math.abs(end - currentStart));
+      const candidate = {
+        ...base,
+        containsCurrent,
+        distance,
+        boundaryAffinity: currentStart === currentEnd && end === currentStart ? 1 : 0,
+        startDistance: start <= currentStart ? currentStart - start : start - currentEnd
+      };
+      if (isBetterCandidate(candidate, best)) best = candidate;
+    }
+    return best ? { selection: best.selection, structure: best.structure } : null;
+  }
+
+  function findSlotSelection(
+    field: MathfieldElement,
+    structureSelection: MathSelection,
+    structure: SemanticStructure,
+    slot: SemanticSlot
+  ) {
+    const [structureStart, structureEnd] = structureSelection.ranges[0] ?? [0, field.lastOffset];
+    const target = normalizeSlotLatex(slot.latex);
+    if (!target) return null;
+    const traversalOrder = structure.kind === "integral"
+      ? ["upper", "lower", "body", "variable"]
+      : ["upper", "lower", "body"];
+    const sameValueSlots = structure.slots
+      .filter((candidate) => normalizeSlotLatex(candidate.latex) === target)
+      .sort((left, right) => traversalOrder.indexOf(left.id) - traversalOrder.indexOf(right.id));
+    const duplicateIndex = Math.max(0, sameValueSlots.findIndex((candidate) => candidate.id === slot.id));
+    let distinct: MathSelection[] = [];
+    let checks = 0;
+    for (let span = 1; span <= structureEnd - structureStart && checks < 4000; span += 1) {
+      const matches: MathSelection[] = [];
+      for (let start = structureStart; start + span <= structureEnd && checks < 4000; start += 1) {
+        checks += 1;
+        const selection: MathSelection = { ranges: [[start, start + span]], direction: "forward" };
+        if (normalizeSlotLatex(field.getValue(selection, "latex")) === target) matches.push(selection);
+      }
+      if (matches.length === 0) continue;
+      distinct = matches.reduce<MathSelection[]>((result, candidate) => {
+        const [start, end] = candidate.ranges[0] ?? [0, 0];
+        const overlaps = result.some((existing) => {
+          const [existingStart, existingEnd] = existing.ranges[0] ?? [0, 0];
+          return start < existingEnd && end > existingStart;
+        });
+        if (!overlaps) result.push(candidate);
+        return result;
+      }, []);
+      if (slot.id === "variable" || distinct.length > duplicateIndex) break;
+    }
+    distinct.sort((left, right) => (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0));
+    if (slot.id === "variable") return distinct.at(-1) ?? null;
+    return distinct[duplicateIndex] ?? distinct[0] ?? null;
+  }
+
+  function selectSemanticSlot(kind: SemanticStructureKind, slotId: SemanticSlot["id"]) {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.focus();
+    const found = findSemanticStructure(field, kind, slotId);
+    const slot = found?.structure.slots.find((candidate) => candidate.id === slotId);
+    if (!found || !slot) {
+      announceSelection(kind === "integral" ? "選択できる積分要素がありません。" : "選択できるシグマ要素がありません。");
+      return;
+    }
+    const selection = findSlotSelection(field, found.selection, found.structure, slot);
+    if (!selection) {
+      announceSelection(`${slot.label}はまだ入力されていません。`);
+      return;
+    }
+    clearSelectionHistory();
+    field.selection = selection;
+    const label = `${found.structure.label}・${slot.label}`;
+    setSelectionSummary({ kind: "element", label });
+    setSemanticTarget(`${kind}:${slot.id}`);
+    announceSelection(`${label}を選択しました。`);
   }
 
   function updateLatexSource(value: string) {
@@ -432,6 +792,7 @@ export function MathWorkspace() {
       setSaveState("unavailable");
     }
     updateLatexSource("");
+    clearSelectionHistory();
     setEditorMode("visual");
     setAnnouncement("新しい数式を開始しました。");
     window.setTimeout(() => fieldRef.current?.focus());
@@ -510,11 +871,59 @@ export function MathWorkspace() {
             aria-label="数式を入力"
             math-virtual-keyboard-policy="manual"
             onInput={(event) => {
+              clearSelectionHistory();
               setLatex((event.currentTarget as MathfieldElement).value);
             }}
           >
             {latex}
           </math-field>
+        )}
+        {ready && hasExpression && editorMode === "visual" && (
+          <div
+            className={`structure-navigator structure-navigator-${selectionSummary.kind}`}
+            role="group"
+            aria-label="数式内の要素を選択"
+          >
+            <span className="selection-status" aria-hidden="true">
+              <span className="selection-status-dot" />
+              {selectionSummary.label}
+              {selectionDepth > 0 && <small>外側 +{selectionDepth}</small>}
+            </span>
+            <div className="structure-navigator-actions">
+              <button type="button" onClick={() => moveWithinStructure("moveUp", "上の要素")}>上へ</button>
+              <button type="button" onClick={() => moveWithinStructure("moveDown", "下の要素")}>下へ</button>
+              <button type="button" onClick={selectCurrentElement}>要素を選択</button>
+              <button type="button" disabled={selectionDepth === 0} onClick={selectInnerStructure}>内側へ</button>
+              <button type="button" onClick={selectOuterStructure}>外側へ</button>
+            </div>
+            {(hasIntegral || hasSum) && (
+              <div className="semantic-navigator" role="group" aria-label="数式構造の要素">
+                {([hasIntegral && "integral", hasSum && "sum"].filter(Boolean) as SemanticStructureKind[]).map((kind) => (
+                  <div
+                    className="semantic-navigator-row"
+                    key={kind}
+                    role="group"
+                    aria-label={kind === "integral" ? "積分の要素" : "シグマ・総乗の要素"}
+                  >
+                    <span aria-hidden="true">{kind === "integral" ? "積分" : "Σ / Π"}</span>
+                    <div>
+                      {semanticSlotControls[kind].map((slot) => (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          aria-label={`${kind === "integral" ? "積分" : "シグマ"}の${slot.label}を選択`}
+                          aria-pressed={semanticTarget === `${kind}:${slot.id}`}
+                          onClick={() => selectSemanticSlot(kind, slot.id)}
+                        >
+                          {slot.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {editorMode === "latex" && (
           <textarea
@@ -718,6 +1127,9 @@ export function MathWorkspace() {
               )}
               {outputKind === "strict" && (
                 <p className="strict-note">ASCIIMathを基礎にした暫定仕様です。正式なStrict文法はβ期間中に策定します。</p>
+              )}
+              {outputKind === "readable" && (
+                <p className="readable-note">Strict βから安全な記号置換だけで生成する表示・共有向けのUnicode表現です。括弧と分数の「/」は保持します。</p>
               )}
               {!expression.isComplete && (
                 <p className="output-warning" id="output-warning">未入力の欄があります。コピー前に数式を確認してください。</p>

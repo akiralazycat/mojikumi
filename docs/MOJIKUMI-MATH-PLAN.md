@@ -155,14 +155,16 @@ blue. Keyboard density should stay below the visual expression, not compete with
 ### Current implementation
 
 - Versioned, app-local `MojikumiExpression` adapter; engine payload stays private
-- Readable, Strict β, AI prompt, LaTeX, Markdown, MathML, and Embed serializers
+- Plain text, Strict β-derived Unicode Readable, Strict β, AI prompt, LaTeX,
+  Markdown, MathML, and Embed serializers
 - Incomplete-placeholder detection and safe HTML/MathML fallback escaping
 - Visual and LaTeX source editing, Undo/Redo, placeholder movement
 - Namespaced, versioned, device-local draft recovery with malformed-data guards
 - AI action presets without becoming an AI answer service
 - Long-press/disclosure variants for roots, relations, integrals, sums, and arrows
 - Pure fixture coverage for conversion and draft persistence, including 30
-  representative formulas across five categories
+  representative formulas across five categories and 17 ambiguity fixtures for
+  Unicode Readable
 - Light/dark appearance saved under `mojikumi.math.theme`
 - Installable PWA shell with network-first HTML, cache-first static assets,
   offline editing/conversion, and versioned cache cleanup
@@ -192,7 +194,8 @@ Exit: median time from open to copied quadratic/integral expression is under
 ### Milestone 2 — conversion quality (2–3 weeks)
 
 - Versioned `MojikumiExpression` adapter
-- Readable and Strict Plain as separate products
+- Expand the conservative Unicode Readable allowlist only alongside ambiguity fixtures
+- Define and version the Mojikumi-owned Strict grammar before removing β
 - AI action presets: Explain, Solve, Prove, Simplify, Differentiate, Integrate
 - Japanese and English spoken/readable output review
 - Import from LaTeX and share-by-URL with explicit length/privacy limits
