@@ -1,3 +1,5 @@
+import { readGroup } from "./latex-scan";
+
 export type SemanticStructureKind = "integral" | "sum";
 
 export type SemanticSlot = {
@@ -17,24 +19,6 @@ type ScriptParts = {
   upper: string;
   rest: string;
 };
-
-function readGroup(source: string, start: number) {
-  if (source[start] !== "{") return null;
-  let depth = 0;
-  for (let index = start; index < source.length; index += 1) {
-    if (source[index] === "\\") {
-      index += 1;
-      continue;
-    }
-    if (source[index] === "{") depth += 1;
-    if (source[index] !== "}") continue;
-    depth -= 1;
-    if (depth === 0) {
-      return { content: source.slice(start + 1, index), end: index + 1 };
-    }
-  }
-  return null;
-}
 
 function unwrapGrouping(source: string) {
   let result = source.trim();
@@ -120,4 +104,15 @@ export function parseSemanticStructure(latex: string): SemanticStructure | null 
 
 export function normalizeSlotLatex(latex: string) {
   return stripLeadingSpacing(unwrapGrouping(latex)).replace(/\s+/gu, " ").trim();
+}
+
+const integralPattern = /\\(?:iiint|iint|oint|int)(?=[^a-zA-Z]|$)/u;
+const sumPattern = /\\(?:sum|prod)(?=[^a-zA-Z]|$)/u;
+
+/** Which semantic structures the expression contains, without parsing it. */
+export function structureKindsIn(latex: string): SemanticStructureKind[] {
+  const kinds: SemanticStructureKind[] = [];
+  if (integralPattern.test(latex)) kinds.push("integral");
+  if (sumPattern.test(latex)) kinds.push("sum");
+  return kinds;
 }
