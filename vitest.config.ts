@@ -14,7 +14,8 @@ export default defineConfig({
     include: [
       "packages/**/*.test.ts",
       "apps/web/**/*.test.ts",
-      "apps/math/**/*.test.ts"
+      "apps/math/**/*.test.ts",
+      "apps/chem/**/*.test.ts"
     ],
     coverage: {
       reporter: ["text", "html"]
