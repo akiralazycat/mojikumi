@@ -32,6 +32,33 @@ test("開始例、記号キー、端末内保存を一つの流れで使える",
   await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.chem.draft.v1"))).toContain("CH3COOH");
 });
 
+test("反応式を検証し、係数を整えてUndoできる", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByRole("textbox", { name: "化学式・反応式" });
+  await input.fill("H2 + O2 -> H2O");
+  await expect(page.getByText("係数の調整が必要です")).toBeVisible();
+  await expect(page.getByText("生成物に", { exact: false })).toBeVisible();
+
+  await page.locator(".analysis-panel").getByRole("button", { name: "係数を整える" }).click();
+  await expect(input).toHaveValue("2H2 + O2 → 2H2O");
+  await expect(page.getByText("原子数と電荷が保存されています")).toBeVisible();
+
+  await page.getByRole("button", { name: "元に戻す" }).click();
+  await expect(input).toHaveValue("H2 + O2 -> H2O");
+  await page.getByRole("button", { name: "やり直す" }).click();
+  await expect(input).toHaveValue("2H2 + O2 → 2H2O");
+});
+
+test("反応条件を表示とmhchem出力へ反映する", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByRole("textbox", { name: "化学式・反応式" });
+  await input.fill("N2 + 3H2 <=> 2NH3");
+  await page.getByRole("textbox", { name: /反応条件/ }).fill("Fe, 450 °C");
+  await expect(page.locator(".formula-condition")).toHaveText("Fe, 450 °C");
+  await page.getByRole("tab", { name: "mhchem" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("<=>[Fe, 450 °C]");
+});
+
 test("主要画面に重大なアクセシビリティ違反がない", async ({ page }) => {
   await page.goto("/");
   const results = await new AxeBuilder({ page }).analyze();

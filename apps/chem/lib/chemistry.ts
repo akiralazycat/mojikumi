@@ -1,9 +1,14 @@
+import { analyzeChem } from "./chem-model";
+import { normalizeChemInput } from "./normalize";
+
+export { normalizeChemInput } from "./normalize";
+
 export type ChemSegment = {
   kind: "text" | "subscript" | "superscript" | "arrow";
   value: string;
 };
 
-export type ChemOutputKind = "plain" | "mhchem" | "latex" | "markdown" | "html" | "ai";
+export type ChemOutputKind = "plain" | "mhchem" | "latex" | "markdown" | "html" | "json" | "ai";
 export type ChemAiAction = "explain" | "balance" | "name" | "analyze";
 
 const subscriptCharacters: Record<string, string> = {
@@ -38,16 +43,20 @@ const aiInstructions: Record<ChemAiAction, string> = {
   analyze: "次の化学反応式を分析し、反応の種類、酸化還元、条件、注意点を説明してください。"
 };
 
-export function normalizeChemInput(value: string) {
-  return value
-    .replaceAll("<=>", "⇌")
-    .replaceAll("<->", "↔")
-    .replaceAll("->", "→")
-    .replaceAll("<-", "←")
-    .replaceAll("=>", "→")
-    .replaceAll("−>", "→")
-    .replace(/\s+/g, " ")
-    .trim();
+export function splitChemCondition(value: string) {
+  const normalized = normalizeChemInput(value);
+  const match = normalized.match(/([→←⇌↔])\s*\[([^\]]*)\]/);
+  return {
+    condition: match?.[2]?.trim() ?? "",
+    source: match ? normalized.replace(match[0], match[1]!) : normalized
+  };
+}
+
+function withCondition(value: string, explicitCondition = "") {
+  const extracted = splitChemCondition(value);
+  const condition = explicitCondition.trim() || extracted.condition;
+  if (!condition) return extracted.source;
+  return extracted.source.replace(/([→←⇌↔])/, `$1[${condition}]`);
 }
 
 function pushSegment(segments: ChemSegment[], kind: ChemSegment["kind"], value: string) {
@@ -134,8 +143,8 @@ function escapeLatex(value: string) {
     .replaceAll(" ", String.raw`\,`);
 }
 
-export function toUnicodeChem(value: string) {
-  return parseChemSegments(value).map((segment) => {
+export function toUnicodeChem(value: string, condition = "") {
+  return parseChemSegments(withCondition(value, condition)).map((segment) => {
     if (segment.kind === "subscript") {
       return [...segment.value].map((character) => subscriptCharacters[character] ?? character).join("");
     }
@@ -146,20 +155,25 @@ export function toUnicodeChem(value: string) {
   }).join("");
 }
 
-export function toMhchem(value: string) {
-  const normalized = normalizeChemInput(value);
+export function toMhchem(value: string, condition = "") {
+  const normalized = withCondition(value, condition);
   const source = [...normalized].map((character) => arrowToMhchem[character] ?? character).join("");
   return String.raw`\ce{${source}}`;
 }
 
-export function toChemLatex(value: string) {
-  return parseChemSegments(value).map((segment) => {
+export function toChemLatex(value: string, explicitCondition = "") {
+  const extracted = splitChemCondition(value);
+  const condition = explicitCondition.trim() || extracted.condition;
+  return parseChemSegments(extracted.source).map((segment) => {
     switch (segment.kind) {
       case "subscript":
         return `_{${escapeLatex(segment.value)}}`;
       case "superscript":
         return `^{${escapeLatex(segment.value)}}`;
       case "arrow":
+        if (condition && segment.value === "→") return String.raw`\;\xrightarrow{\mathrm{${escapeLatex(condition)}}}\;`;
+        if (condition && segment.value === "←") return String.raw`\;\xleftarrow{\mathrm{${escapeLatex(condition)}}}\;`;
+        if (condition) return String.raw`\;\overset{\mathrm{${escapeLatex(condition)}}}{${arrowToLatex[segment.value]}}\;`;
         return String.raw`\;${arrowToLatex[segment.value]}\;`;
       case "text":
         return String.raw`\mathrm{${escapeLatex(segment.value)}}`;
@@ -167,39 +181,52 @@ export function toChemLatex(value: string) {
   }).join("");
 }
 
-export function toChemHtml(value: string) {
-  const contents = parseChemSegments(value).map((segment) => {
+export function toChemHtml(value: string, explicitCondition = "") {
+  const extracted = splitChemCondition(value);
+  const condition = explicitCondition.trim() || extracted.condition;
+  const contents = parseChemSegments(extracted.source).map((segment) => {
     const escaped = escapeHtml(segment.value);
     if (segment.kind === "subscript") return `<sub>${escaped}</sub>`;
     if (segment.kind === "superscript") return `<sup>${escaped}</sup>`;
-    if (segment.kind === "arrow") return `<span class="chem-arrow">${escaped}</span>`;
+    if (segment.kind === "arrow") return `<span class="chem-arrow">${condition ? `<span class="chem-condition">${escapeHtml(condition)}</span>` : ""}${escaped}</span>`;
     return escaped;
   }).join("");
   return `<span class="chemical-equation" role="math">${contents}</span>`;
 }
 
-export function createChemAiPrompt(value: string, action: ChemAiAction = "explain") {
-  return `${aiInstructions[action]}\n\n${toUnicodeChem(value)}`;
+export function createChemAiPrompt(value: string, action: ChemAiAction = "explain", condition = "") {
+  return `${aiInstructions[action]}\n\n${toUnicodeChem(value, condition)}`;
 }
 
 export function serializeChem(
   value: string,
   kind: ChemOutputKind,
-  options: { aiAction?: ChemAiAction } = {}
+  options: { aiAction?: ChemAiAction; condition?: string } = {}
 ) {
   if (!normalizeChemInput(value)) return "";
   switch (kind) {
     case "plain":
-      return toUnicodeChem(value);
+      return toUnicodeChem(value, options.condition);
     case "mhchem":
-      return toMhchem(value);
+      return toMhchem(value, options.condition);
     case "latex":
-      return toChemLatex(value);
+      return toChemLatex(value, options.condition);
     case "markdown":
-      return `$${toMhchem(value)}$`;
+      return `$${toMhchem(value, options.condition)}$`;
     case "html":
-      return toChemHtml(value);
+      return toChemHtml(value, options.condition);
+    case "json": {
+      const analysis = analyzeChem(value, { condition: options.condition ?? "" });
+      return JSON.stringify({
+        version: 1,
+        kind: analysis.kind,
+        source: normalizeChemInput(value),
+        condition: analysis.reaction?.condition ?? options.condition?.trim() ?? "",
+        reaction: analysis.reaction,
+        species: analysis.species
+      }, null, 2);
+    }
     case "ai":
-      return createChemAiPrompt(value, options.aiAction);
+      return createChemAiPrompt(value, options.aiAction, options.condition);
   }
 }

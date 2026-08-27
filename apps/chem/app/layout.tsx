@@ -19,7 +19,7 @@ try {
 export const metadata: Metadata = {
   metadataBase: new URL("https://chem.mojikumi.jp"),
   title: "Mojikumi Chem — 化学式を自然に組み上げる",
-  description: "スマホでも化学式と反応式を組み立て、テキスト・mhchem・LaTeX・Markdown・HTML・AIへ持ち出せる入力ツール。",
+  description: "スマホでも化学式と反応式を組み立て、原子数と電荷を検証。係数を整え、mhchem・LaTeX・Markdown・HTML・AIへ持ち出せる入力ツール。",
   manifest: "/manifest.webmanifest",
   applicationName: "Mojikumi Chem",
   appleWebApp: { capable: true, title: "Mojikumi Chem", statusBarStyle: "default" },
