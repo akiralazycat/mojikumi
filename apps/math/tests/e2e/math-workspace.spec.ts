@@ -83,7 +83,6 @@ test("開始候補はプレースホルダー付き構造を挿入し、新規�
   await expect(field).toBeFocused();
   await expect(page.getByRole("button", { name: "分数から始める" })).toBeHidden();
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "新規" }).click();
   await expect.poll(value).toBe("");
 
@@ -91,11 +90,37 @@ test("開始候補はプレースホルダー付き構造を挿入し、新規�
   await expect.poll(value).toContain("x^2");
   await expect.poll(value).toContain(String.raw`\placeholder`);
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "新規" }).click();
   await page.getByRole("button", { name: "定積分から始める" }).click();
   await expect.poll(value).toContain(String.raw`\int`);
   await expect.poll(value).toContain(String.raw`\placeholder`);
+});
+
+test("新規作成は確認なしで消し、元に戻せる", async ({ page }) => {
+  await page.goto("/");
+  const field = await waitForMathfield(page);
+  const value = () => field.evaluate((node: HTMLElement & { value: string }) => node.value);
+
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`x^2+1`);
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+
+  await page.getByRole("button", { name: "新規" }).click();
+  await expect.poll(value).toBe("");
+  await page.getByRole("button", { name: "消した数式を戻す" }).click();
+  await expect.poll(value).toContain("x^2");
+  await expect(page.getByRole("button", { name: "消した数式を戻す" })).toBeHidden();
+});
+
+test("未入力の欄は出力にも残る", async ({ page }) => {
+  await page.goto("/");
+  await waitForMathfield(page);
+
+  await page.getByRole("button", { name: "分数から始める" }).click();
+  await expect(page.getByText("未入力の欄は□で示しています。")).toBeVisible();
+  await page.getByRole("tab", { name: "LaTeX" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText(String.raw`\square`);
+  await expect(page.getByRole("tabpanel")).not.toContainText(String.raw`\placeholder`);
 });
 
 test("出力タブは矢印キー、Home、Endで移動できる", async ({ page }) => {
@@ -126,7 +151,6 @@ test("構造キーは入力後も使え、任意の文字へ累乗を追加で�
   await expect.poll(value).toContain("a^");
   await expect(page.getByRole("button", { name: "分数を挿入" })).toBeVisible();
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "新規" }).click();
   await page.getByRole("button", { name: "LaTeX", exact: true }).click();
   await page.getByRole("textbox", { name: "LaTeXソース" }).fill("a+b");
@@ -202,7 +226,7 @@ test("MathLiveの記号色をMojikumiの選択トークンで統一する", asyn
 test("ΣとΠは右側の被演算子まで一つの構造として挿入する", async ({ page }) => {
   await page.goto("/");
   const field = await waitForMathfield(page);
-  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "解析" }).click();
   await page.getByRole("button", { name: "Σ", exact: true }).click();
   const value = await field.evaluate((node: HTMLElement & { value: string }) => node.value);
   expect(value).toContain(String.raw`\sum`);
@@ -243,7 +267,7 @@ test("積分を下限・上限・式・変数の名前で選択できる", async
 test("空の積分も名前付き要素を順番に埋められる", async ({ page }) => {
   await page.goto("/");
   const field = await waitForMathfield(page);
-  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "解析" }).click();
   await page.getByRole("button", { name: "∫", exact: true }).click();
 
   const fillSelected = async (name: string, value: string) => {
@@ -328,6 +352,35 @@ test("シグマを下側条件・上限・総和式の名前で選択できる",
   await expect(page.locator(".selection-status")).toContainText("シグマ・総和式");
 });
 
+test("長い数式でも構造要素の選択が操作予算に収まる", async ({ page }) => {
+  await page.goto("/");
+  await waitForMathfield(page);
+  await page.getByRole("button", { name: "LaTeX", exact: true }).click();
+  await page.getByRole("textbox", { name: "LaTeXソース" }).fill(
+    String.raw`\frac{1}{n}\sum_{i=1}^{n}\frac{x_i-\mu}{\sigma}+\int_{0}^{1}\frac{x^2+3x+2}{1+x^2}\,dx`
+  );
+  await page.getByRole("button", { name: "Visual", exact: true }).click();
+
+  const timeClick = (name: string) => page.evaluate((label) => {
+    const button = document.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`);
+    if (!button) throw new Error(`${label} was not rendered`);
+    const started = performance.now();
+    button.click();
+    return performance.now() - started;
+  }, name);
+
+  const firstIntegral = await timeClick("積分の変数を選択");
+  const firstSum = await timeClick("シグマの上限を選択");
+  const repeated = await timeClick("積分の変数を選択");
+
+  // The first press of each kind builds the range index for the expression;
+  // later presses reuse it until the expression changes.
+  expect(firstIntegral, `integral ${firstIntegral}ms`).toBeLessThan(400);
+  expect(firstSum, `sum ${firstSum}ms`).toBeLessThan(400);
+  expect(repeated, `repeat ${repeated}ms`).toBeLessThan(150);
+  console.log(`semantic selection: integral ${firstIntegral.toFixed(1)}ms, sum ${firstSum.toFixed(1)}ms, repeat ${repeated.toFixed(1)}ms`);
+});
+
 test("複合数式fixtureは数式キャンバス内で崩れずに表示される", async ({ page }) => {
   await page.goto("/");
   const field = await waitForMathfield(page);
@@ -356,7 +409,7 @@ test("複合数式fixtureは数式キャンバス内で崩れずに表示され�
 test("記号バリエーションはフォーカスを管理しEscapeで閉じる", async ({ page }) => {
   await page.goto("/");
   await waitForMathfield(page);
-  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "解析" }).click();
 
   const trigger = page.getByRole("button", { name: "∫のバリエーションを表示" });
   await trigger.click();
@@ -371,7 +424,7 @@ test("長押しでも記号バリエーションを開いて選択できる", as
   test.skip(testInfo.project.name !== "desktop", "長押し経路はdesktopプロジェクトで一度実行する");
   await page.goto("/");
   await waitForMathfield(page);
-  await page.getByRole("button", { name: "Calculus" }).click();
+  await page.getByRole("button", { name: "解析" }).click();
 
   const integral = page.getByRole("button", { name: "∫", exact: true });
   await integral.dispatchEvent("pointerdown", { pointerType: "touch" });
@@ -401,7 +454,7 @@ test("下書きとテーマを端末内に復元する", async ({ page }) => {
   await page.getByRole("button", { name: "LaTeX", exact: true }).click();
   await page.getByRole("textbox", { name: "LaTeXソース" }).fill(String.raw`\frac{a}{b}`);
   await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.math.draft.v1"))).toContain(String.raw`\frac{a}{b}`);
-  await expect(page.locator('[aria-live="polite"]')).toContainText("下書きを保存しました");
+  await expect(page.locator(".save-status")).toContainText("保存済み");
 
   await page.getByRole("button", { name: "ダークテーマ" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

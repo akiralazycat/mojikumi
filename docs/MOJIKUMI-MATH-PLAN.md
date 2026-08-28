@@ -52,7 +52,9 @@ math.mojikumi.jp/
 ```
 
 The editor is the home page. There is no dashboard before user accounts or
-durable documents exist.
+durable documents exist. As of August 2026 the three MVP+ routes are still
+covered by sections of the home page (`#use-cases`, `#privacy`); they become
+separate routes when their content outgrows that.
 
 ## 4. Repository shape
 
@@ -157,6 +159,9 @@ blue. Keyboard density should stay below the visual expression, not compete with
 - Versioned, app-local `MojikumiExpression` adapter; engine payload stays private
 - Plain text, Strict β-derived Unicode Readable, Strict β, AI prompt, LaTeX,
   Markdown, MathML, and Embed serializers
+- Unfilled input slots kept visible in every output (`\square` / `□`) rather
+  than dropped, and outputs withheld until the converter they derive from exists
+- AI prompts built from the visible text plus LaTeX, never from a guessed reading
 - Incomplete-placeholder detection and safe HTML/MathML fallback escaping
 - Visual and LaTeX source editing, Undo/Redo, placeholder movement
 - Namespaced, versioned, device-local draft recovery with malformed-data guards
@@ -168,7 +173,8 @@ blue. Keyboard density should stay below the visual expression, not compete with
 - Light/dark appearance saved under `mojikumi.math.theme`
 - Installable PWA shell with network-first HTML, cache-first static assets,
   offline editing/conversion, and versioned cache cleanup
-- Accessible output tabs, managed variant-tray focus, and a single status live region
+- Accessible output tabs, managed variant-tray focus, and separate live regions
+  for save state and for the result of an action
 - Playwright/axe coverage at 320 px, 390 px, and desktop widths
 
 ### Milestone 0 — interaction skeleton (now)
@@ -197,7 +203,8 @@ Exit: median time from open to copied quadratic/integral expression is under
 - Expand the conservative Unicode Readable allowlist only alongside ambiguity fixtures
 - Define and version the Mojikumi-owned Strict grammar before removing β
 - AI action presets: Explain, Solve, Prove, Simplify, Differentiate, Integrate
-- Japanese and English spoken/readable output review
+- Japanese and English spoken/readable output review (a generated Japanese
+  reading is deliberately out of scope; see `MOJIKUMI-MATH-REFINEMENT.md` §1.3)
 - Import from LaTeX and share-by-URL with explicit length/privacy limits
 
 Exit: golden fixtures round-trip without structural loss for the supported set;

@@ -36,6 +36,9 @@ Unicode Readableは、ブログ、メモ、チャットなどへ貼り付けた�
 | `alpha`、`beta`、`gamma`、`delta`、`theta`、`lambda`、`mu`、`sigma`、`phi`、`omega` | 対応するUnicode文字 | 独立したStrict βトークンの場合。`x_alpha`のように添字マーカーへ続く場合も含む |
 | ASCII `-` | 数学用の`−` | 矢印などの長い演算子を置換した後 |
 
+未入力の欄はStrict βの段階で`□`になっている。Unicode Readableはこれをそのまま
+残し、周囲の記号から内容を推測しない。
+
 ## 行わない変換
 
 - `(a+b)/(c+d)`を`a+b/c+d`へ短縮しない。

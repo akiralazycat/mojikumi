@@ -6,10 +6,11 @@ Use the protected Vercel Preview before promoting a deployment to the existing
 ## Automated gate
 
 - [x] Math typecheck and production static export
-- [x] Repository unit suite, including Unicode ambiguity and semantic-structure fixtures
+- [x] Repository unit suite, including Unicode ambiguity, semantic-structure, and placeholder fixtures
 - [x] Playwright flows at desktop, 390 px, and 320 px
 - [x] axe WCAG 2 A/AA scan (MathLive composite-editor false positive documented in the test)
 - [x] PWA registration, first-visit precache, offline reload, and local draft recovery
+- [x] Semantic selection stays inside its interaction budget on a long expression
 - [x] Formula sentinel absent from requests and Cache Storage
 - [x] Local MathLive font delivery and zero known npm vulnerabilities
 
