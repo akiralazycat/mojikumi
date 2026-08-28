@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Mojikumi Chem",
     short_name: "Chem",
-    description: "化学式・反応式を組み立て、文書・Web・AIへ持ち出す入力レイヤー。",
+    description: "化学式・反応式を組み立てて検証し、係数を整えて文書・Web・AIへ持ち出す入力レイヤー。",
     start_url: "/",
     display: "standalone",
     background_color: "#f4f1e8",

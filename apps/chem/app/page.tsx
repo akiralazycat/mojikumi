@@ -27,7 +27,7 @@ export default function HomePage() {
           <div className="intro-copy">
             <p className="eyebrow">Chemical notation, reconsidered</p>
             <h1 id="intro-title">化学式を、<br /><em>意味から</em>組み上げる</h1>
-            <p>下付き文字や電荷、反応矢印を気にせず入力。ひとつの化学表現を、文書・Web・AIで使える形式へ変換します。</p>
+            <p>下付き文字や電荷、反応矢印を気にせず入力。原子数と電荷を確かめ、係数を整えて、文書・Web・AIへ変換します。</p>
           </div>
           <div className="hero-specimen" aria-hidden="true">
             <span className="specimen-number">01</span>
@@ -69,8 +69,8 @@ export default function HomePage() {
             <h2 id="roadmap-title">まず反応式。<br />次に、構造式へ。</h2>
           </div>
           <ol>
-            <li><span>Now</span><strong>化学式・反応式</strong><small>下付き、電荷、状態、反応矢印、標準形式への変換</small></li>
-            <li><span>Next</span><strong>反応条件・酸化数</strong><small>触媒、温度、電子移動、可逆反応の詳細な構造化</small></li>
+            <li><span>Now</span><strong>理解する反応式エディター</strong><small>元素・原子数・電荷を検証し、係数調整と反応条件を端末内で処理</small></li>
+            <li><span>Next</span><strong>酸化数・電子移動</strong><small>酸化還元、半反応式、触媒、温度、可逆反応の詳細な構造化</small></li>
             <li><span>Later</span><strong>構造式・Lewis構造</strong><small>視覚編集からSMILES・InChIへつなぐ分子表現</small></li>
           </ol>
         </section>
