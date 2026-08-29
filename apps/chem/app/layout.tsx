@@ -4,6 +4,7 @@ import { PwaRegistration } from "../components/pwa-registration";
 import "./globals.css";
 import "./a11y.css";
 import "./reaction-awareness.css";
+import "./output-ux.css";
 
 const themeScript = `
 try {

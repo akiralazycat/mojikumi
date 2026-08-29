@@ -11,6 +11,7 @@ import {
 import type { SpeciesRef } from "../lib/reaction-awareness";
 import { loadChemDraft, removeChemDraft, saveChemDraft } from "../lib/draft";
 import { ChemicalDisplay } from "./chemical-display";
+import { ChemOutputPanel, chemOutputLabels, type ChemVisibleOutputKind } from "./output-panel";
 import { ReactionNavigator } from "./reaction-navigator";
 
 type EditorSnapshot = { condition: string; source: string };
@@ -34,24 +35,6 @@ const insertKeys = [
 ] as const;
 
 const conditionKeys = ["加熱", "光", "Pt", "電気分解"] as const;
-const outputKinds = ["plain", "mhchem", "latex", "markdown", "html", "json"] as const;
-type VisibleOutputKind = (typeof outputKinds)[number];
-
-const outputLabels: Record<VisibleOutputKind, string> = {
-  plain: "テキスト",
-  mhchem: "mhchem",
-  latex: "LaTeX",
-  markdown: "Markdown",
-  html: "HTML",
-  json: "JSON"
-};
-
-const aiActions: Array<{ value: ChemAiAction; label: string }> = [
-  { value: "explain", label: "説明する" },
-  { value: "balance", label: "係数を整える" },
-  { value: "name", label: "物質名を調べる" },
-  { value: "analyze", label: "反応を分析する" }
-];
 
 function analysisTone(analysis: ChemAnalysis) {
   if (!analysis.valid) return "error";
@@ -67,7 +50,7 @@ export function ChemWorkspace() {
   const snapshotRef = useRef<EditorSnapshot>(emptySnapshot);
   const [editor, setEditor] = useState<EditorSnapshot>(emptySnapshot);
   const [historyState, setHistoryState] = useState({ canRedo: false, canUndo: false });
-  const [outputKind, setOutputKind] = useState<VisibleOutputKind>("plain");
+  const [outputKind, setOutputKind] = useState<ChemVisibleOutputKind>("plain");
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiAction, setAiAction] = useState<ChemAiAction>("explain");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
@@ -188,7 +171,7 @@ export function ChemWorkspace() {
     try {
       await navigator.clipboard.writeText(output);
       setCopyState("copied");
-      setAnnouncement(`${aiEnabled ? "AI用テキスト" : outputLabels[outputKind]}をコピーしました。`);
+      setAnnouncement(`${aiEnabled ? "AI用テキスト" : chemOutputLabels[outputKind]}をコピーしました。`);
     } catch {
       setCopyState("failed");
       setAnnouncement("コピーできませんでした。出力を選択してコピーしてください。");
@@ -215,19 +198,6 @@ export function ChemWorkspace() {
     event.preventDefault();
     if (event.shiftKey) redo();
     else undo();
-  }
-
-  function moveOutputTab(event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) {
-    let nextIndex = currentIndex;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % outputKinds.length;
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
-    else if (event.key === "Home") nextIndex = 0;
-    else if (event.key === "End") nextIndex = outputKinds.length - 1;
-    else return;
-    event.preventDefault();
-    const nextKind = outputKinds[nextIndex]!;
-    setOutputKind(nextKind);
-    document.getElementById(`chem-output-tab-${nextKind}`)?.focus();
   }
 
   return (
@@ -344,44 +314,18 @@ export function ChemWorkspace() {
         )}
       </div>
 
-      <div className="output-panel">
-        <div className="output-heading">
-          <div><p className="panel-kicker">Take it anywhere</p><h2>変換してコピー</h2></div>
-          <label className="ai-switch">
-            <input type="checkbox" checked={aiEnabled} onChange={(event) => setAiEnabled(event.target.checked)} />
-            <span>AIへの依頼文を付ける</span>
-          </label>
-        </div>
-
-        {aiEnabled ? (
-          <div className="ai-actions" role="group" aria-label="AIへの依頼">
-            {aiActions.map((action) => <button key={action.value} type="button" aria-pressed={aiAction === action.value} onClick={() => setAiAction(action.value)}>{action.label}</button>)}
-          </div>
-        ) : (
-          <div className="output-tabs" role="tablist" aria-label="出力形式">
-            {outputKinds.map((kind, index) => (
-              <button
-                id={`chem-output-tab-${kind}`}
-                key={kind}
-                type="button"
-                role="tab"
-                tabIndex={outputKind === kind ? 0 : -1}
-                aria-controls="chem-output-panel"
-                aria-selected={outputKind === kind}
-                onClick={() => setOutputKind(kind)}
-                onKeyDown={(event) => moveOutputTab(event, index)}
-              >{outputLabels[kind]}</button>
-            ))}
-          </div>
-        )}
-
-        <div id="chem-output-panel" className="output-box" role="tabpanel" aria-labelledby={aiEnabled ? undefined : `chem-output-tab-${outputKind}`}>
-          {output ? <code>{output}</code> : <span>化学式を入力すると変換結果が表示されます</span>}
-        </div>
-        <button className="copy-button" type="button" disabled={!output} onClick={copyOutput}>
-          {copyState === "copied" ? "コピーしました" : copyState === "failed" ? "コピーできませんでした" : `${aiEnabled ? "AI用テキスト" : outputLabels[outputKind]}をコピー`}
-        </button>
-      </div>
+      <ChemOutputPanel
+        hasSource={Boolean(editor.source.trim())}
+        outputKind={outputKind}
+        onOutputKindChange={setOutputKind}
+        aiEnabled={aiEnabled}
+        onAiEnabledChange={setAiEnabled}
+        aiAction={aiAction}
+        onAiActionChange={setAiAction}
+        output={output}
+        copyState={copyState}
+        onCopy={copyOutput}
+      />
       <p className="visually-hidden" aria-live="polite">{announcement}</p>
     </section>
   );

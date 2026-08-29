@@ -4,6 +4,7 @@ import { PwaRegistration } from "../components/pwa-registration";
 import "./globals.css";
 import "./math-refinement.css";
 import "./math-stage3.css";
+import "./output-ux.css";
 
 const themeScript = `
 try {
