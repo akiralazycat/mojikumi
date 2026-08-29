@@ -8,8 +8,10 @@ import {
   summarizeAnalysis,
   type ChemAnalysis
 } from "../lib/chem-model";
+import type { SpeciesRef } from "../lib/reaction-awareness";
 import { loadChemDraft, removeChemDraft, saveChemDraft } from "../lib/draft";
 import { ChemicalDisplay } from "./chemical-display";
+import { ReactionNavigator } from "./reaction-navigator";
 
 type EditorSnapshot = { condition: string; source: string };
 const emptySnapshot: EditorSnapshot = { condition: "", source: "" };
@@ -71,6 +73,9 @@ export function ChemWorkspace() {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [saveState, setSaveState] = useState<"loading" | "saving" | "saved" | "unavailable">("loading");
   const [announcement, setAnnouncement] = useState("");
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [selectedSpecies, setSelectedSpecies] = useState<SpeciesRef | null>(null);
+  const [balancePreviewOpen, setBalancePreviewOpen] = useState(false);
 
   const analysis = useMemo(() => analyzeChem(editor.source, { condition: editor.condition }), [editor]);
   const balanceResult = useMemo(
@@ -154,6 +159,12 @@ export function ChemWorkspace() {
     return () => window.clearTimeout(timer);
   }, [editor]);
 
+  useEffect(() => {
+    setSelectedElement(null);
+    setSelectedSpecies(null);
+    setBalancePreviewOpen(false);
+  }, [editor.source]);
+
   const output = serializeChem(editor.source, aiEnabled ? "ai" : outputKind, {
     aiAction,
     condition: editor.condition
@@ -195,6 +206,7 @@ export function ChemWorkspace() {
   function applyBalance() {
     if (!balanceResult) return;
     applySnapshot({ source: balanceResult.source, condition: balanceResult.condition });
+    setBalancePreviewOpen(false);
     setAnnouncement(`係数を ${balanceResult.coefficients.join(" : ")} に整えました。`);
   }
 
@@ -292,7 +304,6 @@ export function ChemWorkspace() {
                 <strong>{summarizeAnalysis(analysis)}</strong>
                 <span>{analysis.kind === "formula" ? "元素記号・括弧・原子数を確認しました" : "原子数と総電荷を左右で比較しています"}</span>
               </div>
-              {balanceResult && <button type="button" onClick={applyBalance}>係数を整える</button>}
             </div>
             {analysis.kind === "formula" && analysis.valid && (
               <div className="composition-list" aria-label="元素組成">
@@ -312,6 +323,24 @@ export function ChemWorkspace() {
               </ul>
             )}
           </div>
+        )}
+
+        {analysis.kind === "reaction" && analysis.valid && analysis.reaction && (
+          <ReactionNavigator
+            reaction={analysis.reaction}
+            selectedElement={selectedElement}
+            selectedSpecies={selectedSpecies}
+            balanceProposal={balanceResult}
+            balancePreviewOpen={balancePreviewOpen}
+            onSelectElement={(element) => {
+              setSelectedElement(element);
+              setSelectedSpecies(null);
+            }}
+            onSelectSpecies={setSelectedSpecies}
+            onOpenBalancePreview={() => setBalancePreviewOpen(true)}
+            onCloseBalancePreview={() => setBalancePreviewOpen(false)}
+            onApplyBalance={applyBalance}
+          />
         )}
       </div>
 
