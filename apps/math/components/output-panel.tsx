@@ -13,6 +13,8 @@ export const outputLabels: Record<OutputKind, string> = {
   embed: "Embed"
 };
 
+// Keep the keyboard cycle stable while the visible tabs are grouped by use case.
+// The visual grouping below is intentionally independent from this sequence.
 export const outputKinds = [
   "plain",
   "readable",
@@ -24,6 +26,23 @@ export const outputKinds = [
 ] as const;
 
 export type VisibleOutputKind = (typeof outputKinds)[number];
+
+const outputGroups: Array<{
+  label: string;
+  description: string;
+  kinds: VisibleOutputKind[];
+}> = [
+  {
+    label: "よく使う",
+    description: "コピーや文書へ持ち出す基本形式",
+    kinds: ["plain", "latex", "markdown"]
+  },
+  {
+    label: "詳細",
+    description: "共有・機械処理・埋め込み向け",
+    kinds: ["readable", "strict", "mathml", "embed"]
+  }
+];
 
 export const aiActionLabels: Record<AiAction, string> = {
   explain: "説明する",
@@ -57,34 +76,44 @@ export function OutputPanel({
 }) {
   return (
     <div className="output-panel">
-      <div className="output-tabs" role="tablist" aria-label="出力形式">
-        {outputKinds.map((kind) => (
-          <button
-            key={kind}
-            id={`output-tab-${kind}`}
-            type="button"
-            role="tab"
-            aria-selected={outputKind === kind}
-            aria-controls="output-panel"
-            tabIndex={outputKind === kind ? 0 : -1}
-            onClick={() => onOutputKindChange(kind)}
-            onKeyDown={(event) => {
-              const currentIndex = outputKinds.indexOf(kind);
-              let nextIndex = currentIndex;
-              if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % outputKinds.length;
-              else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
-              else if (event.key === "Home") nextIndex = 0;
-              else if (event.key === "End") nextIndex = outputKinds.length - 1;
-              else return;
-              event.preventDefault();
-              const nextKind = outputKinds[nextIndex];
-              if (!nextKind) return;
-              onOutputKindChange(nextKind);
-              window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
-            }}
-          >
-            {outputLabels[kind]}
-          </button>
+      <div className="output-format-groups" role="tablist" aria-label="出力形式">
+        {outputGroups.map((group) => (
+          <div className="output-format-group" key={group.label} role="presentation">
+            <div className="output-format-heading" aria-hidden="true">
+              <strong>{group.label}</strong>
+              <span>{group.description}</span>
+            </div>
+            <div className="output-tabs" role="presentation">
+              {group.kinds.map((kind) => (
+                <button
+                  key={kind}
+                  id={`output-tab-${kind}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={outputKind === kind}
+                  aria-controls="output-panel"
+                  tabIndex={outputKind === kind ? 0 : -1}
+                  onClick={() => onOutputKindChange(kind)}
+                  onKeyDown={(event) => {
+                    const currentIndex = outputKinds.indexOf(kind);
+                    let nextIndex = currentIndex;
+                    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % outputKinds.length;
+                    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
+                    else if (event.key === "Home") nextIndex = 0;
+                    else if (event.key === "End") nextIndex = outputKinds.length - 1;
+                    else return;
+                    event.preventDefault();
+                    const nextKind = outputKinds[nextIndex];
+                    if (!nextKind) return;
+                    onOutputKindChange(nextKind);
+                    window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
+                  }}
+                >
+                  {outputLabels[kind]}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
       <div

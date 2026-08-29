@@ -1,7 +1,46 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSlotLatex, parseSemanticStructure } from "./math-structure";
+import {
+  normalizeSlotLatex,
+  parseSemanticStructure,
+  structureKindsIn
+} from "./math-structure";
 
 describe("parseSemanticStructure", () => {
+  it("splits a fraction into numerator and denominator", () => {
+    expect(parseSemanticStructure(String.raw`\frac{x+1}{y}`)).toEqual({
+      kind: "fraction",
+      label: "分数",
+      slots: [
+        { id: "numerator", label: "分子", latex: "x+1" },
+        { id: "denominator", label: "分母", latex: "y" }
+      ]
+    });
+  });
+
+  it("splits square and indexed roots into semantic slots", () => {
+    expect(parseSemanticStructure(String.raw`\sqrt{x+1}`)).toEqual({
+      kind: "root",
+      label: "平方根",
+      slots: [
+        { id: "index", label: "根指数", latex: "" },
+        { id: "radicand", label: "根号の中", latex: "x+1" }
+      ]
+    });
+    expect(parseSemanticStructure(String.raw`\sqrt[3]{x}`)).toEqual({
+      kind: "root",
+      label: "根号",
+      slots: [
+        { id: "index", label: "根指数", latex: "3" },
+        { id: "radicand", label: "根号の中", latex: "x" }
+      ]
+    });
+  });
+
+  it("does not absorb trailing terms into fraction or root structures", () => {
+    expect(parseSemanticStructure(String.raw`\frac{a}{b}+c`)).toBeNull();
+    expect(parseSemanticStructure(String.raw`\sqrt{x}+1`)).toBeNull();
+  });
+
   it("splits a definite integral into four semantic slots", () => {
     expect(parseSemanticStructure(String.raw`\int_{0}^{1}x^2\,dx`)).toEqual({
       kind: "integral",
@@ -47,5 +86,10 @@ describe("parseSemanticStructure", () => {
     const slots = parseSemanticStructure(String.raw`\int_0^1 x\,dx+1`)?.slots;
     expect(slots?.find((slot) => slot.id === "variable")?.latex).toBe("");
     expect(slots?.find((slot) => slot.id === "body")?.latex).toBe(String.raw`x\,dx+1`);
+  });
+
+  it("reports every supported semantic structure present in an expression", () => {
+    expect(structureKindsIn(String.raw`\frac{1}{2}+\sqrt{x}+\int_0^1x\,dx+\sum_{n=1}^{N}n`))
+      .toEqual(["fraction", "root", "integral", "sum"]);
   });
 });
