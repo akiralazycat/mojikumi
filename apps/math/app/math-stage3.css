@@ -1,0 +1,219 @@
+.primary-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-utility-button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  min-height: 40px;
+  padding: 0 12px;
+  transition: background 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease);
+}
+
+.workspace-utility-button:hover:not(:disabled),
+.workspace-utility-button[aria-expanded="true"] {
+  background: var(--primary-soft);
+  border-color: var(--line-strong);
+  color: var(--primary);
+}
+
+.workspace-utility-button:disabled {
+  opacity: 0.38;
+}
+
+.workspace-drawer {
+  background: color-mix(in srgb, var(--field) 90%, var(--glass-strong));
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 14px;
+  padding: 16px 22px 18px 26px;
+}
+
+.workspace-drawer-heading {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.workspace-drawer-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.workspace-drawer-heading strong {
+  font-size: 13px;
+}
+
+.workspace-drawer-heading span,
+.history-empty {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.workspace-drawer-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 18px;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.workspace-drawer-close:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.import-source-field {
+  display: grid;
+  gap: 6px;
+}
+
+.import-source-field > span {
+  color: var(--muted-soft);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.import-source-field textarea {
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  min-height: 92px;
+  outline: none;
+  padding: 12px 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+.import-source-field textarea:focus {
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.import-panel-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.import-detection {
+  color: var(--primary);
+  font-size: 11px;
+}
+
+.import-panel-actions button,
+.history-clear {
+  background: var(--primary);
+  border: 0;
+  border-radius: 11px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 36px;
+  padding: 0 13px;
+}
+
+.import-panel-actions button:disabled {
+  opacity: 0.45;
+}
+
+.history-list {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.history-entry {
+  align-items: stretch;
+  background: color-mix(in srgb, var(--glass-strong) 82%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  overflow: hidden;
+}
+
+.history-open,
+.history-remove {
+  background: transparent;
+  border: 0;
+}
+
+.history-open {
+  min-width: 0;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.history-open code {
+  color: var(--ink);
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-open:hover,
+.history-remove:hover {
+  background: var(--primary-soft);
+}
+
+.history-remove {
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.history-clear {
+  justify-self: start;
+}
+
+@media (max-width: 720px) {
+  .workspace-topbar {
+    align-items: flex-start;
+  }
+
+  .primary-actions {
+    gap: 6px;
+    max-width: 78%;
+  }
+
+  .workspace-utility-button,
+  .new-button,
+  .copy-primary {
+    min-height: 38px;
+  }
+
+  .workspace-drawer {
+    padding: 14px 16px 16px;
+  }
+
+  .import-panel-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .import-panel-actions button,
+  .history-clear {
+    width: 100%;
+  }
+}
