@@ -1,0 +1,355 @@
+.output-panel {
+  background: color-mix(in srgb, var(--field) 76%, transparent);
+  border-top: 1px solid var(--line);
+  padding: 24px 26px 26px;
+}
+
+.output-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 28px;
+  justify-content: space-between;
+}
+
+.output-heading-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.output-kicker {
+  color: var(--primary);
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.output-heading h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.output-heading-description {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.ai-switch {
+  align-items: center;
+  background: color-mix(in srgb, var(--glass-strong) 84%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 10px;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.ai-switch:has(input:checked) {
+  background: var(--primary-soft);
+  border-color: var(--line-strong);
+  color: var(--primary);
+}
+
+.ai-switch input {
+  accent-color: var(--primary);
+  margin: 0;
+}
+
+.output-format-groups {
+  display: grid;
+  gap: 7px;
+  margin-top: 20px;
+}
+
+.output-format-group {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 138px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.output-format-heading {
+  display: grid;
+  gap: 2px;
+  padding-left: 4px;
+}
+
+.output-format-heading strong {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.output-format-heading span {
+  color: var(--muted-soft);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.output-panel .output-tabs {
+  border: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+.output-panel .output-tabs button {
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  flex: 0 0 auto;
+  font-size: 11px;
+  margin: 0;
+  min-height: 34px;
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
+.output-panel .output-tabs button[aria-selected="true"] {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 650;
+}
+
+.output-ai-panel {
+  background: color-mix(in srgb, var(--glass-strong) 72%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 13px 14px;
+}
+
+.output-ai-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.output-ai-copy strong {
+  font-size: 11px;
+}
+
+.output-ai-copy span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.output-panel .ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+}
+
+.output-panel .ai-actions button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  min-height: 31px;
+  padding: 0 10px;
+}
+
+.output-panel .ai-actions button[aria-pressed="true"] {
+  background: var(--primary-soft);
+  border-color: var(--line-strong);
+  color: var(--primary);
+  font-weight: 650;
+}
+
+.output-preview {
+  margin-top: 18px;
+}
+
+.output-preview-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 0 4px 7px;
+}
+
+.output-preview-heading strong {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.output-preview-heading span {
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+.output-preview-surface {
+  background: var(--code-bg);
+  border-radius: 15px;
+  color: var(--code-ink);
+  line-height: 1.7;
+  min-height: 96px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 18px 20px;
+  white-space: pre-wrap;
+}
+
+.output-preview-surface.is-empty {
+  align-items: center;
+  background: color-mix(in srgb, var(--field) 64%, transparent);
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.output-preview-surface code,
+.output-preview-surface pre {
+  font-family: var(--font-code);
+  font-size: 12px;
+}
+
+.output-preview-surface pre {
+  background: transparent;
+  color: inherit;
+  margin: 0;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  white-space: pre-wrap;
+}
+
+.output-preview-surface p {
+  margin: 0;
+}
+
+.output-preview-surface .strict-note,
+.output-preview-surface .readable-note,
+.output-preview-surface .embed-note,
+.output-preview-surface .output-warning {
+  color: color-mix(in srgb, var(--code-ink) 76%, transparent);
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.output-preview-surface .output-warning {
+  color: color-mix(in srgb, var(--primary) 72%, var(--code-ink));
+}
+
+.output-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.output-current-format {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.output-copy-button {
+  align-items: center;
+  background: var(--primary);
+  border: 0;
+  border-radius: 12px;
+  color: var(--bg);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.output-copy-button:hover:not(:disabled) {
+  background: var(--primary-strong);
+}
+
+.output-copy-button:disabled {
+  opacity: 0.38;
+}
+
+.output-copy-button span[aria-hidden="true"] {
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .output-panel {
+    padding: 20px 14px 22px;
+  }
+
+  .output-heading {
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .ai-switch {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .output-format-group {
+    align-items: start;
+    gap: 4px;
+    grid-template-columns: 1fr;
+  }
+
+  .output-format-heading {
+    align-items: baseline;
+    display: flex;
+    gap: 7px;
+    padding: 4px 8px 0;
+  }
+
+  .output-format-heading span {
+    font-size: 8px;
+  }
+
+  .output-panel .output-tabs button {
+    padding-inline: 10px;
+  }
+
+  .output-preview-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .output-preview-surface {
+    min-height: 88px;
+    padding: 16px;
+  }
+
+  .output-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .output-copy-button {
+    justify-content: center;
+    width: 100%;
+  }
+}
