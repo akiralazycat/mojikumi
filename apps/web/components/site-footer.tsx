@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Dictionary, Locale } from "../content";
-import { npmUrl, pageHref, releasesUrl, repositoryUrl } from "../lib/site";
+import { chemUrl, mathUrl, npmUrl, pageHref, releasesUrl, repositoryUrl } from "../lib/site";
 
 export function SiteFooter({
   dictionary,
@@ -10,6 +10,7 @@ export function SiteFooter({
   locale: Locale;
 }) {
   const { footer, nav } = dictionary;
+  const toolsHeading = locale === "ja" ? "Tools" : "Tools";
 
   return (
     <footer className="site-footer">
@@ -32,6 +33,12 @@ export function SiteFooter({
             <Link href={pageHref(locale, "docs")}>{nav.docs}</Link>
             <Link href={pageHref(locale, "playground")}>{nav.playground}</Link>
             <Link href={pageHref(locale, "benchmarks")}>{nav.benchmarks}</Link>
+          </nav>
+
+          <nav aria-label={toolsHeading}>
+            <p className="footer-heading">{toolsHeading}</p>
+            <a href={mathUrl}>Mojikumi Math</a>
+            <a href={chemUrl}>Mojikumi Chem</a>
           </nav>
 
           <nav aria-label={footer.project}>

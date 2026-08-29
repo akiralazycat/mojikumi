@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Dictionary, Locale } from "../../content";
-import { pageHref } from "../../lib/site";
+import { chemUrl, mathUrl, pageHref } from "../../lib/site";
 import { ArrowRightIcon } from "../icons";
 
 export function HomePage({
@@ -11,6 +11,37 @@ export function HomePage({
   locale: Locale;
 }) {
   const { home } = dictionary;
+  const tools = locale === "ja"
+    ? {
+        eyebrow: "Mojikumi Tools",
+        title: "表記を、使う場所へ。",
+        body: "文章だけでなく、数式と化学式も。Mojikumiの考え方を、それぞれの表記に合わせた入力ツールへ広げています。",
+        math: {
+          title: "Mojikumi Math",
+          description: "数式を見たまま組み上げ、Readable・LaTeX・Markdown・MathMLへ。",
+          action: "Mathを開く"
+        },
+        chem: {
+          title: "Mojikumi Chem",
+          description: "化学式と反応式を解析し、原子数と電荷を確認して文書・Web・AIへ。",
+          action: "Chemを開く"
+        }
+      }
+    : {
+        eyebrow: "Mojikumi Tools",
+        title: "Notation, ready for where it goes next.",
+        body: "Mojikumi extends beyond prose into focused tools for mathematical and chemical notation.",
+        math: {
+          title: "Mojikumi Math",
+          description: "Compose equations visually, then carry them into readable text, LaTeX, Markdown, or MathML.",
+          action: "Open Math"
+        },
+        chem: {
+          title: "Mojikumi Chem",
+          description: "Parse formulas and reactions, inspect atoms and charge, then carry them into documents, the Web, or AI.",
+          action: "Open Chem"
+        }
+      };
 
   return (
     <main>
@@ -67,12 +98,6 @@ export function HomePage({
         </div>
       </section>
 
-      {/*
-       * The "after" side is simply the page's own typesetting, since the whole
-       * site is already wrapped in Mojikumi. Only the "before" side has to opt
-       * out: data-no-mojikumi keeps the runtime pass off it, and the CSS resets
-       * the inherited standard properties.
-       */}
       <section className="section-block home-compare">
         <div className="section-heading">
           <p className="eyebrow">{home.compare.eyebrow}</p>
@@ -116,6 +141,30 @@ export function HomePage({
               <span className="package-description">{item.description}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="section-block section-split" aria-labelledby="mojikumi-tools-title">
+        <div className="section-heading">
+          <p className="eyebrow">{tools.eyebrow}</p>
+          <h2 id="mojikumi-tools-title">{tools.title}</h2>
+          <p>{tools.body}</p>
+        </div>
+        <div className="package-list">
+          <div>
+            <strong>{tools.math.title}</strong>
+            <span className="package-description">
+              {tools.math.description}{" "}
+              <a className="text-link" href={mathUrl}>{tools.math.action} <ArrowRightIcon size={14} /></a>
+            </span>
+          </div>
+          <div>
+            <strong>{tools.chem.title}</strong>
+            <span className="package-description">
+              {tools.chem.description}{" "}
+              <a className="text-link" href={chemUrl}>{tools.chem.action} <ArrowRightIcon size={14} /></a>
+            </span>
+          </div>
         </div>
       </section>
 

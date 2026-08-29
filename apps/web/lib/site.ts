@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getDictionary, type Locale } from "../content";
 
 export const siteUrl = "https://mojikumi.jp";
+export const mathUrl = "https://math.mojikumi.jp";
+export const chemUrl = "https://chem.mojikumi.jp";
 export const repositoryUrl = "https://github.com/akiralazycat/mojikumi";
 export const releasesUrl = `${repositoryUrl}/releases`;
 export const npmUrl = "https://www.npmjs.com/package/mojikumi";
