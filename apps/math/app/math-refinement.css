@@ -1,0 +1,123 @@
+.selection-context {
+  align-items: center;
+  display: flex;
+  flex: 1 0 100%;
+  gap: 12px;
+  justify-content: space-between;
+  min-width: 0;
+  width: 100%;
+}
+
+.structure-breadcrumb {
+  align-items: center;
+  color: var(--muted-soft);
+  display: flex;
+  font-size: 10px;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0 2px;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.structure-breadcrumb li {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.structure-breadcrumb li + li::before {
+  color: color-mix(in srgb, var(--muted-soft) 58%, transparent);
+  content: "›";
+  margin: 0 7px;
+}
+
+.structure-breadcrumb li[aria-current="location"] {
+  color: var(--primary);
+  font-weight: 650;
+}
+
+.selection-context .selection-status {
+  margin-left: auto;
+}
+
+.semantic-navigator-row {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+.output-format-groups {
+  display: grid;
+  gap: 6px;
+}
+
+.output-format-group {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 148px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.output-format-heading {
+  display: grid;
+  gap: 2px;
+  padding-left: 4px;
+}
+
+.output-format-heading strong {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.output-format-heading span {
+  color: var(--muted-soft);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.output-format-group .output-tabs {
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .selection-context {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+    padding: 2px 6px 4px;
+  }
+
+  .selection-context .selection-status {
+    margin-left: 0;
+  }
+
+  .structure-breadcrumb {
+    min-height: 22px;
+    width: 100%;
+  }
+
+  .semantic-navigator-row {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .output-format-group {
+    align-items: start;
+    gap: 3px;
+    grid-template-columns: 1fr;
+  }
+
+  .output-format-heading {
+    align-items: baseline;
+    display: flex;
+    gap: 7px;
+    padding: 4px 10px 0;
+  }
+
+  .output-format-heading span {
+    font-size: 8px;
+  }
+}

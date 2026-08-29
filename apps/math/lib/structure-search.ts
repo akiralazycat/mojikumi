@@ -34,10 +34,20 @@ export function createSemanticSearchCache(): SemanticSearchCache {
 }
 
 /** How far past a start offset a structure has to become recognizable. */
-const structureLookahead = 32;
+const structureLookahead = 64;
 
 /** Ceiling on range reads per kind, so a pathological expression cannot hang. */
 const maxRangeChecks = 12_000;
+
+const traversalOrderByKind: Record<SemanticStructureKind, SemanticSlot["id"][]> = {
+  fraction: ["numerator", "denominator"],
+  root: ["index", "radicand"],
+  integral: ["upper", "lower", "body", "variable"],
+  sum: ["upper", "lower", "body"]
+};
+
+const differentialPrefixPattern = /(?:\\[,!;:]\s*)?(?:d|\\mathrm\s*\{\s*d\s*\}|\\operatorname\s*\{\s*d\s*\})\s*$/u;
+const differentialSuffixPattern = /^\s*(?:\\[,!;:]\s*)?(?:d|\\mathrm\s*\{\s*d\s*\}|\\operatorname\s*\{\s*d\s*\})/u;
 
 function countFilledSlots(structure: SemanticStructure) {
   return structure.slots.filter((slot) => normalizeSlotLatex(slot.latex)).length;
@@ -142,24 +152,31 @@ function findStructure(
     distance: number;
     boundaryAffinity: number;
     startDistance: number;
+    targetFilled: boolean;
+    targetLength: number;
   };
   const isBetterCandidate = (candidate: RankedCandidate, best: RankedCandidate | null) => {
     if (!best) return true;
     if (candidate.containsCurrent !== best.containsCurrent) return candidate.containsCurrent;
     if (candidate.distance !== best.distance) return candidate.distance < best.distance;
+    if (candidate.targetFilled !== best.targetFilled) return candidate.targetFilled;
+    // A complete structure is more trustworthy than a shorter prefix that can
+    // already be parsed as the same operator. This is especially important for
+    // integral bodies, where a truncated candidate can absorb the differential.
+    if (candidate.filledSlots !== best.filledSlots) return candidate.filledSlots > best.filledSlots;
     if (candidate.boundaryAffinity !== best.boundaryAffinity) {
       return candidate.boundaryAffinity > best.boundaryAffinity;
     }
     if (candidate.startDistance !== best.startDistance) return candidate.startDistance < best.startDistance;
-    if (candidate.filledSlots !== best.filledSlots) return candidate.filledSlots > best.filledSlots;
     if (candidate.contentLength !== best.contentLength) return candidate.contentLength > best.contentLength;
+    if (candidate.targetLength !== best.targetLength) return candidate.targetLength < best.targetLength;
     return candidate.span < best.span;
   };
   let best: RankedCandidate | null = null;
   for (const base of getCandidates(field, kind, cache)) {
-    if (!base.structure.slots.some(
-      (slot) => slot.id === slotId && normalizeSlotLatex(slot.latex)
-    )) continue;
+    const targetSlot = base.structure.slots.find((slot) => slot.id === slotId);
+    if (!targetSlot) continue;
+    const targetValue = normalizeSlotLatex(targetSlot.latex);
     const { start, end } = base;
     const containsCurrent = start <= currentStart && end >= currentEnd;
     const distance = containsCurrent
@@ -169,12 +186,45 @@ function findStructure(
       ...base,
       containsCurrent,
       distance,
+      targetFilled: targetValue.length > 0,
+      targetLength: targetValue.length,
       boundaryAffinity: currentStart === currentEnd && end === currentStart ? 1 : 0,
       startDistance: start <= currentStart ? currentStart - start : start - currentEnd
     };
     if (isBetterCandidate(candidate, best)) best = candidate;
   }
   return best;
+}
+
+function hasDifferentialBefore(
+  field: MathfieldElement,
+  selection: MathSelection,
+  structureStart: number
+) {
+  const [start] = selection.ranges[0] ?? [structureStart, structureStart];
+  for (let contextStart = Math.max(structureStart, start - 8); contextStart < start; contextStart += 1) {
+    const prefix = readRange(field, { ranges: [[contextStart, start]], direction: "forward" });
+    if (differentialPrefixPattern.test(prefix.trim())) return true;
+  }
+  return false;
+}
+
+function hasDifferentialAfter(
+  field: MathfieldElement,
+  selection: MathSelection,
+  structureEnd: number
+) {
+  const [, end] = selection.ranges[0] ?? [structureEnd, structureEnd];
+  for (let contextEnd = end + 1; contextEnd <= Math.min(structureEnd, end + 8); contextEnd += 1) {
+    const suffix = readRange(field, { ranges: [[end, contextEnd]], direction: "forward" });
+    if (differentialSuffixPattern.test(suffix)) return true;
+  }
+  return false;
+}
+
+function selectionSpan(selection: MathSelection) {
+  const [start, end] = selection.ranges[0] ?? [0, 0];
+  return Math.abs(end - start);
 }
 
 /**
@@ -189,36 +239,64 @@ function searchSlotSelection(
   const [structureStart, structureEnd] = candidate.selection.ranges[0] ?? [0, field.lastOffset];
   const target = normalizeSlotLatex(slot.latex);
   if (!target) return null;
-  const traversalOrder = candidate.structure.kind === "integral"
-    ? ["upper", "lower", "body", "variable"]
-    : ["upper", "lower", "body"];
+  const traversalOrder = traversalOrderByKind[candidate.structure.kind];
   const sameValueSlots = candidate.structure.slots
     .filter((other) => normalizeSlotLatex(other.latex) === target)
     .sort((left, right) => traversalOrder.indexOf(left.id) - traversalOrder.indexOf(right.id));
   const duplicateIndex = Math.max(0, sameValueSlots.findIndex((other) => other.id === slot.id));
-  let distinct: MathSelection[] = [];
+  const matches: MathSelection[] = [];
   let checks = 0;
   for (let span = 1; span <= structureEnd - structureStart && checks < 4000; span += 1) {
-    const matches: MathSelection[] = [];
     for (let start = structureStart; start + span <= structureEnd && checks < 4000; start += 1) {
       checks += 1;
       const selection: MathSelection = { ranges: [[start, start + span]], direction: "forward" };
-      if (normalizeSlotLatex(readRange(field, selection)) === target) matches.push(selection);
+      if (normalizeSlotLatex(readRange(field, selection)) !== target) continue;
+      matches.push(selection);
     }
-    if (matches.length === 0) continue;
-    distinct = matches.reduce<MathSelection[]>((result, match) => {
-      const [start, end] = match.ranges[0] ?? [0, 0];
-      const overlaps = result.some((existing) => {
-        const [existingStart, existingEnd] = existing.ranges[0] ?? [0, 0];
-        return start < existingEnd && end > existingStart;
-      });
-      if (!overlaps) result.push(match);
-      return result;
-    }, []);
-    if (slot.id === "variable" || distinct.length > duplicateIndex) break;
+    // Non-integral slots only need the shortest exact matches. Integral body
+    // and variable slots inspect a few more ranges so their differential
+    // boundary can disambiguate MathLive offsets.
+    if (
+      matches.length > duplicateIndex &&
+      !(candidate.structure.kind === "integral" && (slot.id === "body" || slot.id === "variable"))
+    ) break;
   }
-  distinct.sort((left, right) => (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0));
-  if (slot.id === "variable") return distinct.at(-1) ?? null;
+
+  const distinct = matches.reduce<MathSelection[]>((result, match) => {
+    const [start, end] = match.ranges[0] ?? [0, 0];
+    const duplicate = result.some((existing) => {
+      const [existingStart, existingEnd] = existing.ranges[0] ?? [0, 0];
+      return start === existingStart && end === existingEnd;
+    });
+    if (!duplicate) result.push(match);
+    return result;
+  }, []);
+
+  if (candidate.structure.kind === "integral" && slot.id === "body") {
+    const qualified = distinct
+      .filter((selection) => hasDifferentialAfter(field, selection, structureEnd))
+      .sort((left, right) => selectionSpan(left) - selectionSpan(right));
+    if (qualified[0]) return qualified[0];
+  }
+
+  if (candidate.structure.kind === "integral" && slot.id === "variable") {
+    const qualified = distinct
+      .filter((selection) => hasDifferentialBefore(field, selection, structureStart))
+      .sort((left, right) => {
+        const spanDifference = selectionSpan(left) - selectionSpan(right);
+        if (spanDifference) return spanDifference;
+        return (right.ranges[0]?.[0] ?? 0) - (left.ranges[0]?.[0] ?? 0);
+      });
+    if (qualified[0]) return qualified[0];
+    distinct.sort((left, right) => (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0));
+    return distinct.at(-1) ?? null;
+  }
+
+  distinct.sort((left, right) => {
+    const spanDifference = selectionSpan(left) - selectionSpan(right);
+    if (spanDifference) return spanDifference;
+    return (left.ranges[0]?.[0] ?? 0) - (right.ranges[0]?.[0] ?? 0);
+  });
   return distinct[duplicateIndex] ?? distinct[0] ?? null;
 }
 

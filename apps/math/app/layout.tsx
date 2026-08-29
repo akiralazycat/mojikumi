@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { PwaRegistration } from "../components/pwa-registration";
 import "./globals.css";
+import "./math-refinement.css";
 
 const themeScript = `
 try {

@@ -19,6 +19,18 @@ export type SelectionSummary = {
 
 export type SemanticTarget = `${SemanticStructureKind}:${SemanticSlot["id"]}`;
 
+type SelectionHistoryEntry = {
+  selection: MathSelection;
+  semanticTarget: SemanticTarget | null;
+};
+
+const semanticKindLabels: Record<SemanticStructureKind, string> = {
+  fraction: "分数",
+  root: "根号",
+  integral: "積分",
+  sum: "総和・総乗"
+};
+
 function describeSelectedLatex(selectedLatex: string): SelectionSummary {
   const normalized = selectedLatex.trim().replace(/^\{\s*/, "").trim();
   if (/^\\(?:d?frac|tfrac)\b/.test(normalized)) {
@@ -40,6 +52,18 @@ function describeSelection(field: MathfieldElement): SelectionSummary {
   return describeSelectedLatex(readRange(field, copySelection(field.selection)));
 }
 
+function sameSelection(left: MathSelection | null, right: MathSelection) {
+  if (!left) return false;
+  const leftRange = left.ranges[0];
+  const rightRange = right.ranges[0];
+  return Boolean(
+    leftRange &&
+    rightRange &&
+    leftRange[0] === rightRange[0] &&
+    leftRange[1] === rightRange[1]
+  );
+}
+
 /**
  * Selection state for the structure navigator: what is selected now, how far
  * the writer has widened it, and which named slot they last jumped to.
@@ -48,7 +72,8 @@ export function useStructureSelection(
   fieldRef: RefObject<MathfieldElement | null>,
   announce: (message: string) => void
 ) {
-  const historyRef = useRef<MathSelection[]>([]);
+  const historyRef = useRef<SelectionHistoryEntry[]>([]);
+  const semanticSelectionRef = useRef<MathSelection | null>(null);
   const searchCacheRef = useRef(createSemanticSearchCache());
   const [summary, setSummary] = useState<SelectionSummary>({ kind: "caret", label: "カーソル" });
   const [depth, setDepth] = useState(0);
@@ -56,6 +81,7 @@ export function useStructureSelection(
 
   const reset = useCallback(() => {
     historyRef.current = [];
+    semanticSelectionRef.current = null;
     setDepth(0);
     setSemanticTarget(null);
   }, []);
@@ -63,6 +89,11 @@ export function useStructureSelection(
   const sync = useCallback(() => {
     const field = fieldRef.current;
     if (!field) return;
+    const currentSelection = copySelection(field.selection);
+    if (semanticSelectionRef.current && !sameSelection(semanticSelectionRef.current, currentSelection)) {
+      semanticSelectionRef.current = null;
+      setSemanticTarget(null);
+    }
     setSummary(describeSelection(field));
   }, [fieldRef]);
 
@@ -129,20 +160,28 @@ export function useStructureSelection(
       announce("これ以上外側の構造はありません。");
       return;
     }
-    historyRef.current.push(previous);
+    historyRef.current.push({ selection: previous, semanticTarget });
     setDepth(historyRef.current.length);
+    semanticSelectionRef.current = null;
     setSemanticTarget(null);
     field.selection = candidate;
     setSummary(candidateSummary);
     announce(`${candidateSummary.label}へ選択を広げました。`);
-  }, [announce, fieldRef]);
+  }, [announce, fieldRef, semanticTarget]);
 
   const selectInnerStructure = useCallback(() => {
     const field = fieldRef.current;
     const previous = historyRef.current.pop();
     if (!field || !previous) return;
     field.focus();
-    field.selection = previous;
+    if (previous.semanticTarget) {
+      semanticSelectionRef.current = copySelection(previous.selection);
+      setSemanticTarget(previous.semanticTarget);
+    } else {
+      semanticSelectionRef.current = null;
+      setSemanticTarget(null);
+    }
+    field.selection = previous.selection;
     setDepth(historyRef.current.length);
     const restored = describeSelection(field);
     setSummary(restored);
@@ -158,7 +197,7 @@ export function useStructureSelection(
     field.focus();
     const found = findSemanticSlot(field, kind, slotId, searchCacheRef.current);
     if (!found) {
-      announce(kind === "integral" ? "選択できる積分要素がありません。" : "選択できるシグマ要素がありません。");
+      announce(`選択できる${semanticKindLabels[kind]}要素がありません。`);
       return;
     }
     if (!found.selection) {
@@ -166,10 +205,12 @@ export function useStructureSelection(
       return;
     }
     reset();
+    const target: SemanticTarget = `${kind}:${found.slot.id}`;
+    semanticSelectionRef.current = copySelection(found.selection);
+    setSemanticTarget(target);
     field.selection = found.selection;
     const label = `${found.structure.label}・${found.slot.label}`;
     setSummary({ kind: "element", label });
-    setSemanticTarget(`${kind}:${found.slot.id}`);
     announce(`${label}を選択しました。`);
   }, [announce, fieldRef, reset]);
 
