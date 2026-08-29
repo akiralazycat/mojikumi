@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { PwaRegistration } from "../components/pwa-registration";
 import "./globals.css";
 import "./a11y.css";
+import "./reaction-awareness.css";
 
 const themeScript = `
 try {

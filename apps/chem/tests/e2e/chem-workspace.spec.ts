@@ -32,14 +32,29 @@ test("開始例、記号キー、端末内保存を一つの流れで使える",
   await expect.poll(() => page.evaluate(() => localStorage.getItem("mojikumi.chem.draft.v1"))).toContain("CH3COOH");
 });
 
-test("反応式を検証し、係数を整えてUndoできる", async ({ page }) => {
+test("反応構造と元素収支をたどり、係数案を確認して適用・Undoできる", async ({ page }) => {
   await page.goto("/");
   const input = page.getByRole("textbox", { name: "化学式・反応式" });
   await input.fill("H2 + O2 -> H2O");
   await expect(page.getByText("係数の調整が必要です")).toBeVisible();
   await expect(page.locator(".delta-list")).toContainText("O反応物に 1 多い");
 
-  await page.locator(".analysis-panel").getByRole("button", { name: "係数を整える" }).click();
+  const navigator = page.getByRole("region", { name: "反応式の構造" });
+  await expect(navigator).toBeVisible();
+  await navigator.getByRole("button", { name: /Oの収支 反応物2 生成物1/ }).click();
+  await expect(navigator.locator('.reaction-species[data-related="true"]')).toHaveCount(2);
+
+  await navigator.getByRole("button", { name: "生成物 H2O" }).click();
+  await expect(navigator.locator(".species-detail")).toContainText("H2O");
+  await expect(navigator.locator(".species-detail")).toContainText("元素");
+
+  await navigator.getByRole("button", { name: "係数案を見る" }).click();
+  const proposal = navigator.getByRole("region", { name: "係数案" });
+  await expect(proposal).toContainText("最小の整数比 2 : 1 : 2");
+  await expect(proposal).toContainText("元の式はまだ変更していません");
+  await expect(input).toHaveValue("H2 + O2 -> H2O");
+  await proposal.getByRole("button", { name: "この係数を適用" }).click();
+
   await expect(input).toHaveValue("2H2 + O2 → 2H2O");
   await expect(page.getByText("原子数と電荷が保存されています")).toBeVisible();
 
