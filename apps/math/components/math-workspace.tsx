@@ -1,22 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HistoryPanel } from "./history-panel";
+import { ImportPanel } from "./import-panel";
 import { MathKeyboard } from "./math-keyboard";
 import { OutputPanel, outputLabels, type VisibleOutputKind } from "./output-panel";
 import { StructureGlyph } from "./structure-glyph";
 import { StructureNavigator } from "./structure-navigator";
 import { useDraft } from "../hooks/use-draft";
+import { useLocalHistory } from "../hooks/use-local-history";
 import { useStructureSelection } from "../hooks/use-structure-selection";
 import {
   createExpression,
   serializeExpression,
   type AiAction
 } from "../lib/expression";
+import { detectImportSource, prepareImportedLatex } from "../lib/import-source";
 import { quickStarters, type QuickStarter, type StructureKey } from "../lib/keyboard";
 import { structureKindsIn } from "../lib/math-structure";
 import { readValue, type MathfieldElement } from "../lib/mathfield";
+import { createShareUrl, maxSharedExpressionLength, readSharedExpression } from "../lib/share";
 
 type EditorMode = "visual" | "latex";
+type ImportMode = "replace" | "insert";
 
 type ConverterValues = {
   plainText: string;
@@ -49,16 +55,32 @@ export function MathWorkspace() {
   const [aiPromptEnabled, setAiPromptEnabled] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [shareState, setShareState] = useState<"idle" | "copied" | "failed">("idle");
   const [announcement, setAnnouncement] = useState("");
   const [undoNotice, setUndoNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [importValue, setImportValue] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
 
   const announce = useCallback((message: string) => setAnnouncement(message), []);
   const selection = useStructureSelection(fieldRef, announce);
-  const { saveState, clear: clearDraft } = useDraft(latex, useCallback((restored: string) => {
-    setLatex(restored);
-    announce("この端末の下書きを読み込みました。");
-  }, [announce]));
+  const history = useLocalHistory(latex);
+  const readStartupExpression = useCallback(() => {
+    const shared = readSharedExpression(window.location.hash);
+    return shared ? { latex: shared.latex, source: "shared" as const } : null;
+  }, []);
+  const { saveState, clear: clearDraft } = useDraft(
+    latex,
+    useCallback((restored: string, source: "draft" | "shared") => {
+      setLatex(restored);
+      announce(source === "shared"
+        ? "共有リンクの数式を読み込みました。"
+        : "この端末の下書きを読み込みました。");
+    }, [announce]),
+    readStartupExpression
+  );
 
   const readConverters = useCallback((field: MathfieldElement | null): ConverterValues => ({
     plainText: readValue(field, "plain-text"),
@@ -138,6 +160,7 @@ export function MathWorkspace() {
   const copyLabel = outputKind === "plain" && aiPromptEnabled
     ? outputLabels.ai
     : outputLabels[outputKind];
+  const canShare = hasExpression && latex.length <= maxSharedExpressionLength;
 
   useEffect(() => {
     if (!hasExpression) {
@@ -204,6 +227,57 @@ export function MathWorkspace() {
     setConverters(readConverters(field));
   }
 
+  async function importSource(source: string, mode: ImportMode = "replace") {
+    const detection = detectImportSource(source);
+    if (!detection.normalized.trim()) return;
+    setImportBusy(true);
+    try {
+      const mathlive = await import("mathlive");
+      const importedLatex = prepareImportedLatex(detection, mathlive.convertAsciiMathToLatex);
+      if (!importedLatex.trim()) throw new Error("数式を読み取れませんでした。");
+      const field = fieldRef.current;
+      if (mode === "insert" && field) {
+        field.focus();
+        field.insert(importedLatex, {
+          insertionMode: "replaceSelection",
+          selectionMode: "after"
+        });
+        selection.reset();
+        syncFromField(field);
+        history.remember(field.value);
+      } else {
+        if (latex.trim() && latex.trim() !== importedLatex.trim()) history.remember(latex);
+        updateLatexSource(importedLatex);
+        selection.reset();
+        setEditorMode("visual");
+        history.remember(importedLatex);
+        window.setTimeout(() => fieldRef.current?.focus());
+      }
+      setImportOpen(false);
+      setImportValue("");
+      announce(`${detection.label}として読み込みました。`);
+      feedback();
+    } catch (error) {
+      announce(error instanceof Error ? error.message : "数式を読み込めませんでした。");
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
+  function handleMathPaste(event: React.ClipboardEvent<HTMLElement>) {
+    const source = event.clipboardData.getData("text/plain");
+    if (!source.trim()) return;
+    const detection = detectImportSource(source);
+    const needsConversion = detection.format === "asciimath"
+      || detection.format === "mathml"
+      || detection.format === "unicode"
+      || detection.normalized !== source.trim();
+    if (!hasExpression || needsConversion) {
+      event.preventDefault();
+      void importSource(source, hasExpression ? "insert" : "replace");
+    }
+  }
+
   function showUndoNotice(previousLatex: string) {
     if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current);
     setUndoNotice(previousLatex);
@@ -215,6 +289,7 @@ export function MathWorkspace() {
 
   function newExpression() {
     const previousLatex = latex;
+    if (previousLatex.trim()) history.remember(previousLatex);
     clearDraft();
     updateLatexSource("");
     selection.reset();
@@ -222,7 +297,7 @@ export function MathWorkspace() {
     const restorable = previousLatex.trim().length > 0;
     if (restorable) showUndoNotice(previousLatex);
     announce(restorable
-      ? "新しい数式を開始しました。前の数式は元に戻せます。"
+      ? "新しい数式を開始しました。前の数式は履歴にも残しています。"
       : "新しい数式を開始しました。");
     window.setTimeout(() => fieldRef.current?.focus());
   }
@@ -230,16 +305,45 @@ export function MathWorkspace() {
   function restorePrevious() {
     if (undoNotice === null) return;
     updateLatexSource(undoNotice);
+    history.remember(undoNotice);
     setUndoNotice(null);
     if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current);
     announce("前の数式に戻しました。");
     window.setTimeout(() => fieldRef.current?.focus());
   }
 
+  function openHistoryExpression(value: string) {
+    if (latex.trim() && latex.trim() !== value.trim()) history.remember(latex);
+    updateLatexSource(value);
+    history.remember(value);
+    selection.reset();
+    setEditorMode("visual");
+    setHistoryOpen(false);
+    announce("履歴から数式を開きました。");
+    window.setTimeout(() => fieldRef.current?.focus());
+  }
+
+  async function copyShareLink() {
+    if (!canShare) return;
+    try {
+      const url = createShareUrl(latex, window.location.href);
+      await navigator.clipboard.writeText(url);
+      history.remember(latex);
+      setShareState("copied");
+      announce("共有リンクをコピーしました。数式はURLの#以降にだけ入ります。");
+      feedback();
+    } catch {
+      setShareState("failed");
+      announce("共有リンクをコピーできませんでした。");
+    }
+    window.setTimeout(() => setShareState("idle"), 1800);
+  }
+
   async function copyOutput() {
     if (!hasExpression || output === null) return;
     try {
       await navigator.clipboard.writeText(output);
+      history.remember(latex);
       setCopyState("copied");
       announce(`${copyLabel}をコピーしました。`);
       feedback();
@@ -264,7 +368,39 @@ export function MathWorkspace() {
           <span className="save-state" aria-hidden="true">{saveStateMessage}</span>
         </div>
         <div className="primary-actions">
+          <button
+            className="workspace-utility-button"
+            type="button"
+            aria-expanded={historyOpen}
+            aria-controls="math-history-panel"
+            onClick={() => {
+              setHistoryOpen((open) => !open);
+              setImportOpen(false);
+            }}
+          >
+            履歴
+          </button>
+          <button
+            className="workspace-utility-button"
+            type="button"
+            aria-expanded={importOpen}
+            aria-controls="math-import-panel"
+            onClick={() => {
+              setImportOpen((open) => !open);
+              setHistoryOpen(false);
+            }}
+          >
+            読み込む
+          </button>
           <button className="new-button" type="button" onClick={newExpression}>新規</button>
+          <button
+            className="workspace-utility-button"
+            type="button"
+            disabled={!canShare}
+            onClick={copyShareLink}
+          >
+            {shareState === "copied" ? "リンクをコピー済み" : shareState === "failed" ? "共有できませんでした" : "共有"}
+          </button>
           <button
             className="copy-primary"
             type="button"
@@ -281,6 +417,31 @@ export function MathWorkspace() {
           </button>
         </div>
       </div>
+
+      {historyOpen && (
+        <div id="math-history-panel">
+          <HistoryPanel
+            entries={history.entries}
+            available={history.available}
+            onOpen={openHistoryExpression}
+            onRemove={history.remove}
+            onClear={history.clear}
+            onClose={() => setHistoryOpen(false)}
+          />
+        </div>
+      )}
+
+      {importOpen && (
+        <div id="math-import-panel">
+          <ImportPanel
+            value={importValue}
+            busy={importBusy}
+            onValueChange={setImportValue}
+            onImport={() => void importSource(importValue)}
+            onClose={() => setImportOpen(false)}
+          />
+        </div>
+      )}
 
       {undoNotice !== null && (
         <div className="workspace-notice">
@@ -319,6 +480,7 @@ export function MathWorkspace() {
             className={`math-canvas${editorMode === "visual" ? "" : " math-canvas-hidden"}`}
             aria-label="数式を入力"
             math-virtual-keyboard-policy="manual"
+            onPaste={handleMathPaste}
             onInput={(event) => {
               selection.reset();
               syncFromField(event.currentTarget as MathfieldElement);
@@ -372,8 +534,8 @@ export function MathWorkspace() {
         )}
         <p className="canvas-hint">
           {editorMode === "visual"
-            ? "数式をタップして編集 · キーを選んで構造を追加"
-            : "LaTeXを貼り付けると読み込みます · Visualへ切り替えると組版で確認できます"}
+            ? "貼り付けると形式を自動判定 · 数式をタップして編集 · キーを選んで構造を追加"
+            : "LaTeXを直接編集 · Visualへ切り替えると組版で確認できます"}
         </p>
       </div>
 
