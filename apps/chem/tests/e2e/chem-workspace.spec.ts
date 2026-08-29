@@ -37,7 +37,7 @@ test("反応式を検証し、係数を整えてUndoできる", async ({ page })
   const input = page.getByRole("textbox", { name: "化学式・反応式" });
   await input.fill("H2 + O2 -> H2O");
   await expect(page.getByText("係数の調整が必要です")).toBeVisible();
-  await expect(page.getByText("生成物に", { exact: false })).toBeVisible();
+  await expect(page.locator(".delta-list")).toContainText("O反応物に 1 多い");
 
   await page.locator(".analysis-panel").getByRole("button", { name: "係数を整える" }).click();
   await expect(input).toHaveValue("2H2 + O2 → 2H2O");
