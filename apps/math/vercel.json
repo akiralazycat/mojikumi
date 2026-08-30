@@ -2,5 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && npm ci",
-  "buildCommand": "cd ../.. && npm run build:math"
+  "buildCommand": "cd ../.. && npm run build:math",
+  "ignoreCommand": "case \"$VERCEL_GIT_COMMIT_MESSAGE\" in *'[skip vercel]'*) exit 0;; esac; [ \"$VERCEL_GIT_COMMIT_REF\" = main ] && exit 1 || exit 0",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true
+    }
+  }
 }
