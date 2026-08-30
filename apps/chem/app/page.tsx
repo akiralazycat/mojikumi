@@ -1,6 +1,10 @@
 import { ChemWorkspace } from "../components/chem-workspace";
 import { ThemeToggle } from "../components/theme-toggle";
 
+const repositoryUrl = "https://github.com/akiralazycat/mojikumi";
+const mojikumiUrl = "https://mojikumi.jp";
+const mathUrl = "https://math.mojikumi.jp";
+
 export default function HomePage() {
   return (
     <div className="site-shell">
@@ -98,12 +102,23 @@ export default function HomePage() {
           </a>
           <p>化学表現を組むことと、使うことのあいだをつなぐ</p>
         </div>
-        <nav aria-label="フッター">
-          <a href="#editor">化学式を入力</a>
-          <a href="#destinations">使い方</a>
-          <a href="#privacy">データ方針</a>
-          <a href="https://mojikumi.jp">Mojikumi本体</a>
-        </nav>
+        <div className="footer-links">
+          <nav aria-label="Chem">
+            <p className="footer-heading">Chem</p>
+            <a href="#editor">化学式を入力</a>
+            <a href="#destinations">使い方</a>
+            <a href="#privacy">データ方針</a>
+          </nav>
+          <nav aria-label="Mojikumi">
+            <p className="footer-heading">Mojikumi</p>
+            <a href={mojikumiUrl}>Mojikumi</a>
+            <a href={mathUrl}>Mojikumi Math</a>
+          </nav>
+          <nav aria-label="Project">
+            <p className="footer-heading">Project</p>
+            <a href={repositoryUrl}>GitHub</a>
+          </nav>
+        </div>
         <div className="footer-bottom">
           <span>© Mojikumi</span><span>Public beta</span><span className="footer-domain">chem.mojikumi.jp</span>
         </div>

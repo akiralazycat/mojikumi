@@ -2,6 +2,8 @@ import { MathWorkspace } from "../components/math-workspace";
 import { ThemeToggle } from "../components/theme-toggle";
 
 const repositoryUrl = "https://github.com/akiralazycat/mojikumi";
+const mojikumiUrl = "https://mojikumi.jp";
+const chemUrl = "https://chem.mojikumi.jp";
 
 export default function HomePage() {
   return (
@@ -99,7 +101,11 @@ export default function HomePage() {
             </nav>
             <nav aria-label="Mojikumi">
               <p className="footer-heading">Mojikumi</p>
-              <a href="https://mojikumi.jp">Mojikumi本体</a>
+              <a href={mojikumiUrl}>Mojikumi</a>
+              <a href={chemUrl}>Mojikumi Chem</a>
+            </nav>
+            <nav aria-label="Project">
+              <p className="footer-heading">Project</p>
               <a href={repositoryUrl}>GitHub</a>
             </nav>
           </div>

@@ -1,10 +1,10 @@
 import { getDictionary, type Locale } from "../content";
-import { localePath, repositoryUrl, siteUrl } from "../lib/site";
+import { chemUrl, localePath, mathUrl, repositoryUrl, siteUrl } from "../lib/site";
 
 /*
- * Describes the two things this site is: a bilingual site, and the source of an
- * open-source library. Both nodes are kept to facts already stated on the page
- * itself, so the markup and the visible copy cannot drift apart.
+ * Describes the site, source project, and the focused Mojikumi tools that live
+ * on sibling subdomains. Keeping the family relationship explicit here mirrors
+ * the visible navigation without turning the main product into a portal.
  */
 export function StructuredData({ locale }: { locale: Locale }) {
   const dictionary = getDictionary(locale);
@@ -13,13 +13,14 @@ export function StructuredData({ locale }: { locale: Locale }) {
     name: "Akira Manabe",
     url: repositoryUrl
   };
+  const websiteId = `${siteUrl}/#website`;
 
   const graph = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": `${siteUrl}/#website`,
+        "@id": websiteId,
         name: "Mojikumi",
         url: new URL(localePath(locale, "/"), siteUrl).href,
         description: dictionary.meta.description,
@@ -39,6 +40,28 @@ export function StructuredData({ locale }: { locale: Locale }) {
         license: "https://opensource.org/licenses/MIT",
         author,
         isAccessibleForFree: true
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${mathUrl}/#app`,
+        name: "Mojikumi Math",
+        url: mathUrl,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Any",
+        browserRequirements: "Requires JavaScript",
+        isAccessibleForFree: true,
+        isPartOf: { "@id": websiteId }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${chemUrl}/#app`,
+        name: "Mojikumi Chem",
+        url: chemUrl,
+        applicationCategory: "UtilitiesApplication",
+        operatingSystem: "Any",
+        browserRequirements: "Requires JavaScript",
+        isAccessibleForFree: true,
+        isPartOf: { "@id": websiteId }
       },
       { ...author, "@id": `${siteUrl}/#author` }
     ]
