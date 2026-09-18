@@ -1,9 +1,12 @@
 import { spawnSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const target = process.argv[2] ?? "web";
 const ref = process.env.VERCEL_GIT_COMMIT_REF ?? "";
 const message = process.env.VERCEL_GIT_COMMIT_MESSAGE ?? "";
 const current = process.env.VERCEL_GIT_COMMIT_SHA ?? "HEAD";
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Vercel Ignored Build Step: exit 0 skips, exit 1 builds.
 // Git-connected deployments stay main-only. Explicit manual CLI/API previews
@@ -32,12 +35,13 @@ const sharedPaths = [
   "turbo.json",
 ];
 
-// Scope the decision to this commit only. Comparing against the prior
-// deployment would make a rarely-built sibling catch up on old changes.
+// Scope the decision to this commit only. Vercel runs ignoreCommand from each
+// project's root directory, so run Git from the repository root before using
+// repository-relative pathspecs.
 const diff = spawnSync(
   "git",
   ["diff", "--quiet", `${current}^`, current, "--", ...selected, ...sharedPaths],
-  { stdio: "ignore" },
+  { cwd: repositoryRoot, stdio: "ignore" },
 );
 
 // Unknown Git failures fail open to a build; only a proven no-op is skipped.
