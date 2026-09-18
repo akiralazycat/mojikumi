@@ -79,6 +79,14 @@ async function page(template, destination) {
 await mkdir(output, { recursive: true });
 
 /*
+ * Browser chrome uses the exact same brand assets as mojikumi.jp. Keeping one
+ * source prevents the CDN origin from drifting into a second Mojikumi mark.
+ */
+await cp(resolve(root, "apps/web/app/icon.svg"), resolve(output, "icon.svg"));
+await cp(resolve(root, "apps/web/app/favicon.ico"), resolve(output, "favicon.ico"));
+await cp(resolve(root, "apps/web/app/apple-icon.png"), resolve(output, "apple-icon.png"));
+
+/*
  * One page per language rather than both languages down one page, which is how
  * mojikumi.jp is laid out too. Each one can then be written as prose instead of
  * as a translation running beside its original. The 404 keeps both, since a
