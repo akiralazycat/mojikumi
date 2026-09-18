@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "cd ../.. && npm ci",
   "buildCommand": "cd ../.. && npm run build:packages && npm run build --workspace @mojikumi/web",
-  "ignoreCommand": "node ../../scripts/vercel-ignore-build.mjs web",
   "git": {
     "deploymentEnabled": {
       "**": false,
