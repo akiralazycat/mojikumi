@@ -9,7 +9,7 @@
   "scripts": {
     "assets": "node scripts/generate-assets.mjs",
     "dev": "next dev",
-    "build": "npm run assets && next build && node scripts/finalize-service-worker.mjs",
+    "build": "next build && node scripts/finalize-service-worker.mjs",
     "preview": "serve out --listen 3200 --no-clipboard",
     "test:e2e": "npm run build && playwright test",
     "typecheck": "tsc --noEmit"
