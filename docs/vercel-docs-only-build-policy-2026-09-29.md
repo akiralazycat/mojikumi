@@ -47,10 +47,14 @@ Every Vercel target attached to this repository must receive the docs-only rule 
 - [x] 2026-09-29 — `ignoreCommand` normalized for every target.
 - [x] 2026-09-29 — Existing contradictory deployment guidance reconciled where present.
 - [x] 2026-09-29 — Final diff verified.
-- [ ] Merged to `main`.
+- [x] 2026-09-29 — Merged to `main`.
 
 ## Change history
 
 ### 2026-09-29
 
 Initial cross-project policy document created before implementation.
+
+### Verification probe
+
+This documentation-only main commit is the live Ignored Build Step probe. It must be ignored by every Vercel target attached to this repository.
