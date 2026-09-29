@@ -57,4 +57,4 @@ Initial cross-project policy document created before implementation.
 
 ### Verification probe
 
-This documentation-only main commit is the live Ignored Build Step probe. It must be ignored by every Vercel target attached to this repository.
+Verification PASS. Probe commit `8a3cd915771594162cfd72b0771a2b4ce7543351` was observed as `CANCELED` by Vercel for: mojikumi, mojikumi-cdn, mojikumi-chem, mojikumi-math. This confirms the Ignored Build Step stopped before build compute.
