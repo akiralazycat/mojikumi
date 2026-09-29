@@ -12,8 +12,14 @@
     {
       "source": "/:version(\\d+\\.\\d+\\.\\d+)/:file*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     },
     {
@@ -23,8 +29,12 @@
           "key": "Cache-Control",
           "value": "public, max-age=600, s-maxage=86400, stale-while-revalidate=86400"
         },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     }
-  ]
+  ],
+  "ignoreCommand": "if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; cd \"$(git rev-parse --show-toplevel)\" || exit 1; if git diff --name-only \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD | grep -Eqv '^(docs/|[^/]+\\.(md|mdx)$)'; then exit 1; else exit 0; fi"
 }
