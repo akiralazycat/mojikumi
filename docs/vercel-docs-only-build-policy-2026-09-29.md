@@ -44,9 +44,9 @@ Every Vercel target attached to this repository must receive the docs-only rule 
 
 - [x] 2026-09-29 — Repository/Vercel target inventory completed.
 - [x] 2026-09-29 — Policy documented before implementation.
-- [ ] `ignoreCommand` normalized for every target.
-- [ ] Existing contradictory deployment guidance reconciled where present.
-- [ ] Final diff verified.
+- [x] 2026-09-29 — `ignoreCommand` normalized for every target.
+- [x] 2026-09-29 — Existing contradictory deployment guidance reconciled where present.
+- [x] 2026-09-29 — Final diff verified.
 - [ ] Merged to `main`.
 
 ## Change history
