@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "mathlive": "^0.110.0",
-    "next": "^16.3.1",
+    "next": "^16.4.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
@@ -27,7 +27,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "serve": "^14.2.6",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.5",
     "typescript": "^5.8.3"
   }
 }
