@@ -28,10 +28,7 @@ export default function HomePage() {
         <section className="intro" aria-labelledby="intro-title">
           <p className="eyebrow">Mathematical input, reconsidered</p>
           <h1 id="intro-title">数式を<em>自然に</em><span className="intro-action">組み上げる</span></h1>
-          <p>
-            <span>見たまま組み立てて、テキスト、LaTeX、Markdown、MathMLへ。</span>{" "}
-            <span className="intro-detail">Mojikumi Mathは、数式を書くことと使うことのあいだをつなぐ入力レイヤーです。</span>
-          </p>
+          <p>見たまま組み立てて、テキスト、LaTeX、Markdown、MathMLへ。</p>
         </section>
 
         <div id="editor">
@@ -42,27 +39,24 @@ export default function HomePage() {
           <div className="section-heading">
             <p className="eyebrow">One expression, many destinations</p>
             <h2 id="use-cases-title">ひとつの数式を、<span className="section-title-tail">使う場所に合わせて</span></h2>
-            <p>入力しづらい構造は画面上で組み、必要な形式を選んでコピー。書き直すことなく、次の道具へ渡せます。</p>
+            <p>画面上で組み、形式を選んでコピー。次の道具へそのまま渡せます。</p>
           </div>
 
           <div className="use-case-grid">
             <article>
               <span className="use-case-number">01</span>
               <h3>読めるテキストとして</h3>
-              <p>ブログ、メモ、チャットなど、数式記法を前提にしない場所へ読みやすいテキストとして貼り付けられます。</p>
-              <p className="use-case-detail">Readableでは安全な範囲だけUnicode記号へ置き換えます。AIへ渡す場合は目的に合った依頼文も付けられます。</p>
+              <p>ブログ、メモ、チャットなど、数式記法を前提にしない場所へ。</p>
             </article>
             <article>
               <span className="use-case-number">02</span>
               <h3>文書の数式として</h3>
-              <p>LaTeXやMarkdownへ変換し、論文、教材、技術文書へ。Visual編集とソース編集をいつでも切り替えられます。</p>
-              <p className="use-case-detail">Strict βでは、構造を保った簡潔なプレーンテキストも試せます。</p>
+              <p>LaTeXやMarkdownへ変換し、論文、教材、技術文書へ。</p>
             </article>
             <article>
               <span className="use-case-number">03</span>
               <h3>Webの要素として</h3>
-              <p>MathMLや埋め込み用マークアップを取り出し、WebページやCMSの中へ整った数式を運べます。</p>
-              <p className="use-case-detail">入力元はひとつ。用途が変わっても、式を最初から作り直す必要はありません。</p>
+              <p>MathMLや埋め込み用マークアップを、ページやCMSへ。</p>
             </article>
           </div>
         </section>
@@ -71,13 +65,13 @@ export default function HomePage() {
           <div className="privacy-copy">
             <p className="eyebrow">Local by design</p>
             <h2 id="privacy-title">数式は、この端末の中で</h2>
-            <p>入力内容はサーバーへ送らず、下書きもブラウザ内に保存します。初回の読み込み後は、オフラインでも入力・変換・コピーを続けられます。</p>
+            <p>サーバーへ送らず、下書きもブラウザ内に保存。初回読み込み後はオフラインでも使えます。</p>
           </div>
           <ul className="privacy-points" aria-label="データ方針">
-            <li><strong>ログイン不要</strong><span>アカウントを作らず、すぐに使えます</span></li>
-            <li><strong>端末内保存</strong><span>下書きはこのブラウザだけに残ります</span></li>
-            <li><strong>数式を送信しない</strong><span>入力内容をAnalyticsにも含めません</span></li>
-            <li><strong>オフライン対応</strong><span>初回訪問後も主要機能を利用できます</span></li>
+            <li><strong>ログイン不要</strong><span>アカウントなしですぐ使える</span></li>
+            <li><strong>端末内保存</strong><span>下書きはこのブラウザだけ</span></li>
+            <li><strong>数式を送信しない</strong><span>Analyticsにも含めない</span></li>
+            <li><strong>オフライン対応</strong><span>初回訪問後も主要機能が使える</span></li>
           </ul>
         </section>
       </main>
