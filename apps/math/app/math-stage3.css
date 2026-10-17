@@ -30,7 +30,7 @@
   border-bottom: 1px solid var(--line);
   display: grid;
   gap: 14px;
-  padding: 16px 22px 18px 26px;
+  padding: 16px 4px 18px;
 }
 
 .workspace-drawer-heading {
@@ -198,8 +198,7 @@
   }
 
   .workspace-utility-button,
-  .new-button,
-  .copy-primary {
+  .new-button {
     min-height: 38px;
   }
 

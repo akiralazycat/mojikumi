@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import type { AiAction, MojikumiExpression, OutputKind } from "../lib/expression";
 import { rememberHistory } from "../lib/history";
 
@@ -27,22 +27,8 @@ export const outputKinds = [
 
 export type VisibleOutputKind = (typeof outputKinds)[number];
 
-const outputGroups: Array<{
-  label: string;
-  description: string;
-  kinds: VisibleOutputKind[];
-}> = [
-  {
-    label: "よく使う",
-    description: "コピーや文書へ持ち出す基本形式",
-    kinds: ["plain", "latex", "markdown"]
-  },
-  {
-    label: "詳細",
-    description: "共有・機械処理・埋め込み向け",
-    kinds: ["readable", "strict", "mathml", "embed"]
-  }
-];
+const primaryKinds: VisibleOutputKind[] = ["plain", "latex", "markdown"];
+const detailKinds: VisibleOutputKind[] = ["readable", "strict", "mathml", "embed"];
 
 export const aiActionLabels: Record<AiAction, string> = {
   explain: "説明する",
@@ -52,6 +38,10 @@ export const aiActionLabels: Record<AiAction, string> = {
   differentiate: "微分する",
   integrate: "積分する"
 };
+
+function isDetailKind(kind: VisibleOutputKind) {
+  return detailKinds.includes(kind);
+}
 
 export function OutputPanel({
   expression,
@@ -75,9 +65,15 @@ export function OutputPanel({
   output: string | null;
 }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const [detailOpen, setDetailOpen] = useState(() => isDetailKind(outputKind));
   const copyLabel = aiPromptEnabled ? outputLabels.ai : outputLabels[outputKind];
 
+  useEffect(() => {
+    if (isDetailKind(outputKind)) setDetailOpen(true);
+  }, [outputKind]);
+
   function selectOutputKind(kind: VisibleOutputKind) {
+    if (isDetailKind(kind)) setDetailOpen(true);
     if (aiPromptEnabled) onAiPromptEnabledChange(false);
     onOutputKindChange(kind);
   }
@@ -120,7 +116,7 @@ export function OutputPanel({
         <div className="output-heading-copy">
           <p className="output-kicker">Output</p>
           <h2>変換してコピー</h2>
-          <p className="output-heading-description">用途に合う形式を選び、Previewを確認してそのまま持ち出せます</p>
+          <p className="output-heading-description">形式を選んで持ち出す</p>
         </div>
         <label className="ai-switch">
           <input
@@ -136,39 +132,74 @@ export function OutputPanel({
         </label>
       </div>
 
-      <div className="output-format-groups" role="tablist" aria-label="出力形式">
-        {outputGroups.map((group) => (
-          <div className="output-format-group" key={group.label} role="presentation">
-            <div className="output-format-heading" aria-hidden="true">
-              <strong>{group.label}</strong>
-              <span style={{ color: "var(--muted)" }}>{group.description}</span>
-            </div>
-            <div className="output-tabs" role="presentation">
-              {group.kinds.map((kind) => (
-                <button
-                  key={kind}
-                  id={`output-tab-${kind}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={outputKind === kind}
-                  aria-controls="output-panel"
-                  tabIndex={outputKind === kind ? 0 : -1}
-                  onClick={() => selectOutputKind(kind)}
-                  onKeyDown={(event) => moveOutputTab(event, kind)}
-                >
-                  {outputLabels[kind]}
-                </button>
-              ))}
-            </div>
+      <div className="output-format-groups">
+        <div className="output-format-group">
+          <div className="output-format-heading" aria-hidden="true">
+            <strong>よく使う</strong>
           </div>
-        ))}
+          <div className="output-tabs" role="tablist" aria-label="出力形式">
+            {primaryKinds.map((kind) => (
+              <button
+                key={kind}
+                id={`output-tab-${kind}`}
+                type="button"
+                role="tab"
+                aria-selected={outputKind === kind}
+                aria-controls="output-panel"
+                tabIndex={outputKind === kind ? 0 : -1}
+                onClick={() => selectOutputKind(kind)}
+                onKeyDown={(event) => moveOutputTab(event, kind)}
+              >
+                {outputLabels[kind]}
+              </button>
+            ))}
+            {detailOpen && detailKinds.map((kind) => (
+              <button
+                key={kind}
+                id={`output-tab-${kind}`}
+                type="button"
+                role="tab"
+                aria-selected={outputKind === kind}
+                aria-controls="output-panel"
+                tabIndex={outputKind === kind ? 0 : -1}
+                onClick={() => selectOutputKind(kind)}
+                onKeyDown={(event) => moveOutputTab(event, kind)}
+              >
+                {outputLabels[kind]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={`output-format-group output-format-group-detail${detailOpen ? " is-open" : ""}`}>
+          <button
+            className="output-detail-toggle"
+            type="button"
+            aria-expanded={detailOpen}
+            aria-controls="output-detail-tabs"
+            aria-label="詳細の出力形式"
+            onClick={() => {
+              setDetailOpen((open) => {
+                if (open && isDetailKind(outputKind)) {
+                  if (aiPromptEnabled) onAiPromptEnabledChange(false);
+                  onOutputKindChange("plain");
+                }
+                return !open;
+              });
+            }}
+          >
+            <strong>詳細</strong>
+            <span>{detailOpen ? "閉じる" : "Readable · Strict · MathML · Embed"}</span>
+          </button>
+          {detailOpen && <span id="output-detail-tabs" className="visually-hidden">詳細形式を表示中</span>}
+        </div>
       </div>
 
       {aiPromptEnabled && (
         <div className="output-ai-panel">
           <div className="output-ai-copy">
             <strong>AIに渡す目的</strong>
-            <span>数式そのものに、用途に合った依頼文を添えます</span>
+            <span>数式に依頼文を添えます</span>
           </div>
           <div className="ai-actions" role="group" aria-label="AIへの依頼">
             {(Object.keys(aiActionLabels) as AiAction[]).map((action) => (
