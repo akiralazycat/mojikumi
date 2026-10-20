@@ -21,7 +21,7 @@ test("MathのOutput UXは形式・AI・Preview・Copyを一つの階層で扱う
   await expect(aiSwitch).not.toBeChecked();
   await expect(page.getByText("現在の出力: LaTeX")).toBeVisible();
 
-  const copyButton = page.getByRole("button", { name: "LaTeXをコピー" });
+  const copyButton = page.locator(".output-copy-button");
   await expect(copyButton).toBeEnabled();
   await copyButton.click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("x+1");

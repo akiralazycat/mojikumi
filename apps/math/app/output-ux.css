@@ -82,7 +82,15 @@
 
 .output-format-group-detail {
   grid-template-columns: 1fr;
-  gap: 0;
+  gap: 8px;
+}
+
+.output-format-group-detail.is-open {
+  align-items: start;
+}
+
+.output-tabs-detail {
+  width: 100%;
 }
 
 .output-format-heading {
@@ -292,7 +300,7 @@
 }
 
 .output-preview-surface .output-warning {
-  color: color-mix(in srgb, var(--primary) 72%, var(--code-ink));
+  color: color-mix(in srgb, var(--code-ink) 88%, var(--primary));
 }
 
 .output-actions {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { SemanticSlot, SemanticStructureKind } from "../lib/math-structure";
 import type { SelectionSummary, SemanticTarget } from "../hooks/use-structure-selection";
 
@@ -40,6 +41,7 @@ function selectionBreadcrumb(summary: SelectionSummary, semanticTarget: Semantic
     const slot = semanticSlotControls[kind].find((entry) => entry.id === slotId);
     return ["式", structureLabels[kind].accessible, slot?.label ?? summary.label];
   }
+  if (summary.kind === "caret") return ["式", "カーソル"];
   return ["式", summary.label.replace(/全体$/u, "")];
 }
 
@@ -69,11 +71,14 @@ export function StructureNavigator({
   onSelectOuter: () => void;
   onSelectSlot: (kind: SemanticStructureKind, slotId: SemanticSlot["id"]) => void;
 }) {
+  const [actionsOpen, setActionsOpen] = useState(false);
   const breadcrumb = selectionBreadcrumb(summary, semanticTarget);
+  const isCaret = summary.kind === "caret";
+  const showActions = !isCaret || actionsOpen;
 
   return (
     <div
-      className={`structure-navigator structure-navigator-${summary.kind}`}
+      className={`structure-navigator structure-navigator-${summary.kind}${isCaret ? " is-idle" : ""}`}
       role="group"
       aria-label="数式内の要素を選択"
     >
@@ -85,19 +90,33 @@ export function StructureNavigator({
             </li>
           ))}
         </ol>
-        <span className="selection-status" aria-hidden="true">
-          <span className="selection-status-dot" />
-          {summary.label}
-          {depth > 0 && <small>外側 +{depth}</small>}
-        </span>
+        {!isCaret && (
+          <span className="selection-status" aria-hidden="true">
+            <span className="selection-status-dot" />
+            {summary.label}
+            {depth > 0 && <small>外側 +{depth}</small>}
+          </span>
+        )}
+        {isCaret && (
+          <button
+            className="structure-navigator-toggle"
+            type="button"
+            aria-expanded={actionsOpen}
+            onClick={() => setActionsOpen((open) => !open)}
+          >
+            構造
+          </button>
+        )}
       </div>
-      <div className="structure-navigator-actions">
-        <button type="button" onClick={() => onMove("moveUp", "上の要素")}>上へ</button>
-        <button type="button" onClick={() => onMove("moveDown", "下の要素")}>下へ</button>
-        <button type="button" onClick={onSelectCurrent}>要素を選択</button>
-        <button type="button" disabled={depth === 0} onClick={onSelectInner}>内側へ</button>
-        <button type="button" onClick={onSelectOuter}>外側へ</button>
-      </div>
+      {showActions && (
+        <div className="structure-navigator-actions">
+          <button type="button" onClick={() => onMove("moveUp", "上の要素")}>上へ</button>
+          <button type="button" onClick={() => onMove("moveDown", "下の要素")}>下へ</button>
+          <button type="button" onClick={onSelectCurrent}>要素を選択</button>
+          <button type="button" disabled={depth === 0} onClick={onSelectInner}>内側へ</button>
+          <button type="button" onClick={onSelectOuter}>外側へ</button>
+        </div>
+      )}
       {kinds.length > 0 && (
         <div className="semantic-navigator" role="group" aria-label="数式構造の要素">
           {kinds.map((kind) => {

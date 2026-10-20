@@ -25,12 +25,33 @@
   opacity: 0.38;
 }
 
+.workspace-drawer-backdrop {
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  inset: 0;
+  position: fixed;
+  z-index: 60;
+}
+
+.workspace-drawer-layer {
+  left: 50%;
+  max-width: min(1040px, calc(100vw - 24px));
+  position: fixed;
+  top: calc(88px + env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  z-index: 70;
+}
+
 .workspace-drawer {
-  background: color-mix(in srgb, var(--field) 90%, var(--glass-strong));
-  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--glass-strong) 96%, var(--field));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
   display: grid;
   gap: 14px;
-  padding: 16px 4px 18px;
+  max-height: min(70dvh, 560px);
+  overflow: auto;
+  padding: 16px 18px 18px;
 }
 
 .workspace-drawer-heading {
@@ -198,8 +219,14 @@
   }
 
   .workspace-utility-button,
-  .new-button {
+  .new-button,
+  .copy-primary {
     min-height: 38px;
+  }
+
+  .workspace-drawer-layer {
+    top: calc(72px + env(safe-area-inset-top, 0px));
+    width: calc(100% - 16px);
   }
 
   .workspace-drawer {

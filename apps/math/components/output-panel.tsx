@@ -29,6 +29,7 @@ export type VisibleOutputKind = (typeof outputKinds)[number];
 
 const primaryKinds: VisibleOutputKind[] = ["plain", "latex", "markdown"];
 const detailKinds: VisibleOutputKind[] = ["readable", "strict", "mathml", "embed"];
+const detailOpenStorageKey = "mojikumi.math.output.detailOpen";
 
 export const aiActionLabels: Record<AiAction, string> = {
   explain: "説明する",
@@ -41,6 +42,26 @@ export const aiActionLabels: Record<AiAction, string> = {
 
 function isDetailKind(kind: VisibleOutputKind) {
   return detailKinds.includes(kind);
+}
+
+function readStoredDetailOpen() {
+  try {
+    return sessionStorage.getItem(detailOpenStorageKey) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoredDetailOpen(open: boolean) {
+  try {
+    sessionStorage.setItem(detailOpenStorageKey, open ? "1" : "0");
+  } catch {
+    // Session persistence is best-effort.
+  }
+}
+
+function visibleKindsFor(detailOpen: boolean): VisibleOutputKind[] {
+  return detailOpen ? [...primaryKinds, ...detailKinds] : [...primaryKinds];
 }
 
 export function OutputPanel({
@@ -65,29 +86,39 @@ export function OutputPanel({
   output: string | null;
 }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const [detailOpen, setDetailOpen] = useState(() => isDetailKind(outputKind));
+  const [detailOpen, setDetailOpen] = useState(() => isDetailKind(outputKind) || readStoredDetailOpen());
   const copyLabel = aiPromptEnabled ? outputLabels.ai : outputLabels[outputKind];
 
   useEffect(() => {
-    if (isDetailKind(outputKind)) setDetailOpen(true);
+    if (isDetailKind(outputKind)) {
+      setDetailOpen(true);
+      writeStoredDetailOpen(true);
+    }
   }, [outputKind]);
 
+  function setDetailOpenPersisted(open: boolean) {
+    setDetailOpen(open);
+    writeStoredDetailOpen(open);
+  }
+
   function selectOutputKind(kind: VisibleOutputKind) {
-    if (isDetailKind(kind)) setDetailOpen(true);
+    if (isDetailKind(kind)) setDetailOpenPersisted(true);
     if (aiPromptEnabled) onAiPromptEnabledChange(false);
     onOutputKindChange(kind);
   }
 
   function moveOutputTab(event: KeyboardEvent<HTMLButtonElement>, kind: VisibleOutputKind) {
-    const currentIndex = outputKinds.indexOf(kind);
+    const kinds = visibleKindsFor(detailOpen);
+    const currentIndex = kinds.indexOf(kind);
+    if (currentIndex < 0) return;
     let nextIndex = currentIndex;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % outputKinds.length;
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + outputKinds.length) % outputKinds.length;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % kinds.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + kinds.length) % kinds.length;
     else if (event.key === "Home") nextIndex = 0;
-    else if (event.key === "End") nextIndex = outputKinds.length - 1;
+    else if (event.key === "End") nextIndex = kinds.length - 1;
     else return;
     event.preventDefault();
-    const nextKind = outputKinds[nextIndex];
+    const nextKind = kinds[nextIndex];
     if (!nextKind) return;
     selectOutputKind(nextKind);
     window.setTimeout(() => document.getElementById(`output-tab-${nextKind}`)?.focus());
@@ -108,6 +139,24 @@ export function OutputPanel({
       setCopyState("failed");
     }
     window.setTimeout(() => setCopyState("idle"), 1800);
+  }
+
+  function renderTab(kind: VisibleOutputKind) {
+    return (
+      <button
+        key={kind}
+        id={`output-tab-${kind}`}
+        type="button"
+        role="tab"
+        aria-selected={outputKind === kind}
+        aria-controls="output-panel"
+        tabIndex={outputKind === kind ? 0 : -1}
+        onClick={() => selectOutputKind(kind)}
+        onKeyDown={(event) => moveOutputTab(event, kind)}
+      >
+        {outputLabels[kind]}
+      </button>
+    );
   }
 
   return (
@@ -138,36 +187,7 @@ export function OutputPanel({
             <strong>よく使う</strong>
           </div>
           <div className="output-tabs" role="tablist" aria-label="出力形式">
-            {primaryKinds.map((kind) => (
-              <button
-                key={kind}
-                id={`output-tab-${kind}`}
-                type="button"
-                role="tab"
-                aria-selected={outputKind === kind}
-                aria-controls="output-panel"
-                tabIndex={outputKind === kind ? 0 : -1}
-                onClick={() => selectOutputKind(kind)}
-                onKeyDown={(event) => moveOutputTab(event, kind)}
-              >
-                {outputLabels[kind]}
-              </button>
-            ))}
-            {detailOpen && detailKinds.map((kind) => (
-              <button
-                key={kind}
-                id={`output-tab-${kind}`}
-                type="button"
-                role="tab"
-                aria-selected={outputKind === kind}
-                aria-controls="output-panel"
-                tabIndex={outputKind === kind ? 0 : -1}
-                onClick={() => selectOutputKind(kind)}
-                onKeyDown={(event) => moveOutputTab(event, kind)}
-              >
-                {outputLabels[kind]}
-              </button>
-            ))}
+            {primaryKinds.map(renderTab)}
           </div>
         </div>
 
@@ -179,19 +199,21 @@ export function OutputPanel({
             aria-controls="output-detail-tabs"
             aria-label="詳細の出力形式"
             onClick={() => {
-              setDetailOpen((open) => {
-                if (open && isDetailKind(outputKind)) {
-                  if (aiPromptEnabled) onAiPromptEnabledChange(false);
-                  onOutputKindChange("plain");
-                }
-                return !open;
-              });
+              if (detailOpen && isDetailKind(outputKind)) {
+                if (aiPromptEnabled) onAiPromptEnabledChange(false);
+                onOutputKindChange("plain");
+              }
+              setDetailOpenPersisted(!detailOpen);
             }}
           >
             <strong>詳細</strong>
             <span>{detailOpen ? "閉じる" : "Readable · Strict · MathML · Embed"}</span>
           </button>
-          {detailOpen && <span id="output-detail-tabs" className="visually-hidden">詳細形式を表示中</span>}
+          {detailOpen && (
+            <div className="output-tabs output-tabs-detail" id="output-detail-tabs" role="tablist" aria-label="詳細の出力形式の一覧">
+              {detailKinds.map(renderTab)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -219,7 +241,7 @@ export function OutputPanel({
       <div className="output-preview">
         <div className="output-preview-heading">
           <strong>Preview</strong>
-          <span style={{ color: "var(--muted)" }}>{copyLabel}</span>
+          <span>{copyLabel}</span>
         </div>
         <div
           id="output-panel"
@@ -243,7 +265,7 @@ export function OutputPanel({
                 <p className="embed-note">Web Componentの公開前です。貼り付け先では、要素の中のMathMLがそのまま表示されます。</p>
               )}
               {!expression.isComplete && (
-                <p className="output-warning" id="output-warning" style={{ color: "var(--code-ink)" }}>未入力の欄は□で示しています。コピー前に数式を確認してください。</p>
+                <p className="output-warning" id="output-warning">未入力の欄は□で示しています。コピー前に数式を確認してください。</p>
               )}
               {output === null ? (
                 <p>この形式への変換を準備しています</p>
