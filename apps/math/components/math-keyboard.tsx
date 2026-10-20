@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { StructureGlyph } from "./structure-glyph";
 import {
   keyboardGroups,
@@ -14,13 +14,10 @@ import {
 
 const longPressDelay = 420;
 
-export function MathKeyboard({
-  onInsert,
-  onInsertStructure
-}: {
+export const MathKeyboard = forwardRef<HTMLDivElement, {
   onInsert: (value: string) => void;
   onInsertStructure: (key: StructureKey) => void;
-}) {
+}>(function MathKeyboard({ onInsert, onInsertStructure }, ref) {
   const longPressTimerRef = useRef<number | null>(null);
   const suppressNextClickRef = useRef(false);
   const variantTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -70,7 +67,7 @@ export function MathKeyboard({
   }
 
   return (
-    <div className="keyboard" aria-label="数式キーボード">
+    <div ref={ref} className="keyboard" aria-label="数式キーボード">
       <div className="structure-bar" role="group" aria-label="数式の構造">
         <span className="structure-label">構造</span>
         <div className="structure-keys">
@@ -169,4 +166,4 @@ export function MathKeyboard({
       </div>
     </div>
   );
-}
+});

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HistoryPanel } from "./history-panel";
 import { ImportPanel } from "./import-panel";
 import { MathKeyboard } from "./math-keyboard";
-import { OutputPanel, type VisibleOutputKind } from "./output-panel";
+import { OutputPanel, outputLabels, type VisibleOutputKind } from "./output-panel";
 import { StructureGlyph } from "./structure-glyph";
 import { StructureNavigator } from "./structure-navigator";
 import { useDraft } from "../hooks/use-draft";
@@ -54,6 +54,7 @@ export function MathWorkspace() {
   const [aiAction, setAiAction] = useState<AiAction>("explain");
   const [aiPromptEnabled, setAiPromptEnabled] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "failed">("idle");
   const [announcement, setAnnouncement] = useState("");
   const [undoNotice, setUndoNotice] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export function MathWorkspace() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [importValue, setImportValue] = useState("");
   const [importBusy, setImportBusy] = useState(false);
+  const keyboardRef = useRef<HTMLDivElement | null>(null);
 
   const announce = useCallback((message: string) => setAnnouncement(message), []);
   const selection = useStructureSelection(fieldRef, announce);
@@ -120,15 +122,24 @@ export function MathWorkspace() {
       if (keyboardSink.getAttribute("aria-label") !== "数式を入力") {
         keyboardSink.setAttribute("aria-label", "数式を入力");
       }
+      // Prefer the in-page keyboard over the OS keyboard on touch devices.
+      if (keyboardSink.getAttribute("inputmode") !== "none") {
+        keyboardSink.setAttribute("inputmode", "none");
+      }
     };
     labelKeyboardSink();
     const observer = new MutationObserver(labelKeyboardSink);
-    observer.observe(keyboardSink, { attributes: true, attributeFilter: ["aria-label"] });
+    observer.observe(keyboardSink, { attributes: true, attributeFilter: ["aria-label", "inputmode"] });
     const handleSelectionChange = () => selection.sync();
+    const revealCustomKeyboard = () => {
+      keyboardRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    };
     field.addEventListener("selection-change", handleSelectionChange);
+    field.addEventListener("focus", revealCustomKeyboard);
     return () => {
       observer.disconnect();
       field.removeEventListener("selection-change", handleSelectionChange);
+      field.removeEventListener("focus", revealCustomKeyboard);
     };
     // The field is created once MathLive upgrades the custom element; `latex`
     // is written back through the field itself afterwards.
@@ -156,6 +167,9 @@ export function MathWorkspace() {
   const output = serializeExpression(expression, serializedKind, { aiAction });
   const hasExpression = latex.trim().length > 0;
   const structureKinds = structureKindsIn(latex);
+  const copyLabel = outputKind === "plain" && aiPromptEnabled
+    ? outputLabels.ai
+    : outputLabels[outputKind];
   const canShare = hasExpression && latex.length <= maxSharedExpressionLength;
 
   useEffect(() => {
@@ -203,7 +217,13 @@ export function MathWorkspace() {
 
   function startFrom(starter: QuickStarter) {
     setEditorMode("visual");
-    window.setTimeout(() => insert(starter.value));
+    const field = fieldRef.current;
+    if (!field) {
+      window.setTimeout(() => insert(starter.value));
+      return;
+    }
+    field.focus();
+    insert(starter.value);
   }
 
   function runCommand(command: "undo" | "redo" | "moveToPreviousPlaceholder" | "moveToNextPlaceholder") {
@@ -335,6 +355,21 @@ export function MathWorkspace() {
     window.setTimeout(() => setShareState("idle"), 1800);
   }
 
+  async function copyOutput() {
+    if (!hasExpression || output === null) return;
+    try {
+      await navigator.clipboard.writeText(output);
+      history.remember(latex);
+      setCopyState("copied");
+      announce(`${copyLabel}をコピーしました。`);
+      feedback();
+    } catch {
+      setCopyState("failed");
+      announce("コピーできませんでした。ブラウザの権限を確認してください。");
+    }
+    window.setTimeout(() => setCopyState("idle"), 1800);
+  }
+
   return (
     <section className="workspace" aria-label="Mojikumi Math 数式入力">
       <div className="visually-hidden" aria-live="polite" aria-atomic="true">
@@ -382,11 +417,36 @@ export function MathWorkspace() {
           >
             {shareState === "copied" ? "リンクをコピー済み" : shareState === "failed" ? "共有できませんでした" : "共有"}
           </button>
+          <button
+            className="copy-primary"
+            type="button"
+            aria-label={`${copyLabel}をコピー`}
+            disabled={!hasExpression || output === null}
+            onClick={copyOutput}
+          >
+            {copyState === "copied"
+              ? "コピーしました"
+              : copyState === "failed"
+                ? "コピーできませんでした"
+                : `${copyLabel}をコピー`}
+            <span aria-hidden="true">↗</span>
+          </button>
         </div>
       </div>
 
+      {(historyOpen || importOpen) && (
+        <div
+          className="workspace-drawer-backdrop"
+          aria-hidden="true"
+          onClick={() => {
+            setHistoryOpen(false);
+            setImportOpen(false);
+          }}
+        />
+      )}
+
       {historyOpen && (
-        <div id="math-history-panel">
+        <div id="math-history-panel" className="workspace-drawer-layer">
           <HistoryPanel
             entries={history.entries}
             available={history.available}
@@ -399,7 +459,7 @@ export function MathWorkspace() {
       )}
 
       {importOpen && (
-        <div id="math-import-panel">
+        <div id="math-import-panel" className="workspace-drawer-layer">
           <ImportPanel
             value={importValue}
             busy={importBusy}
@@ -425,7 +485,7 @@ export function MathWorkspace() {
         </div>
       )}
 
-      <div className="canvas-wrap">
+      <div className={`canvas-wrap${hasExpression ? " has-expression" : ""}`}>
         {!ready && <span className="loading-label">数式入力を準備中…</span>}
         <div className="editor-toolbar" aria-label="編集ツール">
           <div className="tool-group">
@@ -449,7 +509,7 @@ export function MathWorkspace() {
             math-virtual-keyboard-policy="manual"
             onPaste={handleMathPaste}
             onInput={(event) => {
-              selection.reset();
+              selection.sync();
               syncFromField(event.currentTarget as MathfieldElement);
             }}
           >
@@ -506,7 +566,11 @@ export function MathWorkspace() {
         </p>
       </div>
 
-      <MathKeyboard onInsert={insert} onInsertStructure={insertStructure} />
+      <MathKeyboard
+        ref={keyboardRef}
+        onInsert={insert}
+        onInsertStructure={insertStructure}
+      />
 
       <OutputPanel
         expression={expression}

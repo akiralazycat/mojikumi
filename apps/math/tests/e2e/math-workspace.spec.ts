@@ -40,7 +40,7 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   await expect(page.getByText("Strict βから安全な記号置換だけで生成する")).toBeVisible();
   await expect(page.getByRole("tabpanel")).toContainText("x²");
   await expect(page.getByRole("tabpanel")).not.toContainText("x^2");
-  await page.getByRole("button", { name: "Readableをコピー" }).click();
+  await page.locator(".output-copy-button").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("x²");
 
   await page.getByRole("tab", { name: "テキスト" }).click();
@@ -49,7 +49,7 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   await expect(page.getByRole("tabpanel")).toContainText("途中の手順");
 
   await page.getByRole("tab", { name: "LaTeX" }).click();
-  await page.getByRole("button", { name: "LaTeXをコピー" }).click();
+  await page.locator(".output-copy-button").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(String.raw`x^2+5x+6=0`);
 });
 
@@ -58,7 +58,8 @@ test("初回は空欄から開始し、開始候補と入力順序を提示す�
   const field = await waitForMathfield(page);
 
   await expect.poll(() => field.evaluate((node: HTMLElement & { value: string }) => node.value)).toBe("");
-  await expect(page.getByRole("button", { name: "テキストをコピー" })).toBeDisabled();
+  await expect(page.locator(".copy-primary")).toBeDisabled();
+  await expect(page.locator(".output-copy-button")).toBeDisabled();
   await expect(page.getByText("数式を入力すると変換結果が表示されます")).toBeVisible();
   await expect(page.getByRole("button", { name: "分数から始める" })).toBeVisible();
   await expect(page.getByRole("button", { name: "二次式から始める" })).toBeVisible();
@@ -131,10 +132,15 @@ test("出力タブは矢印キー、Home、Endで移動できる", async ({ page
   const textTab = page.getByRole("tab", { name: "テキスト" });
   await textTab.focus();
   await textTab.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "LaTeX" })).toBeFocused();
+  await page.getByRole("tab", { name: "LaTeX" }).press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Markdown" })).toBeFocused();
+
+  await page.getByRole("button", { name: "詳細の出力形式" }).click();
+  await page.getByRole("tab", { name: "Markdown" }).focus();
+  await page.getByRole("tab", { name: "Markdown" }).press("ArrowRight");
   await expect(page.getByRole("tab", { name: "Readable" })).toBeFocused();
-  await page.getByRole("tab", { name: "Readable" }).press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Strict β" })).toBeFocused();
-  await page.getByRole("tab", { name: "Strict β" }).press("End");
+  await page.getByRole("tab", { name: "Readable" }).press("End");
   await expect(page.getByRole("tab", { name: "Embed" })).toBeFocused();
   await page.getByRole("tab", { name: "Embed" }).press("Home");
   await expect(textTab).toBeFocused();
@@ -168,6 +174,8 @@ test("分数の要素選択から分数全体へ広げ、内側へ戻せる", as
   await page.getByRole("button", { name: "分数から始める" }).click();
   const navigator = page.getByRole("group", { name: "数式内の要素を選択" });
   await expect(navigator).toBeVisible();
+  const structureToggle = navigator.getByRole("button", { name: "構造" });
+  if (await structureToggle.count()) await structureToggle.click();
 
   await navigator.getByRole("button", { name: "要素を選択" }).click();
   await expect(page.locator('[aria-live="polite"]')).toContainText("現在の要素を選択しました");
@@ -190,6 +198,8 @@ test("入れ子分数は最も内側から一段ずつ外側へ選択できる",
   await page.getByRole("button", { name: "分数を挿入" }).click();
 
   const navigator = page.getByRole("group", { name: "数式内の要素を選択" });
+  const structureToggle = navigator.getByRole("button", { name: "構造" });
+  if (await structureToggle.count()) await structureToggle.click();
   await navigator.getByRole("button", { name: "要素を選択" }).click();
   await navigator.getByRole("button", { name: "外側へ" }).click();
   await expect(page.locator(".selection-status")).toContainText("分数全体");
