@@ -5,12 +5,19 @@ Mojikumiへの変更は、見た目の好みではなく再現可能なfixture�
 
 ## 開発
 
+ルートの `package-lock.json` を使います。パッケージ間のimportは公開時と同じ
+`dist/` を参照するため、初回はパッケージをビルドしてからテストします。
+
 ```bash
-npm install
+npm ci
+npm run build:packages
 npm test
 npm run typecheck
 npm run build
 ```
+
+npmに含めるファイルは `npm run package:check` で確認できます。公開操作は
+[RELEASING.md](RELEASING.md) を参照してください。
 
 ## ルール変更
 
