@@ -27,6 +27,7 @@ Organization名が取得できない場合は、別スコープへ勝手に変�
 ```bash
 npm whoami
 npm ci
+npm run build:packages
 npm run typecheck
 npm test
 npm run build
@@ -132,6 +133,7 @@ Playgroundはprivate workspaceとしてリリース対象から除外されて�
 ```bash
 npm run version-packages
 npm install --package-lock-only
+npm run build:packages
 npm run typecheck
 npm test
 npm run build

@@ -29,17 +29,13 @@ Mojikumiは独自の組版エンジンではありません。`text-spacing-trim
 ## 開発版を試す
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run dev:playground
 ```
 
-表示されたローカルURLでPlaygroundを開けます。
+表示されたローカルURLでPlaygroundを開けます。Webサイトの開発サーバーは `npm run dev` で起動します。
 
-```bash
-npm test
-npm run typecheck
-npm run build
-```
+テストでは先にワークスペースのパッケージをビルドします。[開発時の確認手順](CONTRIBUTING.md#開発)、[npm公開手順](RELEASING.md)、[各サイトの配信設定](DEPLOYMENT.md)を参照してください。
 
 ## スクリプトタグで使う
 
