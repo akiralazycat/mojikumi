@@ -26,6 +26,7 @@ test("入力、ソース編集、全出力、コピーを一つの流れで使�
   const source = page.getByRole("textbox", { name: "LaTeXソース" });
   await source.fill(String.raw`x^2+5x+6=0`);
 
+  await page.getByRole("button", { name: "詳細の出力形式" }).click();
   const outputs = ["テキスト", "Readable", "Strict β", "LaTeX", "Markdown", "MathML", "Embed"];
   for (const name of outputs) {
     await page.getByRole("tab", { name }).click();

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HistoryPanel } from "./history-panel";
 import { ImportPanel } from "./import-panel";
 import { MathKeyboard } from "./math-keyboard";
-import { OutputPanel, outputLabels, type VisibleOutputKind } from "./output-panel";
+import { OutputPanel, type VisibleOutputKind } from "./output-panel";
 import { StructureGlyph } from "./structure-glyph";
 import { StructureNavigator } from "./structure-navigator";
 import { useDraft } from "../hooks/use-draft";
@@ -54,7 +54,6 @@ export function MathWorkspace() {
   const [aiAction, setAiAction] = useState<AiAction>("explain");
   const [aiPromptEnabled, setAiPromptEnabled] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied" | "failed">("idle");
   const [announcement, setAnnouncement] = useState("");
   const [undoNotice, setUndoNotice] = useState<string | null>(null);
@@ -157,9 +156,6 @@ export function MathWorkspace() {
   const output = serializeExpression(expression, serializedKind, { aiAction });
   const hasExpression = latex.trim().length > 0;
   const structureKinds = structureKindsIn(latex);
-  const copyLabel = outputKind === "plain" && aiPromptEnabled
-    ? outputLabels.ai
-    : outputLabels[outputKind];
   const canShare = hasExpression && latex.length <= maxSharedExpressionLength;
 
   useEffect(() => {
@@ -339,21 +335,6 @@ export function MathWorkspace() {
     window.setTimeout(() => setShareState("idle"), 1800);
   }
 
-  async function copyOutput() {
-    if (!hasExpression || output === null) return;
-    try {
-      await navigator.clipboard.writeText(output);
-      history.remember(latex);
-      setCopyState("copied");
-      announce(`${copyLabel}をコピーしました。`);
-      feedback();
-    } catch {
-      setCopyState("failed");
-      announce("コピーできませんでした。ブラウザの権限を確認してください。");
-    }
-    window.setTimeout(() => setCopyState("idle"), 1800);
-  }
-
   return (
     <section className="workspace" aria-label="Mojikumi Math 数式入力">
       <div className="visually-hidden" aria-live="polite" aria-atomic="true">
@@ -400,20 +381,6 @@ export function MathWorkspace() {
             onClick={copyShareLink}
           >
             {shareState === "copied" ? "リンクをコピー済み" : shareState === "failed" ? "共有できませんでした" : "共有"}
-          </button>
-          <button
-            className="copy-primary"
-            type="button"
-            aria-label={`${copyLabel}をコピー`}
-            disabled={!hasExpression || output === null}
-            onClick={copyOutput}
-          >
-            {copyState === "copied"
-              ? "コピーしました"
-              : copyState === "failed"
-                ? "コピーできませんでした"
-                : `${copyLabel}をコピー`}
-            <span aria-hidden="true">↗</span>
           </button>
         </div>
       </div>

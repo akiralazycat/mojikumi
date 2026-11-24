@@ -1,7 +1,7 @@
 .output-panel {
-  background: color-mix(in srgb, var(--field) 76%, transparent);
+  background: transparent;
   border-top: 1px solid var(--line);
-  padding: 24px 26px 26px;
+  padding: 22px 4px 24px;
 }
 
 .output-heading {
@@ -68,16 +68,21 @@
 
 .output-format-groups {
   display: grid;
-  gap: 7px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .output-format-group {
   align-items: center;
   display: grid;
   gap: 14px;
-  grid-template-columns: 138px minmax(0, 1fr);
+  grid-template-columns: 88px minmax(0, 1fr);
   min-width: 0;
+}
+
+.output-format-group-detail {
+  grid-template-columns: 1fr;
+  gap: 0;
 }
 
 .output-format-heading {
@@ -92,10 +97,43 @@
   font-weight: 650;
 }
 
-.output-format-heading span {
+.output-detail-toggle {
+  align-items: baseline;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  min-height: 34px;
+  padding: 0 12px;
+  text-align: left;
+  width: fit-content;
+}
+
+.output-detail-toggle[aria-expanded="true"] {
+  background: var(--primary-soft);
+  border-color: var(--line-strong);
+  color: var(--primary);
+}
+
+.output-detail-toggle strong {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.output-detail-toggle span {
   color: var(--muted-soft);
   font-size: 9px;
   line-height: 1.45;
+}
+
+.output-detail-toggle[aria-expanded="true"] span {
+  color: inherit;
 }
 
 .output-panel .output-tabs {
@@ -296,13 +334,9 @@
   font-size: 13px;
 }
 
-.workspace-topbar .copy-primary {
-  display: none;
-}
-
 @media (max-width: 720px) {
   .output-panel {
-    padding: 20px 14px 22px;
+    padding: 18px 0 20px;
   }
 
   .output-heading {
@@ -328,8 +362,9 @@
     padding: 4px 8px 0;
   }
 
-  .output-format-heading span {
-    font-size: 8px;
+  .output-detail-toggle {
+    width: 100%;
+    justify-content: center;
   }
 
   .output-panel .output-tabs button {

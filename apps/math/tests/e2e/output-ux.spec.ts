@@ -9,7 +9,7 @@ test("MathのOutput UXは形式・AI・Preview・Copyを一つの階層で扱う
 
   await expect(page.getByRole("heading", { name: "変換してコピー" })).toBeVisible();
   await expect(page.getByText("よく使う", { exact: true })).toBeVisible();
-  await expect(page.getByText("詳細", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "詳細の出力形式" })).toBeVisible();
   await expect(page.getByText("Preview", { exact: true })).toBeVisible();
 
   const aiSwitch = page.getByRole("checkbox", { name: "AIへの依頼文を付ける" });
